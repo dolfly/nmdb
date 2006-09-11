@@ -1,0 +1,15 @@
+
+Server:
+* Passive mode
+* Export stats
+* Test it's endian-clean (it should work fine)
+
+Library:
+* Update documentation
+* Support multithreading and/with non-blocking API
+* Automatic server selection
+
+Python:
+* Write test-cases to test the binding, the library and the server
+* Document the module
+

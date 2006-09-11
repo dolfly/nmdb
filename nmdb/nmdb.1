@@ -1,0 +1,86 @@
+.TH nmdb 1 "11/Sep/2006"
+.SH NAME
+nmdb - A TIPC-based database manager
+.SH SYNOPSYS
+nmdb [-d dbpath] [-l lower] [-L upper] [-c nobj] [-f] [-h]
+.SH DESCRIPTION
+
+nmdb is a TIPC-based database manager.
+
+It allows all the applications in the cluster to store (key, value) pairs in a
+central cache and database in a transparent way.
+
+It can also be used as a generic caching system (pretty much like memcached),
+because it has a very fast cache that can be used without impacting on the
+database.
+
+Before using it, you need to create the backing database. As nmdb uses
+.BR qdbm (3)
+as a backend, you need to do this using the
+.I dpmgr
+command. See
+.B "INVOCATION EXAMPLE"
+below for more important information.
+
+The database is accessed with the
+.BR libnmdb (3)
+library. Consult its manual page for programming information. Python bindings
+are also available.
+
+For additional documentation, go to the project's website at
+.IR http://auriga.wearlab.de/~alb/nmdb .
+
+.SH OPTIONS
+.TP
+.B "-d dbpath"
+Indicate the path to the database file to use. It must have been created with
+.RB ' "dpmgr create"
+.IR "dbpath" '
+and have read and write permissions. If a name is not provided, "database"
+will be used.
+.TP
+.B "-l lower"
+Lower TIPC port number to bind to. Defaults to 10. It's useful if you want to
+run more than one nmdb instance in the same TIPC cluster.
+.TP
+.B "-L upper"
+Upper TIPC port number to bind to. Defaults to the same value
+.B lower
+is defined. Useful mainly for passive mode (which is not implemented yet).
+.TP
+.B "-c nobj"
+Sets the maximum number of objects the cache will held, in thousands. Note
+that the size of the memory used by the cache layer depends on the size of the
+object exclusively. It defaults to 128, so the default cache size has space to
+hold 128 thousand objects.
+.TP
+.B "-f"
+Stay in the foreground, don't fork. Useful for debugging. The default is to
+fork.
+.TP
+.B "-h"
+Show a brief help.
+
+.SH INVOCATION EXAMPLE
+To create the database:
+.B "dpmgr create /var/lib/nmpc-db"
+
+To run the server with the said database:
+.B "nmpc -d /var/lib/nmpc-db"
+
+Be
+.I very
+careful not to start more than one nmdb instance on the same port at the same
+time, even if it's on different machines. TIPC allows you to bind the same
+port many times (and it's a very good feature), and all of them will get the
+messages, which will result in several answers, which will confuse the
+clients. This behaviour is different from the normal IP networking, where you
+can't bind a port twice.
+
+.SH SEE ALSO
+.BR libnmdb (3),
+.B TIPC
+(http://tipc.sf.net),
+.BR qdbm (3).
+.SH AUTHORS
+Created by Alberto Bertogli (albertito@gmail.com).

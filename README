@@ -1,0 +1,49 @@
+
+nmdb - A TIPC-based database manager
+Alberto Bertogli (albertito@gmail.com)
+-----------------------------------------
+
+nmdb is a network database that uses the TIPC protocol to communicate with
+it's clients.
+
+It consists of an in-memory cache, that saves (key, value) pairs, and a
+persistant backend that stores the pairs on disk.
+
+Both work combined, but the use of the persistant backend is optional, so you
+can use the server only for cache queries, pretty much like memcached.
+
+This source distribution is composed of several parts: the server called
+"nmdb", the library and the python bindings. Each one has a separate top level
+directory, and is licensed individually. See the LICENSE file for more
+information.
+
+For additional documentation and resources, go to the project's website at
+http://auriga.wearlab.de/~alb/nmdb.
+
+
+How to compile, test and install
+--------------------------------
+
+You will need to be running a kernel >= 2.6.16, and to have kernel headers
+also >= 2.6.16. Alternatively, you can run a TIPC patched kernel, and have the
+tipc.h header be put somewhere in the include path by hand.
+
+To compile the server and the library, you can just use "make" on their
+directories. To install them, use "make install".
+
+To test the application, start the server and then go to the library
+directory. Run "make tests", and then use the "test1c" and "test2c" to test
+the cache layer, and "test1d" and "test2d" to test the database backend.
+
+To compile the Python bindings, you need to have the library already
+installed. Go to the directory and run "python setup.py install", which will
+build and install the modules. The module will be named "nmdb".
+
+
+Where to report bugs
+--------------------
+
+Please report any bugs, suggestions, issues or comments to me, Alberto
+Bertogli, at albertito@gmail.com.
+
+

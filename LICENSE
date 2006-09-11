@@ -1,0 +1,13 @@
+
+Each sub-project in nmdb source tree has an independant license, and can be
+treated as independant projects from a licensing point of view.
+
+Licenses are always in a file named "LICENSE" in the top directory of each
+sub-project, and apply to ALL the source code files in that directory tree (it
+includes subdirectories).
+
+As a brief resume, here's how each sub-project is licensed:
+ * nmdb: OSL 3.0
+ * lib: BOLA (Public domain)
+ * python: BOLA (Public domain)
+

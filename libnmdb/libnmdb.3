@@ -1,0 +1,114 @@
+.TH libnmdb 3 "11/Sep/2006"
+.SH NAME
+libnmdb - Library for interacting with a nmdb server
+.SH SYNOPSYS
+.nf
+.B #include <nmdb.h>
+.sp
+.BI "nmdb_t *nmdb_init(int " port ");"
+.sp
+.BI "int nmdb_free(nmdb_t *" db ");"
+.sp
+.BI "int nmdb_set(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ","
+.BI "             const unsigned char *" val ", size_t " vsize ");"
+.BI "int nmdb_set_async(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ","
+.BI "             const unsigned char *" val ", size_t " vsize ");"
+.BI "int nmdb_cache_set(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ","
+.BI "             const unsigned char *" val ", size_t " vsize ");"
+.sp
+.BI "int nmdb_get(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ","
+.BI "             unsigned char *" val ", size_t " vsize ");"
+.BI "int nmdb_cache_get(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ","
+.BI "             unsigned char *" val ", size_t " vsize ");"
+.sp
+.BI "int nmdb_del(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ");"
+.BI "int nmdb_del_async(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ");"
+.BI "int nmdb_cache_del(nmdb_t *" db ","
+.BI "             const unsigned char *" key ", size_t " ksize ");"
+.fi
+.SH DESCRIPTION
+
+libnmdb is a library for interacting with a nmdb(1) server. For more
+information about it, see nmdb(1) or http://auriga.wearlab.de/~alb/nmdb.
+
+The first step to access a server is to call
+.BR nmdb_init ()
+to initialize the data. It will return an opaque pointer of
+.B nmdb_t
+type, which well be used as the first argument for the rest of the functions
+and identifies a connection to the server. It takes a single argument, which
+is the TIPC port to use. If you are in doubt, use -1 which will use the
+default value.
+
+To dispose a connection, use
+.BR nmdb_free ().
+
+The functions often take
+.I key
+and
+.I ksize
+arguments, as well as
+.I val
+and
+.IR vsize .
+These represent a key and a value, respectively, along with their
+corresponding sizes, in bytes. The following restrictions regarding the size
+of the keys and values apply: keys can't exceed 64Kb, values can't exceed
+64Kb, and the size of a key + the size of it's associated value can't exceed
+64Kb.
+
+There are three kinds of operations:
+.IR set ,
+.I get
+and
+.IR del ,
+with their obvious meaning. Each operation has variants, that make it behave
+in a different way. All three have "cache" variants, that only affect the
+cache and not the database; and
+.I set
+and
+.I del
+have "async" variants that make the operation return inmediately, leaving it
+queued on the server for asynchronous execution. Note that in this case no
+message is sent to the client when the operation completes. All variants
+behave the same way as the original operation unless noted, so the following
+descriptions document them implicitly.
+
+.BR nmdb_set ()
+is used to set the value associated with the given key. It returns 1 on
+success, or < 0 on failure.
+
+.BR nmdb_get ()
+is used to retrieve the value for the given key, if there is any.
+The
+.I val
+parameter should be pointing to a buffer where the value will be placed, and
+.I vsize
+will be the size of that buffer. It's highly recommended that the buffer is
+greater than 64kb in size to make room for the largest possible value. It will
+return the size of the retrieved key (which will be put in the buffer pointed
+at by
+.IR val ),
+0 if the requested key was not in the database (or cache, if the cache variant
+is used), or < 0 on failure.
+
+.BR nmdb_cache_del ()
+is used to remove a given key (and it's associated value). It returns 1 if it
+was removed successfuly, 0 if the key was not in the database/cache, or < 0 on
+failure. In the asynchronous variant, success is always indicated by 1, and no
+distinction is made if the key was not in the database/cache.
+
+.SH SEE ALSO
+
+.BR nmdb (1),
+.B TIPC
+(http://tipc.sf.net).
+.SH AUTHORS
+Created by Alberto Bertogli (albertito@gmail.com).
