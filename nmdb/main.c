@@ -36,7 +36,7 @@ static int load_settings(int argc, char **argv)
 	int c;
 
 	settings.tipc_lower = -1;
-	settings.tipc_higher = -1;
+	settings.tipc_upper = -1;
 	settings.numobjs = -1;
 	settings.foreground = 0;
 
@@ -53,7 +53,7 @@ static int load_settings(int argc, char **argv)
 			settings.tipc_lower = atoi(optarg);
 			break;
 		case 'L':
-			settings.tipc_higher = atoi(optarg);
+			settings.tipc_upper = atoi(optarg);
 			break;
 		case 'c':
 			settings.numobjs = atoi(optarg) * 1024;
@@ -73,8 +73,8 @@ static int load_settings(int argc, char **argv)
 
 	if (settings.tipc_lower == -1)
 		settings.tipc_lower = SERVER_INST;
-	if (settings.tipc_higher == -1)
-		settings.tipc_higher = settings.tipc_lower;
+	if (settings.tipc_upper == -1)
+		settings.tipc_upper = settings.tipc_lower;
 	if (settings.numobjs == -1)
 		settings.numobjs = 128 * 1024;
 

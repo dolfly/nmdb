@@ -15,7 +15,7 @@ struct queue *op_queue;
 /* Settings */
 struct  {
 	int tipc_lower;
-	int tipc_higher;
+	int tipc_upper;
 	int numobjs;
 	int foreground;
 	char *dbname;

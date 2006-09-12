@@ -211,8 +211,8 @@ int tipc_init(void)
 	srvsa.family = AF_TIPC;
 	srvsa.addrtype = TIPC_ADDR_NAMESEQ;
 	srvsa.addr.nameseq.type = SERVER_TYPE;
-	srvsa.addr.nameseq.lower = SERVER_INST;
-	srvsa.addr.nameseq.upper = SERVER_INST;
+	srvsa.addr.nameseq.lower = settings.tipc_lower;
+	srvsa.addr.nameseq.upper = settings.tipc_upper;
 	srvsa.scope = TIPC_CLUSTER_SCOPE;
 
 	fd = socket(AF_TIPC, SOCK_RDM, 0);
