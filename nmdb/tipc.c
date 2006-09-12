@@ -209,7 +209,11 @@ int tipc_init(void)
 	static struct sockaddr_tipc srvsa;
 
 	srvsa.family = AF_TIPC;
-	srvsa.addrtype = TIPC_ADDR_NAMESEQ;
+	if (settings.tipc_lower == settings.tipc_upper)
+		srvsa.addrtype = TIPC_ADDR_NAME;
+	else
+		srvsa.addrtype = TIPC_ADDR_NAMESEQ;
+
 	srvsa.addr.nameseq.type = SERVER_TYPE;
 	srvsa.addr.nameseq.lower = settings.tipc_lower;
 	srvsa.addr.nameseq.upper = settings.tipc_upper;
