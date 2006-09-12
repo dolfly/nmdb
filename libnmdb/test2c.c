@@ -25,6 +25,11 @@ int main(int argc, char **argv)
 	times = atoi(argv[1]);
 	ksize = atoi(argv[2]);
 	vsize = atoi(argv[3]);
+	if (times < 1 || ksize < 1 || vsize < 1) {
+		printf("Error: TIMES, KSIZE and VSIZE must be >= 1\n");
+		return 1;
+	}
+
 	key = malloc(ksize);
 	memset(key, 0, ksize);
 	val = malloc(vsize);
