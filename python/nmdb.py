@@ -64,10 +64,10 @@ class DB (_nmdbDict):
 		_nmdbDict.__init__(self, db, db.get, db.set, db.delete)
 
 
-class AsyncDB (_nmdbDict):
+class SyncDB (_nmdbDict):
 	def __init__(self, port = -1):
 		db = nmdb_ll.connect(port)
-		_nmdbDict.__init__(self, db, db.get, db.set_async,
-					db.delete_async)
+		_nmdbDict.__init__(self, db, db.get, db.set_sync,
+					db.delete_sync)
 
 

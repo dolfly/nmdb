@@ -201,7 +201,7 @@ static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		if (async)
 			request = REQ_SET_ASYNC;
 		else
-			request = REQ_SET;
+			request = REQ_SET_SYNC;
 	} else {
 		request = REQ_CACHE_SET;
 	}
@@ -251,13 +251,13 @@ exit:
 int nmdb_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	return do_set(db, key, ksize, val, vsize, 1, 0);
+	return do_set(db, key, ksize, val, vsize, 1, 1);
 }
 
-int nmdb_set_async(nmdb_t *db, const unsigned char *key, size_t ksize,
+int nmdb_set_sync(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	return do_set(db, key, ksize, val, vsize, 1, 1);
+	return do_set(db, key, ksize, val, vsize, 1, 0);
 }
 
 int nmdb_cache_set(nmdb_t *db, const unsigned char *key, size_t ksize,
@@ -280,7 +280,7 @@ int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 		if (async)
 			request = REQ_DEL_ASYNC;
 		else
-			request = REQ_DEL;
+			request = REQ_DEL_SYNC;
 	} else {
 		request = REQ_CACHE_DEL;
 	}
@@ -328,12 +328,12 @@ exit:
 
 int nmdb_del(nmdb_t *db, const unsigned char *key, size_t ksize)
 {
-	return do_del(db, key, ksize, 1, 0);
+	return do_del(db, key, ksize, 1, 1);
 }
 
-int nmdb_del_async(nmdb_t *db, const unsigned char *key, size_t ksize)
+int nmdb_del_sync(nmdb_t *db, const unsigned char *key, size_t ksize)
 {
-	return do_del(db, key, ksize, 1, 1);
+	return do_del(db, key, ksize, 1, 0);
 }
 
 int nmdb_cache_del(nmdb_t *db, const unsigned char *key, size_t ksize)

@@ -317,9 +317,9 @@ static void parse_msg(struct req_info *req, unsigned char *buf, size_t bsize)
 		parse_del(req, 0, 0);
 	else if (cmd == REQ_GET)
 		parse_get(req, 1);
-	else if (cmd == REQ_SET)
+	else if (cmd == REQ_SET_SYNC)
 		parse_set(req, 1, 0);
-	else if (cmd == REQ_DEL)
+	else if (cmd == REQ_DEL_SYNC)
 		parse_del(req, 1, 0);
 	else if (cmd == REQ_SET_ASYNC)
 		parse_set(req, 1, 1);
@@ -418,7 +418,7 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 		struct queue_entry *e;
 		uint32_t request;
 
-		request = REQ_SET;
+		request = REQ_SET_SYNC;
 		if (async)
 			request = REQ_SET_ASYNC;
 
@@ -467,7 +467,7 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 		struct queue_entry *e;
 		uint32_t request;
 
-		request = REQ_DEL;
+		request = REQ_DEL_SYNC;
 		if (async)
 			request = REQ_DEL_ASYNC;
 

@@ -12,7 +12,7 @@ libnmdb - Library for interacting with a nmdb server
 .BI "int nmdb_set(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ","
 .BI "             const unsigned char *" val ", size_t " vsize ");"
-.BI "int nmdb_set_async(nmdb_t *" db ","
+.BI "int nmdb_set_sync(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ","
 .BI "             const unsigned char *" val ", size_t " vsize ");"
 .BI "int nmdb_cache_set(nmdb_t *" db ","
@@ -28,7 +28,7 @@ libnmdb - Library for interacting with a nmdb server
 .sp
 .BI "int nmdb_del(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ");"
-.BI "int nmdb_del_async(nmdb_t *" db ","
+.BI "int nmdb_del_sync(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ");"
 .BI "int nmdb_cache_del(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ");"
@@ -69,17 +69,19 @@ There are three kinds of operations:
 .I get
 and
 .IR del ,
-with their obvious meaning. Each operation has variants, that make it behave
-in a different way. All three have "cache" variants, that only affect the
-cache and not the database; and
+with their obvious meaning. The normal set and del operations return as soon
+as they've been queued on the server for asynchronous completion. Note that in
+this case no message is sent to the client when the operation completes.
+
+Each operation has variants, that make it behave in a different way. All three
+have "cache" variants, that only affect the cache and not the database; and
 .I set
 and
 .I del
-have "async" variants that make the operation return inmediately, leaving it
-queued on the server for asynchronous execution. Note that in this case no
-message is sent to the client when the operation completes. All variants
-behave the same way as the original operation unless noted, so the following
-descriptions document them implicitly.
+have "sync" variants that make the operation return only after it's been
+acknowledge complete by the database backend. All variants behave the same way
+as the original operation unless noted, so the following descriptions document
+them implicitly.
 
 .BR nmdb_set ()
 is used to set the value associated with the given key. It returns 1 on
@@ -99,11 +101,11 @@ at by
 0 if the requested key was not in the database (or cache, if the cache variant
 is used), or < 0 on failure.
 
-.BR nmdb_cache_del ()
-is used to remove a given key (and it's associated value). It returns 1 if it
-was removed successfuly, 0 if the key was not in the database/cache, or < 0 on
-failure. In the asynchronous variant, success is always indicated by 1, and no
-distinction is made if the key was not in the database/cache.
+.BR nmdb_del ()
+is used to remove a given key (and it's associated value). The normal variant
+returns 1 if it was queued successfuly, or < 0 on failure. The cache and
+synchronous variant return 1 if the key was removed successfuly, 0 if the key
+was not in the database/cache, or < 0 on failure.
 
 .SH SEE ALSO
 

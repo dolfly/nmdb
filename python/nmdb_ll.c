@@ -180,38 +180,38 @@ static PyObject *db_delete(nmdbobject *db, PyObject *args)
 }
 
 
-/* db set async */
-static PyObject *db_set_async(nmdbobject *db, PyObject *args)
+/* db set sync */
+static PyObject *db_set_sync(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *val;
 	int ksize, vsize;
 	int rv;
 
-	if (!PyArg_ParseTuple(args, "s#s#:set_async", &key, &ksize,
+	if (!PyArg_ParseTuple(args, "s#s#:set_sync", &key, &ksize,
 				&val, &vsize)) {
 		return NULL;
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	rv = nmdb_set_async(db->db, key, ksize, val, vsize);
+	rv = nmdb_set_sync(db->db, key, ksize, val, vsize);
 	Py_END_ALLOW_THREADS
 
 	return PyLong_FromLong(rv);
 }
 
-/* db delete async */
-static PyObject *db_delete_async(nmdbobject *db, PyObject *args)
+/* db delete sync */
+static PyObject *db_delete_sync(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
 	int ksize;
 	int rv;
 
-	if (!PyArg_ParseTuple(args, "s#:delete_async", &key, &ksize)) {
+	if (!PyArg_ParseTuple(args, "s#:delete_sync", &key, &ksize)) {
 		return NULL;
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	rv = nmdb_del_async(db->db, key, ksize);
+	rv = nmdb_del_sync(db->db, key, ksize);
 	Py_END_ALLOW_THREADS
 
 	return PyLong_FromLong(rv);
@@ -228,8 +228,8 @@ static PyMethodDef nmdb_methods[] = {
 	{ "set", (PyCFunction) db_set, METH_VARARGS, NULL },
 	{ "get", (PyCFunction) db_get, METH_VARARGS, NULL },
 	{ "delete", (PyCFunction) db_delete, METH_VARARGS, NULL },
-	{ "set_async", (PyCFunction) db_set_async, METH_VARARGS, NULL },
-	{ "delete_async", (PyCFunction) db_delete_async, METH_VARARGS, NULL },
+	{ "set_sync", (PyCFunction) db_set_sync, METH_VARARGS, NULL },
+	{ "delete_sync", (PyCFunction) db_delete_sync, METH_VARARGS, NULL },
 
 	{ NULL }
 };

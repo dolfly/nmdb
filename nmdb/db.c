@@ -78,7 +78,7 @@ static void *db_loop(void *arg)
 static void process_op(db_t *db, struct queue_entry *e)
 {
 	int rv;
-	if (e->operation == REQ_SET) {
+	if (e->operation == REQ_SET_SYNC) {
 		rv = db_set(db, e->key, e->ksize, e->val, e->vsize);
 		if (!rv) {
 			tipc_reply_err(e->req, ERR_DB);
@@ -107,7 +107,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 		tipc_reply_get(e->req, REP_OK, val, vsize);
 		free(val);
 
-	} else if (e->operation == REQ_DEL) {
+	} else if (e->operation == REQ_DEL_SYNC) {
 		rv = db_del(db, e->key, e->ksize);
 		if (rv == 0) {
 			tipc_reply_del(e->req, REP_NOTIN);

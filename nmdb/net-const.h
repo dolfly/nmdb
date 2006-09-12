@@ -19,8 +19,8 @@
 #define REQ_CACHE_SET		0x102
 #define REQ_CACHE_DEL		0x103
 #define REQ_GET			0x104
-#define REQ_SET			0x105
-#define REQ_DEL			0x106
+#define REQ_SET_SYNC		0x105
+#define REQ_DEL_SYNC		0x106
 #define REQ_SET_ASYNC		0x107
 #define REQ_DEL_ASYNC		0x108
 
