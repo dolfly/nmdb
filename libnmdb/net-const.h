@@ -25,11 +25,11 @@
 #define REQ_DEL_ASYNC		0x108
 
 /* Network replies (different namespace from requests) */
-#define REP_ERR			0x100
-#define REP_CACHE_HIT		0x101
-#define REP_CACHE_MISS		0x102
-#define REP_OK			0x103
-#define REP_NOTIN		0x104
+#define REP_ERR			0x800
+#define REP_CACHE_HIT		0x801
+#define REP_CACHE_MISS		0x802
+#define REP_OK			0x803
+#define REP_NOTIN		0x804
 
 /* Network error replies */
 #define ERR_VER			0x101	/* Version mismatch */
