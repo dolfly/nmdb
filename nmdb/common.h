@@ -18,6 +18,7 @@ struct  {
 	int tipc_upper;
 	int numobjs;
 	int foreground;
+	int passive;
 	char *dbname;
 } settings;
 

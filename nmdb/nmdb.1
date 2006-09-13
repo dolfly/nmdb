@@ -2,7 +2,7 @@
 .SH NAME
 nmdb - A TIPC-based database manager
 .SH SYNOPSYS
-nmdb [-d dbpath] [-l lower] [-L upper] [-c nobj] [-f] [-h]
+nmdb [-d dbpath] [-l lower] [-L upper] [-c nobj] [-f] [-p] [-h]
 .SH DESCRIPTION
 
 nmdb is a TIPC-based database manager.
@@ -57,6 +57,16 @@ hold 128 thousand objects.
 .B "-f"
 Stay in the foreground, don't fork. Useful for debugging. The default is to
 fork.
+.TP
+.B "-p"
+Enable passive mode, where the server never replies requests, but acts upon
+them. It's useful when you want to have a live database mirror, in case the
+main node fails. It still requires a manual restart to became active, but at
+least you have a recent up-to-date database. Be aware that it's not widely
+tested (although it should work fine), and do
+.I not
+start an active and a passive server in the same machine (it misbehaves under
+some circumnstances, and doesn't make much sense anyway).
 .TP
 .B "-h"
 Show a brief help.

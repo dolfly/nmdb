@@ -30,6 +30,9 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 	int r, c;
 	unsigned char minibuf[3 * 4];
 
+	if (settings.passive)
+		return;
+
 	/* Network format: ID (4), REP_ERR (4), error code (4) */
 	r = htonl(REP_ERR);
 	c = htonl(code);
@@ -51,6 +54,10 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 		const size_t size)
 {
 	int rv;
+
+	if (settings.passive)
+		return 1;
+
 	rv = sendto(req->fd, buf, size, 0,
 			(struct sockaddr *) req->clisa, req->clilen);
 	if (rv < 0) {
@@ -67,6 +74,9 @@ static void mini_reply(struct req_info *req, uint32_t reply)
 	/* We use a mini buffer to speedup the small replies, to avoid the
 	 * malloc() overhead. */
 	unsigned char minibuf[8];
+
+	if (settings.passive)
+		return;
 
 	reply = htonl(reply);
 	memcpy(minibuf, &(req->id), 4);
@@ -346,6 +356,9 @@ static void parse_get(struct req_info *req, int impact_db)
 	uint32_t ksize;
 	unsigned char *val = NULL;
 	size_t vsize = 0;
+
+	if (settings.passive)
+		return;
 
 	ksize = * (uint32_t *) req->payload;
 	ksize = ntohl(ksize);

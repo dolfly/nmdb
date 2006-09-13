@@ -23,6 +23,7 @@ static void help() {
 	  "  -L upper	upper TIPC port number (= lower)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
 	  "  -f		don't fork and stay in the foreground\n"
+	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -h		show this help\n"
 	  "\n"
 	  "Please report bugs to Alberto Bertogli (albertito@gmail.com)\n"
@@ -39,13 +40,15 @@ static int load_settings(int argc, char **argv)
 	settings.tipc_upper = -1;
 	settings.numobjs = -1;
 	settings.foreground = 0;
+	settings.passive = 0;
 
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
 
-	while ((c = getopt(argc, argv, "d:l:L:c:fh?")) != -1) {
+	while ((c = getopt(argc, argv, "d:l:L:c:fph?")) != -1) {
 		switch(c) {
 		case 'd':
+			free(settings.dbname);
 			settings.dbname = malloc(strlen(optarg) + 1);
 			strcpy(settings.dbname, optarg);
 			break;
@@ -60,6 +63,9 @@ static int load_settings(int argc, char **argv)
 			break;
 		case 'f':
 			settings.foreground = 1;
+			break;
+		case 'p':
+			settings.passive = 1;
 			break;
 		case 'h':
 		case '?':
