@@ -1,11 +1,10 @@
 
 Server:
-* Passive mode
 * Export stats
 * Test it's endian-clean (it should work fine)
+* Live switch from passive to active (command? signal?)
 
 Library:
-* Update documentation
 * Support multithreading and/with non-blocking API
 * Automatic server selection
 
