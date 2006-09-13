@@ -2,8 +2,7 @@
 #include <pthread.h>		/* threading functions */
 #include <time.h>		/* nanosleep() */
 #include <errno.h>		/* ETIMEDOUT */
-
-#include <stdio.h>
+#include <stdio.h>		/* perror() */
 
 #include "common.h"
 #include "db.h"

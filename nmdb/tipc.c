@@ -316,8 +316,8 @@ static void parse_msg(struct req_info *req, unsigned char *buf, size_t bsize)
 	payload = buf + 8;
 	psize = bsize - 8;
 
-	/* store the id encoded in network byte order, so that we don't have
-	 * to calculate it at send time */
+	/* Store the id encoded in network byte order, so that we don't have
+	 * to calculate it at send time. */
 	req->id = htonl(id);
 	req->cmd = cmd;
 	req->payload = payload;
@@ -458,7 +458,7 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 			 * synchronous operation, asynchronous don't mind
 			 * waiting. It does have a measurable impact on
 			 * performance (2083847usec vs 2804973usec for sets on
-			 * "test2d 100000 10 10". */
+			 * "test2d 100000 10 10"). */
 			queue_signal(op_queue);
 		}
 		return;
