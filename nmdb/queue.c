@@ -23,9 +23,10 @@ struct queue *queue_create()
 	pthread_mutex_init(&(q->lock), &attr);
 	pthread_mutexattr_destroy(&attr);
 
+	pthread_cond_init(&(q->cond), NULL);
+
 	return q;
 }
-
 
 void queue_free(struct queue *q)
 {
@@ -44,8 +45,25 @@ void queue_free(struct queue *q)
 }
 
 
-#define queue_lock(q) do { pthread_mutex_lock(&((q)->lock)); } while (0)
-#define queue_unlock(q) do { pthread_mutex_unlock(&((q)->lock)); } while (0)
+void queue_lock(struct queue *q)
+{
+	pthread_mutex_lock(&(q->lock));
+}
+
+void queue_unlock(struct queue *q)
+{
+	pthread_mutex_unlock(&(q->lock));
+}
+
+void queue_signal(struct queue *q)
+{
+	pthread_cond_signal(&(q->cond));
+}
+
+int queue_timedwait(struct queue *q, struct timespec *ts)
+{
+	return pthread_cond_timedwait(&(q->cond), &(q->lock), ts);
+}
 
 
 struct queue_entry *queue_entry_create()
@@ -82,7 +100,6 @@ void queue_entry_free(struct queue_entry *e) {
 
 void queue_put(struct queue *q, struct queue_entry *e)
 {
-	queue_lock(q);
 	if (q->top == NULL) {
 		q->top = q->bottom = e;
 	} else {
@@ -90,30 +107,29 @@ void queue_put(struct queue *q, struct queue_entry *e)
 		q->top = e;
 	}
 	q->size += 1;
-	queue_unlock(q);
 	return;
 }
-
 
 struct queue_entry *queue_get(struct queue *q)
 {
 	struct queue_entry *e, *t;
 
-	queue_lock(q);
-	if (q->bottom == NULL) {
-		e = NULL;
-	} else {
-		e = q->bottom;
-		t = q->bottom->prev;
-		q->bottom = t;
-		if (t == NULL) {
-			/* it's empty now */
-			q->top = NULL;
-		}
+	if (q->bottom == NULL)
+		return NULL;
+
+	e = q->bottom;
+	t = q->bottom->prev;
+	q->bottom = t;
+	if (t == NULL) {
+		/* it's empty now */
+		q->top = NULL;
 	}
 	q->size -= 1;
-	queue_unlock(q);
 	return e;
 }
 
+int queue_isempty(struct queue *q)
+{
+	return (q->size == 0);
+}
 

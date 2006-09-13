@@ -20,7 +20,7 @@ default: all
 all: nmdb
 
 nmdb: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -levent -lpthread -lqdbm -o nmdb
+	$(CC) $(CFLAGS) $(OBJS) -levent -lpthread -lrt -lqdbm -o nmdb
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@

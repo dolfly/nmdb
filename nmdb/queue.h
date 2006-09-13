@@ -8,8 +8,9 @@
 
 struct queue {
 	pthread_mutex_t lock;
-	size_t size;
+	pthread_cond_t cond;
 
+	size_t size;
 	struct queue_entry *top, *bottom;
 };
 
@@ -35,9 +36,14 @@ void queue_free(struct queue *q);
 struct queue_entry *queue_entry_create();
 void queue_entry_free(struct queue_entry *e);
 
+void queue_lock(struct queue *q);
+void queue_unlock(struct queue *q);
+void queue_signal(struct queue *q);
+int queue_timedwait(struct queue *q, struct timespec *ts);
+
 void queue_put(struct queue *q, struct queue_entry *e);
 struct queue_entry *queue_get(struct queue *q);
-
+int queue_isempty(struct queue *q);
 
 #endif
 

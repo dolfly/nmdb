@@ -382,7 +382,10 @@ static void parse_get(struct req_info *req, int impact_db)
 			rep_send_error(req, ERR_MEM);
 			return;
 		}
+		queue_lock(op_queue);
 		queue_put(op_queue, e);
+		queue_unlock(op_queue);
+		queue_signal(op_queue);
 		return;
 	} else {
 		tipc_reply_get(req, REP_CACHE_HIT, val, vsize);
@@ -444,10 +447,19 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 			rep_send_error(req, ERR_MEM);
 			return;
 		}
+		queue_lock(op_queue);
 		queue_put(op_queue, e);
+		queue_unlock(op_queue);
 
 		if (async) {
 			mini_reply(req, REP_OK);
+		} else {
+			/* Signal the DB thread it has work only if it's a
+			 * synchronous operation, asynchronous don't mind
+			 * waiting. It does have a measurable impact on
+			 * performance (2083847usec vs 2804973usec for sets on
+			 * "test2d 100000 10 10". */
+			queue_signal(op_queue);
 		}
 		return;
 	} else {
@@ -493,11 +505,17 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 			rep_send_error(req, ERR_MEM);
 			return;
 		}
+		queue_lock(op_queue);
 		queue_put(op_queue, e);
+		queue_unlock(op_queue);
 
 		if (async) {
 			mini_reply(req, REP_OK);
+		} else {
+			/* See comment on parse_set(). */
+			queue_signal(op_queue);
 		}
+
 		return;
 	}
 

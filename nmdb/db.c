@@ -1,6 +1,7 @@
 
 #include <pthread.h>		/* threading functions */
 #include <time.h>		/* nanosleep() */
+#include <errno.h>		/* ETIMEDOUT */
 
 #include <stdio.h>
 
@@ -44,27 +45,45 @@ void db_loop_stop(pthread_t *thread)
 
 static void *db_loop(void *arg)
 {
-	struct queue_entry *e;
+	int rv;
 	struct timespec ts;
+	struct queue_entry *e;
 	db_t *db;
 
 	db = (db_t *) arg;
 
-	/* We will sleep this amount of time when the queue is empty. It's
-	 * hardcoded, but needs testing. Currenly 0.2s. */
-	ts.tv_sec = 0;
-	ts.tv_nsec = 1000000 / 5;
-
 	for (;;) {
+		/* Condition waits are specified with absolute timeouts, see
+		 * pthread_cond_timedwait()'s SUSv3 specification for more
+		 * information. We need to calculate it each time.
+		 * We sleep for 1 sec. There's no real need for it to be too
+		 * fast (it's only used so that stop detection doesn't take
+		 * long), but we don't want it to be too slow either. */
+		clock_gettime(CLOCK_REALTIME, &ts);
+		ts.tv_sec += 1;
+
+		rv = 0;
+		queue_lock(op_queue);
+		while (queue_isempty(op_queue) && rv == 0) {
+			rv = queue_timedwait(op_queue, &ts);
+		}
+
+		if (rv != 0 && rv != ETIMEDOUT) {
+			perror("Error in queue_timedwait()");
+			continue;
+		}
+
 		e = queue_get(op_queue);
+		queue_unlock(op_queue);
+
 		if (e == NULL) {
 			if (loop_should_stop) {
 				break;
 			} else {
-				nanosleep(&ts, NULL);
 				continue;
 			}
 		}
+
 		process_op(db, e);
 
 		/* Free the entry that was allocated when tipc queued the
