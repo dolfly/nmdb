@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 	int i, r, times;
 	unsigned char *key, *val;
 	size_t ksize, vsize;
-	unsigned long elapsed, misses = 0;
+	unsigned long s_elapsed, g_elapsed, d_elapsed, misses = 0;
 	nmdb_t *db;
 
 	if (argc != 4) {
@@ -39,13 +39,17 @@ int main(int argc, char **argv)
 	val = malloc(vsize);
 	memset(val, 0, vsize);
 
+	if (key == NULL || val == NULL) {
+		perror("Error: malloc()");
+		return 1;
+	}
+
 	db = nmdb_init(-1);
 	if (db == NULL) {
 		perror("nmdb_init() failed");
 		return 1;
 	}
 
-	printf("set... ");
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
@@ -56,13 +60,11 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
-	elapsed = timer_stop();
-	printf("%lu\n", elapsed);
+	s_elapsed = timer_stop();
 
 	memset(key, 0, ksize);
 	free(val);
 	val = malloc(128 * 1024);
-	printf("get... ");
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
@@ -74,13 +76,9 @@ int main(int argc, char **argv)
 			misses++;
 		}
 	}
-	elapsed = timer_stop();
-	printf("%lu\n", elapsed);
+	g_elapsed = timer_stop();
 	free(val);
 
-	printf("get misses: %ld\n", misses);
-
-	printf("del... ");
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
@@ -90,8 +88,8 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
-	elapsed = timer_stop();
-	printf("%lu\n", elapsed);
+	d_elapsed = timer_stop();
+	printf("%lu %lu %lu %lu\n", s_elapsed, g_elapsed, d_elapsed, misses);
 
 	free(key);
 	nmdb_free(db);
