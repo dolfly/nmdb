@@ -6,10 +6,16 @@
 #include <sys/socket.h>		/* socklen_t */
 #include <linux/tipc.h>		/* struct sockaddr_tipc */
 
-typedef struct nmdb_t {
+struct nmdb_srv {
+	int port;
 	int fd;
 	struct sockaddr_tipc srvsa;
 	socklen_t srvlen;
+};
+
+typedef struct nmdb_t {
+	unsigned int nservers;
+	struct nmdb_srv *servers;
 } nmdb_t;
 
 nmdb_t *nmdb_init(int port);

@@ -22,29 +22,40 @@ nmdb_t *nmdb_init(int port)
 {
 	int fd;
 	nmdb_t *db;
+	struct nmdb_srv *server;
 
 	db = malloc(sizeof(nmdb_t));
 	if (db == NULL) {
 		return NULL;
 	}
 
-	if (port < 0)
-		port = SERVER_INST;
-
-	db->srvsa.family = AF_TIPC;
-	db->srvsa.addrtype = TIPC_ADDR_NAMESEQ;
-	db->srvsa.addr.nameseq.type = SERVER_TYPE;
-	db->srvsa.addr.nameseq.lower = port;
-	db->srvsa.addr.nameseq.upper = port;
-	db->srvsa.scope = TIPC_CLUSTER_SCOPE;
-	db->srvlen = (socklen_t) sizeof(db->srvsa);
-
-	fd = socket(AF_TIPC, SOCK_RDM, 0);
-	if (fd < 0) {
+	server = malloc(sizeof(struct nmdb_srv));
+	if (server == NULL) {
 		free(db);
 		return NULL;
 	}
-	db->fd = fd;
+
+	db->servers = server;
+	db->nservers++;
+
+	if (port < 0)
+		port = SERVER_INST;
+
+	server->srvsa.family = AF_TIPC;
+	server->srvsa.addrtype = TIPC_ADDR_NAMESEQ;
+	server->srvsa.addr.nameseq.type = SERVER_TYPE;
+	server->srvsa.addr.nameseq.lower = port;
+	server->srvsa.addr.nameseq.upper = port;
+	server->srvsa.scope = TIPC_CLUSTER_SCOPE;
+	server->srvlen = (socklen_t) sizeof(server->srvsa);
+
+	fd = socket(AF_TIPC, SOCK_RDM, 0);
+	if (fd < 0) {
+		free(db->servers);
+		free(db);
+		return NULL;
+	}
+	server->fd = fd;
 
 	return db;
 }
@@ -52,37 +63,44 @@ nmdb_t *nmdb_init(int port)
 
 int nmdb_free(nmdb_t *db)
 {
-	close(db->fd);
+	int i;
+
+	for (i = 0; i < db->nservers; i++) {
+		close((db->servers[i]).fd);
+	}
+	free(db->servers);
 	free(db);
 	return 1;
 }
 
 
-static int srv_send(nmdb_t *db, const unsigned char *buf, size_t bsize)
+static int srv_send(struct nmdb_srv *srv,
+		const unsigned char *buf, size_t bsize)
 {
 	ssize_t rv;
-	rv = sendto(db->fd, buf, bsize, 0, (struct sockaddr *) &(db->srvsa),
-			db->srvlen);
+	rv = sendto(srv->fd, buf, bsize, 0, (struct sockaddr *) &(srv->srvsa),
+			srv->srvlen);
 	if (rv <= 0)
 		return 0;
 	return 1;
 }
 
-static ssize_t srv_recv(nmdb_t *db, unsigned char *buf, size_t bsize)
+static ssize_t srv_recv(struct nmdb_srv *srv,
+		unsigned char *buf, size_t bsize)
 {
 	ssize_t rv;
-	rv = recv(db->fd, buf, bsize, 0);
+	rv = recv(srv->fd, buf, bsize, 0);
 	return rv;
-
 }
 
-static uint32_t get_rep(nmdb_t *db, unsigned char *buf, size_t bsize,
+static uint32_t get_rep(struct nmdb_srv *srv,
+		unsigned char *buf, size_t bsize,
 		unsigned char **payload, size_t *psize)
 {
 	ssize_t t;
 	uint32_t id, reply;
 
-	t = srv_recv(db, buf, bsize);
+	t = srv_recv(srv, buf, bsize);
 	if (t < 4 + 4) {
 		return -1;
 	}
@@ -103,15 +121,22 @@ static uint32_t get_rep(nmdb_t *db, unsigned char *buf, size_t bsize,
 	return reply;
 }
 
+static struct nmdb_srv *select_srv(nmdb_t *db,
+		const unsigned char *key, size_t ksize)
+{
+	return &(db->servers[0]);
+}
 
 
-static ssize_t do_get(nmdb_t *db, const unsigned char *key, size_t ksize,
+static ssize_t do_get(nmdb_t *db,
+		const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize, int impact_db)
 {
 	ssize_t rv, t;
 	unsigned char *buf, *p;
 	size_t bsize, reqsize, psize;
 	uint32_t request, reply;
+	struct nmdb_srv *srv;
 
 	if (impact_db) {
 		request = REQ_GET;
@@ -140,13 +165,14 @@ static ssize_t do_get(nmdb_t *db, const unsigned char *key, size_t ksize,
 	memcpy(p, key, ksize);
 	reqsize = 3 * 4 + ksize;
 
-	t = srv_send(db, buf, reqsize);
+	srv = select_srv(db, key, ksize);
+	t = srv_send(srv, buf, reqsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(db, buf, bsize, &p, &psize);
+	reply = get_rep(srv, buf, bsize, &p, &psize);
 
 	if (reply == REP_CACHE_MISS || reply == REP_NOTIN) {
 		rv = 0;
@@ -196,6 +222,7 @@ static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 	unsigned char *buf, *p;
 	size_t bsize;
 	uint32_t request, reply;
+	struct nmdb_srv *srv;
 
 	if (impact_db) {
 		if (async)
@@ -226,13 +253,14 @@ static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 	p += ksize;
 	memcpy(p, val, vsize);
 
-	t = srv_send(db, buf, bsize);
+	srv = select_srv(db, key, ksize);
+	t = srv_send(srv, buf, bsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(db, buf, bsize, NULL, NULL);
+	reply = get_rep(srv, buf, bsize, NULL, NULL);
 
 	if (reply == REP_OK) {
 		rv = 1;
@@ -275,6 +303,7 @@ int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 	unsigned char *buf;
 	size_t bsize;
 	uint32_t request, reply;
+	struct nmdb_srv *srv;
 
 	if (impact_db) {
 		if (async)
@@ -301,13 +330,14 @@ int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 	* ((uint32_t *) buf + 2) = htonl(ksize);
 	memcpy(buf + 3 * 4, key, ksize);
 
-	t = srv_send(db, buf, bsize);
+	srv = select_srv(db, key, ksize);
+	t = srv_send(srv, buf, bsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(db, buf, bsize, NULL, NULL);
+	reply = get_rep(srv, buf, bsize, NULL, NULL);
 
 	if (reply == REP_OK) {
 		rv = 1;
