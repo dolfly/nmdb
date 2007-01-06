@@ -12,7 +12,7 @@
 int main(int argc, char **argv)
 {
 	int i, r, times;
-	unsigned char *key, *val;
+	unsigned char *key, *val, *gval;
 	size_t ksize, vsize;
 	unsigned long elapsed, misses = 0;
 	nmdb_t *db;
@@ -46,11 +46,11 @@ int main(int argc, char **argv)
 	elapsed = timer_stop();
 	printf("%lu\n", elapsed);
 
-	val = malloc(128 * 1024);
+	gval = malloc(128 * 1024);
 	printf("get... ");
 	timer_start();
 	for (i = 0; i < times; i++) {
-		r = nmdb_cache_get(db, key, ksize, val, vsize);
+		r = nmdb_cache_get(db, key, ksize, gval, vsize);
 		if (r < 0) {
 			perror("Get");
 			return 1;
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 	}
 	elapsed = timer_stop();
 	printf("%lu\n", elapsed);
-	free(val);
+	free(gval);
 
 	printf("get misses: %ld\n", misses);
 
