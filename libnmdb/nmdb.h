@@ -8,17 +8,18 @@
 
 struct nmdb_srv {
 	int port;
-	int fd;
 	struct sockaddr_tipc srvsa;
 	socklen_t srvlen;
 };
 
 typedef struct nmdb_t {
+	int fd;
 	unsigned int nservers;
 	struct nmdb_srv *servers;
 } nmdb_t;
 
 nmdb_t *nmdb_init(int port);
+int nmdb_add_server(nmdb_t *db, int port);
 int nmdb_free(nmdb_t *db);
 
 ssize_t nmdb_get(nmdb_t *db, const unsigned char *key, size_t ksize,
