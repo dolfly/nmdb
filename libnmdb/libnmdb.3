@@ -6,7 +6,7 @@ libnmdb - Library for interacting with a nmdb server
 .B #include <nmdb.h>
 .sp
 .BI "nmdb_t *nmdb_init(int " port ");"
-.sp
+.BI "int nmdb_add_server(nmdb_t *" db ", int " port ");"
 .BI "int nmdb_free(nmdb_t *" db ");"
 .sp
 .BI "int nmdb_set(nmdb_t *" db ","
@@ -46,6 +46,12 @@ type, which well be used as the first argument for the rest of the functions
 and identifies a connection to the server. It takes a single argument, which
 is the TIPC port to use. If you are in doubt, use -1 which will use the
 default value.
+
+Optionally, you can add more servers to the server pool, using
+.BR nmdb_add_server ().
+You can add any number of servers, and each time a request is made, one will
+be selected. Be aware that you should add all the servers before start using
+the database.
 
 To dispose a connection, use
 .BR nmdb_free ().
