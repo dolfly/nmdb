@@ -6,9 +6,7 @@ Server:
 
 Library:
 * Support multithreading and/with non-blocking API
-* Automatic server selection
 
 Python:
 * Write test-cases to test the binding, the library and the server
-* Document the module
 
