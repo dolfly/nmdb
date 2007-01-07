@@ -35,6 +35,23 @@ static void db_dealloc(nmdbobject *db)
 }
 
 
+/* add server */
+static PyObject *db_add_server(nmdbobject *db, PyObject *args)
+{
+	int port;
+	int rv;
+
+	if (!PyArg_ParseTuple(args, "i:add_server", &port)) {
+		return NULL;
+	}
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_add_server(db->db, port);
+	Py_END_ALLOW_THREADS
+
+	return PyLong_FromLong(rv);
+}
+
 /* cache set */
 static PyObject *db_cache_set(nmdbobject *db, PyObject *args)
 {
@@ -222,6 +239,7 @@ static PyObject *db_delete_sync(nmdbobject *db, PyObject *args)
 /* nmdb method table */
 
 static PyMethodDef nmdb_methods[] = {
+	{ "add_server", (PyCFunction) db_add_server, METH_VARARGS, NULL },
 	{ "cache_set", (PyCFunction) db_cache_set, METH_VARARGS, NULL },
 	{ "cache_get", (PyCFunction) db_cache_get, METH_VARARGS, NULL },
 	{ "cache_delete", (PyCFunction) db_cache_delete, METH_VARARGS, NULL },
