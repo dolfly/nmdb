@@ -242,6 +242,7 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 		}
 		free(e->val);
 		e->val = v;
+		e->vsize = vsize;
 		memcpy(e->val, val, vsize);
 
 		/* promote the entry to the top of the list if necessary */
