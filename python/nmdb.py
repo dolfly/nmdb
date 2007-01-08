@@ -102,11 +102,11 @@ class _nmdbDict (object):
 	def __contains__(self, key):
 		"Returns True if the key is in the database, False otherwise."
 		if self.autopickle:
-			key = hash(key)
+			key = str(hash(key))
 		try:
 			r = self.get(key)
-		except:
-			raise NetworkError
+		except KeyError:
+			return False
 		if not r:
 			return False
 		return True
