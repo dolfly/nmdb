@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	elapsed = timer_stop();
 	printf("%lu\n", elapsed);
 
-	gval = malloc(128 * 1024);
+	gval = malloc(70 * 1024);
 	printf("get... ");
 	timer_start();
 	for (i = 0; i < times; i++) {

@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 
 	memset(key, 0, ksize);
 	free(val);
-	val = malloc(128 * 1024);
+	val = malloc(70 * 1024);
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;

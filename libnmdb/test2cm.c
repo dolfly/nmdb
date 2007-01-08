@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 	s_elapsed = timer_stop();
 
 	memset(key, 0, ksize);
-	gval = malloc(128 * 1024);
+	gval = malloc(70 * 1024);
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
