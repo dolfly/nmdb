@@ -230,9 +230,9 @@ static ssize_t do_get(nmdb_t *db,
 	 * 		vsize bytes key.
 	 *
 	 * We don't know vsize beforehand, but we do know TIPC's max packet is
-	 * 66000. We malloc 128k just in case.
+	 * 66000. We malloc 70k just in case.
 	 */
-	bsize = 128 * 1024;
+	bsize = 70 * 1024;
 	buf = malloc(bsize);
 	if (buf == NULL)
 		return -1;
