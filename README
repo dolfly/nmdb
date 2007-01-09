@@ -17,6 +17,14 @@ This source distribution is composed of several parts: the server called
 directory, and is licensed individually. See the LICENSE file for more
 information.
 
+
+Documentation
+-------------
+
+Most documentation is in the nmdb and libnmdb manpages, and inside the doc/
+directory. It is recommended that you read the User Guide (doc/guide.rst, or
+the online version) to learn how to setup and use nmdb.
+
 For additional documentation and resources, go to the project's website at
 http://auriga.wearlab.de/~alb/nmdb.
 
