@@ -9,20 +9,26 @@ typedef unsigned char u_char;
 #include <sys/time.h>
 #include <event.h>
 
+#include "common.h"
 #include "tipc.h"
 
 
-static void signal_handler(int fd, short event, void *arg)
+static void exit_sighandler(int fd, short event, void *arg)
 {
 	printf("Got signal! Puf!\n");
 	event_loopexit(NULL);
 }
 
+static void passive_to_active_sighandler(int fd, short event, void *arg)
+{
+	printf("Passive toggle!\n");
+	settings.passive = !settings.passive;
+}
 
 void net_loop(void)
 {
 	int tipc_fd;
-	struct event srv_evt, sigterm_evt, sigint_evt;
+	struct event srv_evt, sigterm_evt, sigint_evt, sigusr2_evt;
 
 	tipc_fd = tipc_init();
 	if (tipc_fd < 0) {
@@ -36,10 +42,13 @@ void net_loop(void)
 			&srv_evt);
 	event_add(&srv_evt, NULL);
 
-	signal_set(&sigterm_evt, SIGTERM, signal_handler, &sigterm_evt);
+	signal_set(&sigterm_evt, SIGTERM, exit_sighandler, &sigterm_evt);
 	signal_add(&sigterm_evt, NULL);
-	signal_set(&sigint_evt, SIGINT, signal_handler, &sigint_evt);
+	signal_set(&sigint_evt, SIGINT, exit_sighandler, &sigint_evt);
 	signal_add(&sigint_evt, NULL);
+	signal_set(&sigusr2_evt, SIGUSR2, passive_to_active_sighandler,
+			&sigusr2_evt);
+	signal_add(&sigusr2_evt, NULL);
 
 	event_dispatch();
 }
