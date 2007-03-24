@@ -29,13 +29,13 @@ ssize_t nmdb_cache_get(nmdb_t *db, const unsigned char *key, size_t ksize,
 
 int nmdb_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize);
-int nmdb_set_async(nmdb_t *db, const unsigned char *key, size_t ksize,
+int nmdb_set_sync(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize);
 int nmdb_cache_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize);
 
 int nmdb_del(nmdb_t *db, const unsigned char *key, size_t ksize);
-int nmdb_del_async(nmdb_t *db, const unsigned char *key, size_t ksize);
+int nmdb_del_sync(nmdb_t *db, const unsigned char *key, size_t ksize);
 int nmdb_cache_del(nmdb_t *db, const unsigned char *key, size_t ksize);
 
 #endif
