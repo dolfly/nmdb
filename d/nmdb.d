@@ -173,5 +173,15 @@ class DB
 		return set(key, val);
 	}
 
+	bool opIn_r(char[] key)
+	{
+		try {
+			get(key);
+		} catch (KeyNotFound(s)) {
+			return false;
+		}
+		return true;
+	}
+
 }
 
