@@ -22,7 +22,7 @@ struct cache *cache_table;
 struct queue *op_queue;
 
 
-static void help() {
+static void help(void) {
 	char h[] = \
 	  "nmdb [options]\n"
 	  "  -d dbpath	database path ('database', must be created with dpmgr)\n"

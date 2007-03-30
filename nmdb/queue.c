@@ -5,7 +5,7 @@
 #include "queue.h"
 
 
-struct queue *queue_create()
+struct queue *queue_create(void)
 {
 	struct queue *q;
 	pthread_mutexattr_t attr;
@@ -66,7 +66,7 @@ int queue_timedwait(struct queue *q, struct timespec *ts)
 }
 
 
-struct queue_entry *queue_entry_create()
+struct queue_entry *queue_entry_create(void)
 {
 	struct queue_entry *e;
 

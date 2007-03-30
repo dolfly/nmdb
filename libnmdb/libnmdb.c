@@ -178,7 +178,7 @@ static uint32_t get_rep(nmdb_t *db, struct nmdb_srv *srv,
 }
 
 /* Hash function used internally by select_srv(). See RFC 1071. */
-uint32_t checksum(const unsigned char *buf, size_t bsize)
+static uint32_t checksum(const unsigned char *buf, size_t bsize)
 {
 	uint32_t sum = 0;
 
@@ -375,7 +375,7 @@ int nmdb_cache_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 
 
 
-int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
+static int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int impact_db, int async)
 {
 	ssize_t rv, t;

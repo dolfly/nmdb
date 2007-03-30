@@ -11,6 +11,7 @@ typedef unsigned char u_char;
 
 #include "common.h"
 #include "tipc.h"
+#include "net.h"
 
 
 static void exit_sighandler(int fd, short event, void *arg)

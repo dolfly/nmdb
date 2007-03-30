@@ -25,11 +25,11 @@
 
 static struct timeval tv_s, tv_e;
 
-static void timer_start() {
+static void timer_start(void) {
 	gettimeofday(&tv_s, NULL);
 }
 
-static unsigned long timer_stop() {
+static unsigned long timer_stop(void) {
 	gettimeofday(&tv_e, NULL);
 	return (tv_e.tv_sec - tv_s.tv_sec) * 1000000ul
 		+ (tv_e.tv_usec - tv_s.tv_usec);
