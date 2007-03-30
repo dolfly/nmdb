@@ -15,6 +15,13 @@
 #define DEFDBNAME "database"
 
 
+/* Define the common structures that are used throughout the whole server. */
+struct settings settings;
+struct stats stats;
+struct cache *cache_table;
+struct queue *op_queue;
+
+
 static void help() {
 	char h[] = \
 	  "nmdb [options]\n"

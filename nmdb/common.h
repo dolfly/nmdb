@@ -6,27 +6,29 @@
 
 /* The cache table */
 #include "cache.h"
-struct cache *cache_table;
+extern struct cache *cache_table;
 
 /* The queue for database operations */
 #include "queue.h"
-struct queue *op_queue;
+extern struct queue *op_queue;
 
 /* Settings */
-struct  {
+struct settings {
 	int tipc_lower;
 	int tipc_upper;
 	int numobjs;
 	int foreground;
 	int passive;
 	char *dbname;
-} settings;
+};
+extern struct settings settings;
 
 /* Statistics */
-struct {
+struct stats {
 	unsigned long net_version_mismatch;
 	unsigned long net_broken_req;
 	unsigned long net_unk_req;
-} stats;
+};
+extern struct stats stats;
 #endif
 
