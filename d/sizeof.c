@@ -10,8 +10,6 @@
 int main()
 {
 	printf("sizeof(struct nmdb_t) = %lu\n", sizeof(struct nmdb_t));
-	printf("sizeof(size_t) = %lu\n", sizeof(size_t));
-	printf("sizeof(ssize_t) = %lu\n", sizeof(ssize_t));
 	return 0;
 }
 
