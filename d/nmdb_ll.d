@@ -19,11 +19,9 @@ module nmdb_ll;
  */
 
 version (X86_64) {
-	/* The following has been generated on a Pentium D running Gentoo in
-	 * 64 bit mode. It should be the same on all Linux amd64 boxes. */
+	/* Generated on a Pentium D running Gentoo in 64 bits mode. It should
+	 * be the same on all Linux amd64 boxes. */
 	alias ubyte[16] nmdb_t;
-	alias ulong size_t;
-	alias long ssize_t;
 }
 
 
@@ -34,9 +32,9 @@ extern (C) nmdb_t *nmdb_init(int port);
 extern (C) int nmdb_add_server(nmdb_t *db, int port);
 extern (C) int nmdb_free(nmdb_t *db);
 
-extern (C) ssize_t nmdb_get(nmdb_t *db, ubyte *key, size_t ksize,
+extern (C) ptrdiff_t nmdb_get(nmdb_t *db, ubyte *key, size_t ksize,
 		ubyte *val, size_t vsize);
-extern (C) ssize_t nmdb_cache_get(nmdb_t *db, ubyte *key, size_t ksize,
+extern (C) ptrdiff_t nmdb_cache_get(nmdb_t *db, ubyte *key, size_t ksize,
 		ubyte *val, size_t vsize);
 
 extern (C) int nmdb_set(nmdb_t *db, ubyte *key, size_t ksize,

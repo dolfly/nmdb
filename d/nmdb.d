@@ -41,7 +41,7 @@ class DB
 
 	private char[] do_get(char[] key, int mode)
 	{
-		long size;
+		ptrdiff_t size;
 		ubyte* k = cast(ubyte *) key.ptr;
 		auto v = new char[256];
 
@@ -61,7 +61,7 @@ class DB
 			throw new Exception("Can't get value");
 		}
 
-		return v[0 .. cast(ulong) size];
+		return v[0 .. cast(size_t) size];
 	}
 
 	private void do_set(char[] key, char[] val, int mode)
