@@ -18,6 +18,12 @@ module nmdb_ll;
  * Should nmdb_t change, the numbers must be updated to reflect the new sizes.
  */
 
+version (X86) {
+	/* Generated on a Pentium II running Ubuntu. It should be the same on
+	 * all x86 Linux boxes. */
+	alias ubyte[12] nmdb_t;
+}
+
 version (X86_64) {
 	/* Generated on a Pentium D running Gentoo in 64 bits mode. It should
 	 * be the same on all Linux amd64 boxes. */
