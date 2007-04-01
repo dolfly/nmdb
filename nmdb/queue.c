@@ -32,11 +32,18 @@ void queue_free(struct queue *q)
 {
 	struct queue_entry *e;
 
+	/* We know when we're called there is no other possible queue user;
+	 * however, we don't have any sane way to tell sparse about this, so
+	 * fake the acquisition of the lock to comply with the operations
+	 * performed inside. Obviously, it would be completely safe to do the
+	 * queue_lock()/unlock(), but it'd be misleading to the reader */
+	__acquire(q->lock);
 	e = queue_get(q);
 	while (e != NULL) {
 		queue_entry_free(e);
 		e = queue_get(q);
 	}
+	__release(q->lock);
 
 	pthread_mutex_destroy(&(q->lock));
 

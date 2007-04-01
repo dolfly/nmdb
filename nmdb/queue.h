@@ -5,6 +5,7 @@
 #include <pthread.h>		/* for mutexes */
 #include <stdint.h>		/* for uint32_t */
 #include "req.h"		/* for req_info */
+#include "sparse.h"
 
 struct queue {
 	pthread_mutex_t lock;
@@ -38,14 +39,20 @@ void queue_free(struct queue *q);
 struct queue_entry *queue_entry_create();
 void queue_entry_free(struct queue_entry *e);
 
-void queue_lock(struct queue *q);
-void queue_unlock(struct queue *q);
+void queue_lock(struct queue *q)
+	__acquires(q->lock);
+void queue_unlock(struct queue *q)
+	__releases(q->lock);
 void queue_signal(struct queue *q);
-int queue_timedwait(struct queue *q, struct timespec *ts);
+int queue_timedwait(struct queue *q, struct timespec *ts)
+	__with_lock_acquired(q->lock);
 
-void queue_put(struct queue *q, struct queue_entry *e);
-struct queue_entry *queue_get(struct queue *q);
-int queue_isempty(struct queue *q);
+void queue_put(struct queue *q, struct queue_entry *e)
+	__with_lock_acquired(q->lock);
+struct queue_entry *queue_get(struct queue *q)
+	__with_lock_acquired(q->lock);
+int queue_isempty(struct queue *q)
+	__with_lock_acquired(q->lock);
 
 #endif
 

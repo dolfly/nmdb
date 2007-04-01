@@ -14,6 +14,7 @@
 #include "req.h"
 #include "log.h"
 #include "netutils.h"
+#include "sparse.h"
 
 
 static void *db_loop(void *arg);
@@ -74,6 +75,9 @@ static void *db_loop(void *arg)
 
 		if (rv != 0 && rv != ETIMEDOUT) {
 			errlog("Error in queue_timedwait()");
+			/* When the timedwait fails the lock is released, so
+			 * we need to properly annotate this case. */
+			__release(op_queue->lock);
 			continue;
 		}
 
