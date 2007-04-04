@@ -38,6 +38,13 @@ class DB
 		nmdb_free(db);
 	}
 
+	void add_server(int port)
+	{
+		int r = nmdb_add_server(db, port);
+		if (r == 0) {
+			throw new Exception("Can't add server");
+		}
+	}
 
 	private char[] do_get(char[] key, int mode)
 	{
