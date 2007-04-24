@@ -9,8 +9,8 @@ includes subdirectories).
 As a brief resume, here's how each sub-project is licensed:
  * nmdb: OSL 3.0
  * lib: BOLA (Public domain)
- * python: BOLA (Public domain)
- * d: BOLA (Public domain)
- * newlisp: BOLA (Public domain)
+ * bindings/python: BOLA (Public domain)
+ * bindings/d: BOLA (Public domain)
+ * bindings/newlisp: BOLA (Public domain)
 
 
