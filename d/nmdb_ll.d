@@ -1,4 +1,6 @@
 
+/* Low-level bindings, used by nmdb.d. */
+
 module nmdb_ll;
 
 

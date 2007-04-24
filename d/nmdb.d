@@ -1,4 +1,9 @@
 
+/*
+ * nmdb bindings for the Digital Mars D programming language.
+ * Alberto Bertogli (albertito@gmail.com)
+ */
+
 module nmdb;
 
 import nmdb_ll;
