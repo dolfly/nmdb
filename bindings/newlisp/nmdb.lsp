@@ -54,6 +54,9 @@
 (import libnmdb "nmdb_del_sync")
 (import libnmdb "nmdb_cache_del")
 
+(import libnmdb "nmdb_cas")
+(import libnmdb "nmdb_cache_cas")
+
 
 ; main functions
 
@@ -106,6 +109,19 @@
 (define (db-del key) (priv-del nmdb_del key))
 (define (sync-del key) (priv-del nmdb_del_sync key))
 (define (cache-del key) (priv-del nmdb_cache_del key))
+
+
+; *-cas functions
+(define (priv-cas func key oldval newval)
+  (letn ( (keylen (length key))
+	  (ovlen (length oldval))
+	  (nvlen (length newval))
+	)
+    (func NMDB key keylen oldval ovlen newval nvlen) ) )
+
+(define (db-cas key oval nval) (priv-cas nmdb_cas key oval nval))
+(define (cache-cas key oval nval) (priv-cas nmdb_cache_cas key oval nval))
+
 
 
 (context MAIN)
