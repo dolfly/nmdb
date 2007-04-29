@@ -55,7 +55,7 @@ class DB
 	{
 		ptrdiff_t size;
 		ubyte* k = cast(ubyte *) key.ptr;
-		auto v = new char[256];
+		auto v = new char[64 * 1024];
 
 		if (mode == MODE_NORMAL || mode == MODE_SYNC) {
 			size = nmdb_get(db, k, key.length,
