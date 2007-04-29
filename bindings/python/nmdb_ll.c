@@ -124,6 +124,28 @@ static PyObject *db_cache_delete(nmdbobject *db, PyObject *args)
 	return PyLong_FromLong(rv);
 }
 
+/* cache cas */
+static PyObject *db_cache_cas(nmdbobject *db, PyObject *args)
+{
+	unsigned char *key, *oldval, *newval;
+	int ksize, ovsize, nvsize;
+	int rv;
+
+	if (!PyArg_ParseTuple(args, "s#s#s#:cache_cas", &key, &ksize,
+				&oldval, &ovsize,
+				&newval, &nvsize)) {
+		return NULL;
+	}
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_cache_cas(db->db, key, ksize, oldval, ovsize,
+			newval, nvsize);
+	Py_END_ALLOW_THREADS
+
+	return PyLong_FromLong(rv);
+}
+
+
 /* db set */
 static PyObject *db_set(nmdbobject *db, PyObject *args)
 {
@@ -196,6 +218,26 @@ static PyObject *db_delete(nmdbobject *db, PyObject *args)
 	return PyLong_FromLong(rv);
 }
 
+/* db cas */
+static PyObject *db_cas(nmdbobject *db, PyObject *args)
+{
+	unsigned char *key, *oldval, *newval;
+	int ksize, ovsize, nvsize;
+	int rv;
+
+	if (!PyArg_ParseTuple(args, "s#s#s#:cas", &key, &ksize,
+				&oldval, &ovsize,
+				&newval, &nvsize)) {
+		return NULL;
+	}
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_cas(db->db, key, ksize, oldval, ovsize, newval, nvsize);
+	Py_END_ALLOW_THREADS
+
+	return PyLong_FromLong(rv);
+}
+
 
 /* db set sync */
 static PyObject *db_set_sync(nmdbobject *db, PyObject *args)
@@ -243,9 +285,11 @@ static PyMethodDef nmdb_methods[] = {
 	{ "cache_set", (PyCFunction) db_cache_set, METH_VARARGS, NULL },
 	{ "cache_get", (PyCFunction) db_cache_get, METH_VARARGS, NULL },
 	{ "cache_delete", (PyCFunction) db_cache_delete, METH_VARARGS, NULL },
+	{ "cache_cas", (PyCFunction) db_cache_cas, METH_VARARGS, NULL },
 	{ "set", (PyCFunction) db_set, METH_VARARGS, NULL },
 	{ "get", (PyCFunction) db_get, METH_VARARGS, NULL },
 	{ "delete", (PyCFunction) db_delete, METH_VARARGS, NULL },
+	{ "cas", (PyCFunction) db_cas, METH_VARARGS, NULL },
 	{ "set_sync", (PyCFunction) db_set_sync, METH_VARARGS, NULL },
 	{ "delete_sync", (PyCFunction) db_delete_sync, METH_VARARGS, NULL },
 

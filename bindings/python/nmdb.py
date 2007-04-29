@@ -50,11 +50,12 @@ class NetworkError (Exception):
 
 
 class _nmdbDict (object):
-	def __init__(self, db, op_get, op_set, op_delete):
+	def __init__(self, db, op_get, op_set, op_delete, op_cas):
 		self.db = db
 		self.get = op_get
 		self.set = op_set
 		self.delete = op_delete
+		self._cas = op_cas
 		self.autopickle = True
 
 	def add_server(self, port):
@@ -115,22 +116,41 @@ class _nmdbDict (object):
 		"Returns True if the key is in the database, False otherwise."
 		return self.__contains__(key)
 
+	def cas(self, key, oldval, newval):
+		"Perform a compare-and-swap."
+		if self.autopickle:
+			key = str(hash(key))
+			oldval = cPickle.dumps(oldval, protocol = -1)
+			newval = cPickle.dumps(newval, protocol = -1)
+		r = self._cas(key, oldval, newval)
+		if r == 2:
+			# success
+			return 1
+		elif r == 1:
+			# no match
+			return 0
+		elif r == 0:
+			# not in
+			raise KeyError
+		else:
+			raise NetworkError
+
 
 class Cache (_nmdbDict):
 	def __init__(self, port = -1):
 		db = nmdb_ll.connect(port)
 		_nmdbDict.__init__(self, db, db.cache_get, db.cache_set,
-					db.cache_delete)
+					db.cache_delete, db.cache_cas)
 
 class DB (_nmdbDict):
 	def __init__(self, port = -1):
 		db = nmdb_ll.connect(port)
-		_nmdbDict.__init__(self, db, db.get, db.set, db.delete)
+		_nmdbDict.__init__(self, db, db.get, db.set, db.delete, db.cas)
 
 class SyncDB (_nmdbDict):
 	def __init__(self, port = -1):
 		db = nmdb_ll.connect(port)
 		_nmdbDict.__init__(self, db, db.get, db.set_sync,
-					db.delete_sync)
+					db.delete_sync, db.cas)
 
 
