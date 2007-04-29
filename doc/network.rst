@@ -51,6 +51,8 @@ REQ_SET_SYNC   0x105
 REQ_DEL_SYNC   0x106
 REQ_SET_ASYNC  0x107
 REQ_DEL_ASYNC  0x108
+REQ_CACHE_CAS  0x109
+REQ__CAS       0x110
 ============== ======
 
 
@@ -67,6 +69,9 @@ REQ_SET_* and REQ_CACHE_SET
 REQ_DEL_* and REQ_CACHE_DEL
   You guessed it, they share the payload format too: first the key size (32
   bits), and then the key.
+REQ_CAS and REQ_CACHE_CAS
+  First the key size, then the old value size, then the new value size, and
+  then the key, the old value and the new value.
 
 
 Replies
@@ -107,6 +112,7 @@ REP_CACHE_HIT    0x801
 REP_CACHE_MISS   0x802
 REP_OK           0x803
 REP_NOTIN        0x804
+REP_NOMATCH      0x805
 ================ ======
 
 
@@ -115,14 +121,14 @@ Reply payload formats
 
 REP_ERR
   The payload is a 32-bit error code, according to the table below.
-REP_CACHE_MISS and REP_NOTIN
+REP_CACHE_MISS, REP_NOTIN and REP_NOMATCH
   These replies have no payload.
 REP_CACHE_HIT
   The first 32 bits are the value size, then the value.
 REP_OK
   Depending on the request, this reply does or doesn't have an associated
-  value. For *REQ_SET** or *REQ_DEL** there is no payload. But for *REQ_GET*
-  the first 32 bits are the value size, and then the value.
+  value. For *REQ_SET**, *REQ_DEL** and *REQ_CAS** there is no payload. But
+  for *REQ_GET* the first 32 bits are the value size, and then the value.
 
 
 Reply error codes

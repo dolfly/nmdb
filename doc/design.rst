@@ -62,6 +62,9 @@ cache_set *key* *value*
 cache_del *key*
   Like *del*, but only affects the cache and not the database.
 
+cache_cas *key* *oldvalue* *newvalue*
+  Do a compare-and-swap, using *oldvalue* to compare with the value stored in
+  the database, and replacing it with *newvalue* if they match.
 
 As you can see, it's possible to operate exclusively with the cache, ignoring
 the database completely. This is very similar to what memcached_ does. Note

@@ -214,9 +214,10 @@ Thread safety
   that needs it.
 
 Available operations
-  You can request the server to do three operations: *set* a value to a key,
-  *get* the value associated with the given key, and *delete* a given key
-  (with its associated value).
+  You can request the server to do four operations: *set* a value to a key,
+  *get* the value associated with the given key, *delete* a given key (with
+  its associated value), and perform a *compare-and-swap* of the values
+  associated with the given key.
 
 Request modes
   For each operation, you will have three different modes available:
