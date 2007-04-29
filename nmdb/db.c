@@ -110,7 +110,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 
 	} else if (e->operation == REQ_GET) {
 		unsigned char *val;
-		size_t vsize = 128 * 1024;
+		size_t vsize = 64 * 1024;
 
 		val = malloc(vsize);
 		if (val == NULL) {
