@@ -29,6 +29,7 @@ void tipc_reply_get(struct req_info *req, uint32_t reply,
 		unsigned char *val, size_t vsize);
 void tipc_reply_set(struct req_info *req, uint32_t reply);
 void tipc_reply_del(struct req_info *req, uint32_t reply);
+void tipc_reply_cas(struct req_info *req, uint32_t reply);
 
 #endif
 

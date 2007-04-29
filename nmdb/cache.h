@@ -44,6 +44,9 @@ int cache_get(struct cache *cd, const unsigned char *key, size_t ksize,
 int cache_set(struct cache *cd, const unsigned char *k, size_t ksize,
 		const unsigned char *v, size_t vsize);
 int cache_del(struct cache *cd, const unsigned char *key, size_t ksize);
+int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize);
 
 #endif
 

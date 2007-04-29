@@ -3,6 +3,7 @@
 #include <time.h>		/* nanosleep() */
 #include <errno.h>		/* ETIMEDOUT */
 #include <stdio.h>		/* perror() */
+#include <string.h>		/* memcmp() */
 
 #include "common.h"
 #include "db.h"
@@ -135,6 +136,40 @@ static void process_op(db_t *db, struct queue_entry *e)
 
 	} else if (e->operation == REQ_DEL_ASYNC) {
 		db_del(db, e->key, e->ksize);
+
+	} else if (e->operation == REQ_CAS) {
+		unsigned char *dbval;
+		size_t dbvsize = 64 * 1024;
+
+		/* Compare */
+		dbval = malloc(dbvsize);
+		if (dbval == NULL) {
+			tipc_reply_err(e->req, ERR_MEM);
+			return;
+		}
+		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
+		if (rv == 0) {
+			tipc_reply_get(e->req, REP_NOTIN, NULL, 0);
+			free(dbval);
+			return;
+		}
+
+		if (e->vsize == dbvsize &&
+				memcmp(e->val, dbval, dbvsize) == 0) {
+			/* Swap */
+			rv = db_set(db, e->key, e->ksize, e->newval, e->nvsize);
+			if (!rv) {
+				tipc_reply_err(e->req, ERR_DB);
+				return;
+			}
+
+			tipc_reply_cas(e->req, REP_OK);
+			free(dbval);
+			return;
+		}
+
+		tipc_reply_cas(e->req, REP_NOMATCH);
+		free(dbval);
 
 	} else {
 		printf("Unknown op 0x%x\n", e->operation);

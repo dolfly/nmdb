@@ -19,7 +19,7 @@ static void parse_msg(struct req_info *req, unsigned char *buf,
 static void parse_get(struct req_info *req, int impact_db);
 static void parse_set(struct req_info *req, int impact_db, int async);
 static void parse_del(struct req_info *req, int impact_db, int async);
-
+static void parse_cas(struct req_info *req, int impact_db);
 
 /*
  * Miscelaneous helper functions
@@ -89,12 +89,13 @@ static void mini_reply(struct req_info *req, uint32_t reply)
 /* Create a queue entry structure based on the parameters passed. Memory
  * allocated here will be free()'d in queue_entry_free(). It's not the
  * cleanest way, but the alternatives are even messier. */
-static struct queue_entry *make_queue_entry(struct req_info *req,
+static struct queue_entry *make_queue_long_entry(struct req_info *req,
 		uint32_t operation, const unsigned char *key, size_t ksize,
-		const unsigned char *val, size_t vsize)
+		const unsigned char *val, size_t vsize,
+		const unsigned char *newval, size_t nvsize)
 {
 	struct queue_entry *e;
-	unsigned char *kcopy, *vcopy;
+	unsigned char *kcopy, *vcopy, *nvcopy;
 
 	e = queue_entry_create();
 	if (e == NULL) {
@@ -123,11 +124,27 @@ static struct queue_entry *make_queue_entry(struct req_info *req,
 		memcpy(vcopy, val, vsize);
 	}
 
+	nvcopy = NULL;
+	if (newval != NULL) {
+		nvcopy = malloc(nvsize);
+		if (nvcopy == NULL) {
+			queue_entry_free(e);
+			if (kcopy != NULL)
+				free(kcopy);
+			if (vcopy != NULL)
+				free(vcopy);
+			return NULL;
+		}
+		memcpy(nvcopy, newval, nvsize);
+	}
+
 	e->operation = operation;
 	e->key = kcopy;
 	e->ksize = ksize;
 	e->val = vcopy;
 	e->vsize = vsize;
+	e->newval = nvcopy;
+	e->nvsize = nvsize;
 
 	/* Create a copy of req, including clisa */
 	e->req = malloc(sizeof(struct req_info));
@@ -149,6 +166,16 @@ static struct queue_entry *make_queue_entry(struct req_info *req,
 	e->req->psize = 0;
 
 	return e;
+}
+
+/* Like make_queue_long_entry() but with few parameters because most actions
+ * do not need newval. */
+static struct queue_entry *make_queue_entry(struct req_info *req,
+		uint32_t operation, const unsigned char *key, size_t ksize,
+		const unsigned char *val, size_t vsize)
+{
+	return make_queue_long_entry(req, operation, key, ksize, val, vsize,
+			NULL, 0);
 }
 
 
@@ -204,6 +231,11 @@ void tipc_reply_set(struct req_info *req, uint32_t reply)
 
 
 void tipc_reply_del(struct req_info *req, uint32_t reply)
+{
+	mini_reply(req, reply);
+}
+
+void tipc_reply_cas(struct req_info *req, uint32_t reply)
 {
 	mini_reply(req, reply);
 }
@@ -339,6 +371,10 @@ static void parse_msg(struct req_info *req, unsigned char *buf, size_t bsize)
 		parse_set(req, 1, 1);
 	else if (cmd == REQ_DEL_ASYNC)
 		parse_del(req, 1, 1);
+	else if (cmd == REQ_CACHE_CAS)
+		parse_cas(req, 0);
+	else if (cmd == REQ_CAS)
+		parse_cas(req, 1);
 	else {
 		stats.net_unk_req++;
 		rep_send_error(req, ERR_UNKREQ);
@@ -519,6 +555,85 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 		return;
 	}
 
+	return;
+}
+
+static void parse_cas(struct req_info *req, int impact_db)
+{
+	int rv;
+	unsigned char *key, *oldval, *newval;
+	uint32_t ksize, ovsize, nvsize;
+	const int max = 65536;
+
+	/* Request format:
+	 * 4		ksize
+	 * 4		ovsize
+	 * 4		nvsize
+	 * ksize	key
+	 * ovsize	oldval
+	 * nvsize	newval
+	 */
+	ksize = * (uint32_t *) req->payload;
+	ksize = ntohl(ksize);
+	ovsize = * ( ((uint32_t *) req->payload) + 1);
+	ovsize = ntohl(ovsize);
+	nvsize = * ( ((uint32_t *) req->payload) + 2);
+	nvsize = ntohl(nvsize);
+
+	/* Sanity check on sizes:
+	 * - ksize, ovsize and nvsize must all be < req->psize
+	 * - ksize, ovsize and nvsize must all be < 2^16 = 64k
+	 * - ksize + ovsize + mvsize < 2^16 = 64k
+	 */
+	if ( (req->psize < ksize) || (req->psize < ovsize) ||
+				(req->psize < nvsize) ||
+			(ksize > max) || (ovsize > max) ||
+				(nvsize > max) ||
+			( (ksize + ovsize + nvsize) > max) ) {
+		stats.net_broken_req++;
+		rep_send_error(req, ERR_BROKEN);
+		return;
+	}
+
+	key = req->payload + sizeof(uint32_t) * 3;
+	oldval = key + ksize;
+	newval = oldval + ovsize;
+
+	rv = cache_cas(cache_table, key, ksize, oldval, ovsize,
+			newval, nvsize);
+	if (rv == 0) {
+		/* If the cache doesn't match, there is no need to bother the
+		 * DB even if we were asked to impact. */
+		mini_reply(req, REP_NOMATCH);
+		return;
+	}
+
+	if (!impact_db) {
+		if (rv == -1) {
+			mini_reply(req, REP_NOTIN);
+			return;
+		} else {
+			mini_reply(req, REP_OK);
+			return;
+		}
+	} else {
+		/* impact_db = 1 and the key is either not in the cache, or
+		 * cache_cas() was successful. We now need to queue the CAS in
+		 * the database. */
+		struct queue_entry *e;
+
+		e = make_queue_long_entry(req, REQ_CAS, key, ksize,
+				oldval, ovsize, newval, nvsize);
+		if (e == NULL) {
+			rep_send_error(req, ERR_MEM);
+			return;
+		}
+
+		queue_lock(op_queue);
+		queue_put(op_queue, e);
+		queue_unlock(op_queue);
+		queue_signal(op_queue);
+	}
 	return;
 }
 

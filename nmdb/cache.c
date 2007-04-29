@@ -307,3 +307,52 @@ exit:
 	return rv;
 }
 
+
+/* Performs a cache compare-and-swap.
+ * Returns -2 if there was an error, -1 if the key is not in the cache, 0 if
+ * the old value does not match, and 1 if the CAS was successful. */
+int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize)
+{
+	int rv = 1;
+	uint32_t h = 0;
+	struct cache_chain *c;
+	struct cache_entry *e;
+	unsigned char *buf;
+
+	h = hash(key, ksize) % cd->hashlen;
+	c = cd->table + h;
+
+	e = find_in_chain(c, key, ksize);
+
+	if (e == NULL) {
+		rv = -1;
+		goto exit;
+	}
+
+	if (e->vsize != ovsize) {
+		rv = 0;
+		goto exit;
+	}
+
+	if (memcmp(e->val, oldval, ovsize) != 0) {
+		rv = 0;
+		goto exit;
+	}
+
+	buf = malloc(nvsize);
+	if (buf == NULL) {
+		rv = -2;
+		goto exit;
+	}
+
+	memcpy(buf, newval, nvsize);
+	free(e->val);
+	e->val = buf;
+	e->vsize = nvsize;
+
+exit:
+	return rv;
+}
+

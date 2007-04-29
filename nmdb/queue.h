@@ -20,8 +20,10 @@ struct queue_entry {
 
 	unsigned char *key;
 	unsigned char *val;
+	unsigned char *newval;
 	size_t ksize;
 	size_t vsize;
+	size_t nvsize;
 
 	struct queue_entry *prev;
 	/* A pointer to the next element on the list is actually not

@@ -77,8 +77,10 @@ struct queue_entry *queue_entry_create(void)
 	e->operation = 0;
 	e->key = NULL;
 	e->val = NULL;
+	e->newval = NULL;
 	e->ksize = 0;
 	e->vsize = 0;
+	e->nvsize = 0;
 	e->prev = NULL;
 
 	return e;
@@ -93,6 +95,8 @@ void queue_entry_free(struct queue_entry *e) {
 		free(e->key);
 	if (e->val)
 		free(e->val);
+	if (e->newval)
+		free(e->newval);
 	free(e);
 	return;
 }
