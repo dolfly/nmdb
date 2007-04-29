@@ -38,5 +38,13 @@ int nmdb_del(nmdb_t *db, const unsigned char *key, size_t ksize);
 int nmdb_del_sync(nmdb_t *db, const unsigned char *key, size_t ksize);
 int nmdb_cache_del(nmdb_t *db, const unsigned char *key, size_t ksize);
 
+int nmdb_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize);
+int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize);
+
+
 #endif
 

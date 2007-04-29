@@ -32,6 +32,15 @@ libnmdb - Library for interacting with a nmdb server
 .BI "             const unsigned char *" key ", size_t " ksize ");"
 .BI "int nmdb_cache_del(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ");"
+.sp
+.BI "int nmdb_cas(nmdb_t *" db ","
+.BI "             const unsigned char *" key " , size_t " ksize ","
+.BI "             const unsigned char *" oldval ", size_t " ovsize ","
+.BI "             const unsigned char *" newval ", size_t " nvsize ")"
+.BI "int nmdb_cache_cas(nmdb_t *" db ","
+.BI "             const unsigned char *" key " , size_t " ksize ","
+.BI "             const unsigned char *" oldval ", size_t " ovsize ","
+.BI "             const unsigned char *" newval ", size_t " nvsize ")"
 .fi
 .SH DESCRIPTION
 
@@ -70,14 +79,19 @@ of the keys and values apply: keys can't exceed 64Kb, values can't exceed
 64Kb, and the size of a key + the size of it's associated value can't exceed
 64Kb.
 
-There are three kinds of operations:
+There are four kinds of operations:
 .IR set ,
-.I get
-and
+which sets pairs;
+.IR get ,
+which gets pairs;
 .IR del ,
-with their obvious meaning. The normal set and del operations return as soon
-as they've been queued on the server for asynchronous completion. Note that in
-this case no message is sent to the client when the operation completes.
+which removes pairs;
+and
+.IR cas ,
+which compares-and-sets values. The normal set and del operations return as
+soon as they've been queued on the server for asynchronous completion. Note
+that in this case no message is sent to the client when the operation
+completes.
 
 Each operation has variants, that make it behave in a different way. All three
 have "cache" variants, that only affect the cache and not the database; and
@@ -112,6 +126,12 @@ is used to remove a given key (and it's associated value). The normal variant
 returns 1 if it was queued successfuly, or < 0 on failure. The cache and
 synchronous variant return 1 if the key was removed successfuly, 0 if the key
 was not in the database/cache, or < 0 on failure.
+
+.BR nmdb_cas ()
+is used to compare-and-swap a key's value. It takes an old value to compare
+with the one in the database, and if they match, it sets the key to the given
+new value. Returns 2 if the swap was performed, 1 if the values didn't match,
+0 if the key was not on in the database/cache, and < 0 on failure.
 
 .SH SEE ALSO
 

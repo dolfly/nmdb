@@ -451,3 +451,85 @@ int nmdb_cache_del(nmdb_t *db, const unsigned char *key, size_t ksize)
 }
 
 
+static int do_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize,
+		int impact_db)
+{
+	ssize_t rv, t;
+	unsigned char *buf, *p;
+	size_t bsize;
+	uint32_t request, reply;
+	struct nmdb_srv *srv;
+
+	request = REQ_CACHE_CAS;
+	if (impact_db)
+		request = REQ_CAS;
+
+
+	/* Use the same buffer for the request and the reply.
+	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize, 4
+	 *		bytes ovsize, 4 bytes nvsize, ksize bytes key,
+	 *		ovsize bytes oldval, nvsize bytes newval.
+	 * Reply: 4 bytes id, 4 bytes reply code.
+	 */
+	bsize = 4 + 4 + 4 + 4 + 4 + ksize + ovsize + nvsize;
+	buf = malloc(bsize);
+	if (buf == NULL)
+		return -1;
+
+	* (uint32_t *) buf = htonl( (PROTO_VER << 28) | ID_CODE );
+	* ((uint32_t *) buf + 1) = htonl(request);
+	* ((uint32_t *) buf + 2) = htonl(ksize);
+	* ((uint32_t *) buf + 3) = htonl(ovsize);
+	* ((uint32_t *) buf + 4) = htonl(nvsize);
+	p = buf + 5 * 4;
+	memcpy(p, key, ksize);
+	p += ksize;
+	memcpy(p, oldval, ovsize);
+	p += ovsize;
+	memcpy(p, newval, nvsize);
+
+	srv = select_srv(db, key, ksize);
+	t = srv_send(db, srv, buf, bsize);
+	if (t <= 0) {
+		rv = -1;
+		goto exit;
+	}
+
+	reply = get_rep(db, srv, buf, bsize, NULL, NULL);
+
+	if (reply == REP_OK) {
+		rv = 2;
+		goto exit;
+	} else if (reply == REP_NOMATCH) {
+		rv = 1;
+		goto exit;
+	} else if (reply == REP_NOTIN) {
+		rv = 0;
+		goto exit;
+	}
+
+	/* REP_ERR or invalid response */
+	rv = -1;
+
+exit:
+	free(buf);
+	return rv;
+
+}
+
+int nmdb_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize)
+{
+	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize, 1);
+}
+
+int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
+		const unsigned char *oldval, size_t ovsize,
+		const unsigned char *newval, size_t nvsize)
+{
+	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize, 0);
+}
+

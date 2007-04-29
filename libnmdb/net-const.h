@@ -23,6 +23,8 @@
 #define REQ_DEL_SYNC		0x106
 #define REQ_SET_ASYNC		0x107
 #define REQ_DEL_ASYNC		0x108
+#define REQ_CACHE_CAS		0x109
+#define REQ_CAS			0x110
 
 /* Network replies (different namespace from requests) */
 #define REP_ERR			0x800
@@ -30,6 +32,7 @@
 #define REP_CACHE_MISS		0x802
 #define REP_OK			0x803
 #define REP_NOTIN		0x804
+#define REP_NOMATCH		0x805
 
 /* Network error replies */
 #define ERR_VER			0x101	/* Version mismatch */
@@ -38,6 +41,7 @@
 #define ERR_UNKREQ		0x104	/* Unknown request */
 #define ERR_MEM			0x105	/* Memory allocation error */
 #define ERR_DB			0x106	/* Database error */
+
 
 #endif
 
