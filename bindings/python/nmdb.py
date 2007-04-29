@@ -51,16 +51,16 @@ class NetworkError (Exception):
 
 class _nmdbDict (object):
 	def __init__(self, db, op_get, op_set, op_delete, op_cas):
-		self.db = db
-		self.get = op_get
-		self.set = op_set
-		self.delete = op_delete
+		self._db = db
+		self._get = op_get
+		self._set = op_set
+		self._delete = op_delete
 		self._cas = op_cas
 		self.autopickle = True
 
 	def add_server(self, port):
 		"Adds a server to the server pool."
-		rv = self.db.add_server(port)
+		rv = self._db.add_server(port)
 		if not rv:
 			raise NetworkError
 		return rv
@@ -70,7 +70,7 @@ class _nmdbDict (object):
 		if self.autopickle:
 			key = str(hash(key))
 		try:
-			r = self.get(key)
+			r = self._get(key)
 		except:
 			raise NetworkError
 		if not r:
@@ -84,7 +84,7 @@ class _nmdbDict (object):
 		if self.autopickle:
 			key = str(hash(key))
 			val = cPickle.dumps(val, protocol = -1)
-		r = self.set(key, val)
+		r = self._set(key, val)
 		if r <= 0:
 			raise NetworkError
 		return 1
@@ -93,7 +93,7 @@ class _nmdbDict (object):
 		"del d[k]   Deletes the key k."
 		if self.autopickle:
 			key = str(hash(key))
-		r = self.delete(key)
+		r = self._delete(key)
 		if r < 0:
 			raise NetworkError
 		elif r == 0:
@@ -105,7 +105,7 @@ class _nmdbDict (object):
 		if self.autopickle:
 			key = str(hash(key))
 		try:
-			r = self.get(key)
+			r = self._get(key)
 		except KeyError:
 			return False
 		if not r:
