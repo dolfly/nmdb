@@ -116,6 +116,28 @@ class DB
 		return res;
 	}
 
+	private int do_cas(char[] key, char[] oldval, char[] newval,
+			int mode)
+	{
+		ubyte* k = cast(ubyte *) key.ptr;
+		ubyte* ov = cast(ubyte *) oldval.ptr;
+		ubyte* nv = cast(ubyte *) newval.ptr;
+		int res = 0;
+
+		if (mode == MODE_NORMAL || mode == MODE_SYNC) {
+			res = nmdb_cas(db, k, key.length,
+					ov, oldval.length,
+					nv, newval.length);
+		} else if (mode == MODE_CACHE) {
+			res = nmdb_cache_cas(db, k, key.length,
+					ov, oldval.length,
+					nv, newval.length);
+		} else {
+			throw new Exception("Invalid mode");
+		}
+		return res;
+	}
+
 
 	char[] get(char[] key)
 	{
@@ -172,6 +194,22 @@ class DB
 	int cache_remove(char[] key)
 	{
 		return do_del(key, MODE_CACHE);
+	}
+
+
+	int cas(char[] key, char[] oldval, char[] newval)
+	{
+		return do_cas(key, oldval, newval, mode);
+	}
+
+	int cas_normal(char[] key, char[] oldval, char[] newval)
+	{
+		return do_cas(key, oldval, newval, MODE_NORMAL);
+	}
+
+	int cache_cas(char[] key, char[] oldval, char[] newval)
+	{
+		return do_cas(key, oldval, newval, MODE_CACHE);
 	}
 
 

@@ -56,3 +56,8 @@ extern (C) int nmdb_del(nmdb_t *db, ubyte *key, size_t ksize);
 extern (C) int nmdb_del_sync(nmdb_t *db, ubyte *key, size_t ksize);
 extern (C) int nmdb_cache_del(nmdb_t *db, ubyte *key, size_t ksize);
 
+extern (C) int nmdb_cas(nmdb_t *db, ubyte *key, size_t ksize,
+		ubyte *oldval, size_t ovsize, ubyte *newval, size_t nvsize);
+extern (C) int nmdb_cache_cas(nmdb_t *db, ubyte *key, size_t ksize,
+		ubyte *oldval, size_t ovsize, ubyte *newval, size_t nvsize);
+
