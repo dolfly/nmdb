@@ -288,8 +288,8 @@ void tipc_recv(int fd, short event, void *arg)
 	 * operations.
 	 * TODO: check for negative impacts (beside being ugly, obviously)
 	 */
-	unsigned char buf[128 * 1024];
-	bsize = 128 * 1024;
+	unsigned char buf[68 * 1024];
+	bsize = 68 * 1024;
 
 	clilen = sizeof(clisa);
 
