@@ -1,12 +1,13 @@
 
-CFLAGS += -std=c99 -Wall -D_XOPEN_SOURCE=500 -O3
+CFLAGS += -std=c99 -Wall -O3
+ALL_CFLAGS = -D_XOPEN_SOURCE=500 $(CFLAGS)
 
 ifdef DEBUG
-CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
+ALL_CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
 endif
 
 ifdef STRICT
-CFLAGS += -ansi -pedantic
+ALL_CFLAGS += -ansi -pedantic
 endif
 
 # prefix for installing the binaries
@@ -20,10 +21,10 @@ default: all
 all: nmdb
 
 nmdb: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -levent -lpthread -lrt -lqdbm -o nmdb
+	$(CC) $(ALL_CFLAGS) $(OBJS) -levent -lpthread -lrt -lqdbm -o nmdb
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 install: all
 	install -d $(PREFIX)/bin
@@ -33,7 +34,7 @@ install: all
 
 clean:
 	rm -f $(OBJS) nmdb
-	rm -f *.bb *.bbg *.da *.gcov gmon.out
+	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
 .PHONY: default all clean
 

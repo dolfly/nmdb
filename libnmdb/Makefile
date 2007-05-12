@@ -1,12 +1,13 @@
 
-CFLAGS += -std=c99 -Wall -D_XOPEN_SOURCE=500 -O3 -fPIC
+CFLAGS += -std=c99 -Wall -O3
+ALL_CFLAGS = -D_XOPEN_SOURCE=500 -fPIC $(CFLAGS)
 
 ifdef DEBUG
-CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
+ALL_CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
 endif
 
 ifdef STRICT
-CFLAGS += -ansi -pedantic
+ALL_CFLAGS += -ansi -pedantic
 endif
 
 # prefix for installing the binaries
@@ -24,7 +25,7 @@ all: libs
 libs: libnmdb.so libnmdb.a
 
 libnmdb.so: libnmdb.o
-	$(CC) $(CFLAGS) libnmdb.o -shared -fPIC -o libnmdb.so
+	$(CC) $(ALL_CFLAGS) -shared -fPIC libnmdb.o -o libnmdb.so
 
 libnmdb.a: libnmdb.o
 	$(AR) cr libnmdb.a libnmdb.o
@@ -33,22 +34,22 @@ libnmdb.a: libnmdb.o
 tests: test1c test1d test2c test2cm test2d test2dm
 
 test1c: test1c.o libnmdb.a
-	$(CC) $(CFLAGS) test1c.o libnmdb.a -o test1c
+	$(CC) $(ALL_CFLAGS) test1c.o libnmdb.a -o test1c
 
 test1d: test1d.o libnmdb.a
-	$(CC) $(CFLAGS) test1d.o libnmdb.a -o test1d
+	$(CC) $(ALL_CFLAGS) test1d.o libnmdb.a -o test1d
 
 test2c: test2c.o libnmdb.a
-	$(CC) $(CFLAGS) test2c.o libnmdb.a -o test2c
+	$(CC) $(ALL_CFLAGS) test2c.o libnmdb.a -o test2c
 
 test2cm: test2cm.o libnmdb.a
-	$(CC) $(CFLAGS) test2cm.o libnmdb.a -o test2cm
+	$(CC) $(ALL_CFLAGS) test2cm.o libnmdb.a -o test2cm
 
 test2d: test2d.o libnmdb.a
-	$(CC) $(CFLAGS) test2d.o libnmdb.a -o test2d
+	$(CC) $(ALL_CFLAGS) test2d.o libnmdb.a -o test2d
 
 test2dm: test2dm.o libnmdb.a
-	$(CC) $(CFLAGS) test2dm.o libnmdb.a -o test2dm
+	$(CC) $(ALL_CFLAGS) test2dm.o libnmdb.a -o test2dm
 
 
 install: libs
@@ -65,12 +66,12 @@ install: libs
 
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) libnmdb.so libnmdb.a
 	rm -f test1c test1d test2c test2cm test2d test2dm
-	rm -f *.bb *.bbg *.da *.gcov gmon.out
+	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
 .PHONY: default all libs tests install clean
 
