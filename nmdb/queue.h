@@ -4,7 +4,7 @@
 
 #include <pthread.h>		/* for mutexes */
 #include <stdint.h>		/* for uint32_t */
-#include "tipc.h"		/* for req_info */
+#include "req.h"		/* for req_info */
 
 struct queue {
 	pthread_mutex_t lock;

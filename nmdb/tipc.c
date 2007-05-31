@@ -12,6 +12,7 @@
 #include "common.h"
 #include "queue.h"
 #include "net-const.h"
+#include "req.h"
 
 
 static void parse_msg(struct req_info *req, unsigned char *buf,
@@ -20,6 +21,14 @@ static void parse_get(struct req_info *req, int impact_db);
 static void parse_set(struct req_info *req, int impact_db, int async);
 static void parse_del(struct req_info *req, int impact_db, int async);
 static void parse_cas(struct req_info *req, int impact_db);
+
+void tipc_reply_err(struct req_info *req, uint32_t reply);
+void tipc_reply_get(struct req_info *req, uint32_t reply,
+		unsigned char *val, size_t vsize);
+void tipc_reply_set(struct req_info *req, uint32_t reply);
+void tipc_reply_del(struct req_info *req, uint32_t reply);
+void tipc_reply_cas(struct req_info *req, uint32_t reply);
+
 
 /*
  * Miscelaneous helper functions
@@ -41,8 +50,7 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 	memcpy(minibuf + 8, &c, 4);
 
 	/* If this send fails, there's nothing to be done */
-	r = sendto(req->fd, minibuf, 3 * 4, 0, (struct sockaddr *) req->clisa,
-			req->clilen);
+	r = sendto(req->fd, minibuf, 3 * 4, 0, req->clisa, req->clilen);
 
 	if (r < 0) {
 		perror("rep_send_error() failed");
@@ -58,8 +66,7 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 	if (settings.passive)
 		return 1;
 
-	rv = sendto(req->fd, buf, size, 0,
-			(struct sockaddr *) req->clisa, req->clilen);
+	rv = sendto(req->fd, buf, size, 0, req->clisa, req->clilen);
 	if (rv < 0) {
 		rep_send_error(req, ERR_SEND);
 		return 0;
@@ -307,8 +314,14 @@ void tipc_recv(int fd, short event, void *arg)
 	}
 
 	req.fd = fd;
-	req.clisa = &clisa;
+	req.type = REQTYPE_TIPC;
+	req.clisa = (struct sockaddr *) &clisa;
 	req.clilen = clilen;
+	req.reply_err = tipc_reply_err;
+	req.reply_get = tipc_reply_get;
+	req.reply_set = tipc_reply_set;
+	req.reply_del = tipc_reply_del;
+	req.reply_cas = tipc_reply_cas;
 
 	/* parse the message */
 	parse_msg(&req, buf, rv);

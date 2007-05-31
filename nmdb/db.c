@@ -10,6 +10,7 @@
 #include "be.h"
 #include "queue.h"
 #include "net-const.h"
+#include "req.h"
 
 
 static void *db_loop(void *arg);
@@ -100,10 +101,10 @@ static void process_op(db_t *db, struct queue_entry *e)
 	if (e->operation == REQ_SET_SYNC) {
 		rv = db_set(db, e->key, e->ksize, e->val, e->vsize);
 		if (!rv) {
-			tipc_reply_err(e->req, ERR_DB);
+			e->req->reply_err(e->req, ERR_DB);
 			return;
 		}
-		tipc_reply_set(e->req, REP_OK);
+		e->req->reply_set(e->req, REP_OK);
 
 	} else if (e->operation == REQ_SET_ASYNC) {
 		db_set(db, e->key, e->ksize, e->val, e->vsize);
@@ -114,25 +115,25 @@ static void process_op(db_t *db, struct queue_entry *e)
 
 		val = malloc(vsize);
 		if (val == NULL) {
-			tipc_reply_err(e->req, ERR_MEM);
+			e->req->reply_err(e->req, ERR_MEM);
 			return;
 		}
 		rv = db_get(db, e->key, e->ksize, val, &vsize);
 		if (rv == 0) {
-			tipc_reply_get(e->req, REP_NOTIN, NULL, 0);
+			e->req->reply_get(e->req, REP_NOTIN, NULL, 0);
 			free(val);
 			return;
 		}
-		tipc_reply_get(e->req, REP_OK, val, vsize);
+		e->req->reply_get(e->req, REP_OK, val, vsize);
 		free(val);
 
 	} else if (e->operation == REQ_DEL_SYNC) {
 		rv = db_del(db, e->key, e->ksize);
 		if (rv == 0) {
-			tipc_reply_del(e->req, REP_NOTIN);
+			e->req->reply_del(e->req, REP_NOTIN);
 			return;
 		}
-		tipc_reply_del(e->req, REP_OK);
+		e->req->reply_del(e->req, REP_OK);
 
 	} else if (e->operation == REQ_DEL_ASYNC) {
 		db_del(db, e->key, e->ksize);
@@ -144,12 +145,12 @@ static void process_op(db_t *db, struct queue_entry *e)
 		/* Compare */
 		dbval = malloc(dbvsize);
 		if (dbval == NULL) {
-			tipc_reply_err(e->req, ERR_MEM);
+			e->req->reply_err(e->req, ERR_MEM);
 			return;
 		}
 		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
 		if (rv == 0) {
-			tipc_reply_get(e->req, REP_NOTIN, NULL, 0);
+			e->req->reply_get(e->req, REP_NOTIN, NULL, 0);
 			free(dbval);
 			return;
 		}
@@ -159,16 +160,16 @@ static void process_op(db_t *db, struct queue_entry *e)
 			/* Swap */
 			rv = db_set(db, e->key, e->ksize, e->newval, e->nvsize);
 			if (!rv) {
-				tipc_reply_err(e->req, ERR_DB);
+				e->req->reply_err(e->req, ERR_DB);
 				return;
 			}
 
-			tipc_reply_cas(e->req, REP_OK);
+			e->req->reply_cas(e->req, REP_OK);
 			free(dbval);
 			return;
 		}
 
-		tipc_reply_cas(e->req, REP_NOMATCH);
+		e->req->reply_cas(e->req, REP_NOMATCH);
 		free(dbval);
 
 	} else {
