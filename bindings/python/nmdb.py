@@ -24,8 +24,7 @@ Here is an example using the DB class:
 
 >>> import nmdb
 >>> db = nmdb.DB()
->>> import nmdb
->>> db = nmdb.DB()
+>>> db.add_tipc_server()
 >>> db[1] = { 'english': 'one', 'castellano': 'uno', 'quechua': 'huk' }
 >>> print db[1]
 {'english': 'one', 'castellano': 'uno', 'quechua': 'huk'}
@@ -58,9 +57,16 @@ class _nmdbDict (object):
 		self._cas = op_cas
 		self.autopickle = True
 
-	def add_server(self, port):
-		"Adds a server to the server pool."
-		rv = self._db.add_server(port)
+	def add_tipc_server(self, port = -1):
+		"Adds a TIPC server to the server pool."
+		rv = self._db.add_tipc_server(port)
+		if not rv:
+			raise NetworkError
+		return rv
+
+	def add_tcp_server(self, addr, port = -1):
+		"Adds a TCP server to the server pool."
+		rv = self._db.add_tcp_server(addr, port)
 		if not rv:
 			raise NetworkError
 		return rv
@@ -137,19 +143,19 @@ class _nmdbDict (object):
 
 
 class Cache (_nmdbDict):
-	def __init__(self, port = -1):
-		db = nmdb_ll.connect(port)
+	def __init__(self):
+		db = nmdb_ll.connect()
 		_nmdbDict.__init__(self, db, db.cache_get, db.cache_set,
 					db.cache_delete, db.cache_cas)
 
 class DB (_nmdbDict):
-	def __init__(self, port = -1):
-		db = nmdb_ll.connect(port)
+	def __init__(self):
+		db = nmdb_ll.connect()
 		_nmdbDict.__init__(self, db, db.get, db.set, db.delete, db.cas)
 
 class SyncDB (_nmdbDict):
-	def __init__(self, port = -1):
-		db = nmdb_ll.connect(port)
+	def __init__(self):
+		db = nmdb_ll.connect()
 		_nmdbDict.__init__(self, db, db.get, db.set_sync,
 					db.delete_sync, db.cas)
 

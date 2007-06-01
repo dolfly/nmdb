@@ -35,18 +35,36 @@ static void db_dealloc(nmdbobject *db)
 }
 
 
-/* add server */
-static PyObject *db_add_server(nmdbobject *db, PyObject *args)
+/* add tipc server */
+static PyObject *db_add_tipc_server(nmdbobject *db, PyObject *args)
 {
 	int port;
 	int rv;
 
-	if (!PyArg_ParseTuple(args, "i:add_server", &port)) {
+	if (!PyArg_ParseTuple(args, "i:add_tipc_server", &port)) {
 		return NULL;
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	rv = nmdb_add_server(db->db, port);
+	rv = nmdb_add_tipc_server(db->db, port);
+	Py_END_ALLOW_THREADS
+
+	return PyLong_FromLong(rv);
+}
+
+/* add tcp server */
+static PyObject *db_add_tcp_server(nmdbobject *db, PyObject *args)
+{
+	int port;
+	char *addr;
+	int rv;
+
+	if (!PyArg_ParseTuple(args, "si:add_tcp_server", &addr, &port)) {
+		return NULL;
+	}
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_add_tcp_server(db->db, addr, port);
 	Py_END_ALLOW_THREADS
 
 	return PyLong_FromLong(rv);
@@ -281,7 +299,10 @@ static PyObject *db_delete_sync(nmdbobject *db, PyObject *args)
 /* nmdb method table */
 
 static PyMethodDef nmdb_methods[] = {
-	{ "add_server", (PyCFunction) db_add_server, METH_VARARGS, NULL },
+	{ "add_tipc_server", (PyCFunction) db_add_tipc_server,
+		METH_VARARGS, NULL },
+	{ "add_tcp_server", (PyCFunction) db_add_tcp_server,
+		METH_VARARGS, NULL },
 	{ "cache_set", (PyCFunction) db_cache_set, METH_VARARGS, NULL },
 	{ "cache_get", (PyCFunction) db_cache_get, METH_VARARGS, NULL },
 	{ "cache_delete", (PyCFunction) db_cache_delete, METH_VARARGS, NULL },
@@ -321,18 +342,16 @@ static PyTypeObject nmdbType = {
 static PyObject *db_connect(PyObject *self, PyObject *args)
 {
 	nmdbobject *db;
-	long port;
-
-	if (!PyArg_ParseTuple(args, "i:connect", &port)) {
-		return NULL;
-	}
-
 
 	db = PyObject_New(nmdbobject, &nmdbType);
 	if (db == NULL)
 		return NULL;
 
-	db->db = nmdb_init(port);
+	if (!PyArg_ParseTuple(args, ":connect")) {
+		return NULL;
+	}
+
+	db->db = nmdb_init();
 	if (db->db == NULL) {
 		return PyErr_NoMemory();
 	}
