@@ -44,16 +44,16 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	db = nmdb_init(-1);
+	db = nmdb_init();
 	if (db == NULL) {
 		perror("nmdb_init() failed");
 		return 1;
 	}
 
-	if (!nmdb_add_server(db, 11) ||
-			!nmdb_add_server(db, 12) ||
-			!nmdb_add_server(db, 13)) {
-		perror("nmdb_add_server() failed");
+	if (!nmdb_add_tipc_server(db, 11) ||
+			!nmdb_add_tipc_server(db, 12) ||
+			!nmdb_add_tipc_server(db, 13)) {
+		perror("nmdb_add_tipc_server() failed");
 		return 1;
 	}
 

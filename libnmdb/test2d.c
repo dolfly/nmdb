@@ -44,11 +44,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	db = nmdb_init(-1);
+	db = nmdb_init();
 	if (db == NULL) {
 		perror("nmdb_init() failed");
 		return 1;
 	}
+	nmdb_add_tipc_server(db, -1);
 
 	timer_start();
 	for (i = 0; i < times; i++) {

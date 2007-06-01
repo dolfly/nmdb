@@ -28,11 +28,12 @@ int main(int argc, char **argv)
 	val = (unsigned char *) argv[3];
 	vsize = strlen((char *) val);
 
-	db = nmdb_init(-1);
+	db = nmdb_init();
 	if (db == NULL) {
 		perror("nmdb_init() failed");
 		return 1;
 	}
+	nmdb_add_tipc_server(db, -1);
 
 	printf("set... ");
 	timer_start();
