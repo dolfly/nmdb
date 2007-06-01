@@ -2,13 +2,19 @@
 #include <sys/types.h>		/* socket defines */
 #include <sys/socket.h>		/* socket functions */
 #include <stdlib.h>		/* malloc() */
-#include <linux/tipc.h>		/* tipc stuff */
 #include <stdint.h>		/* uint32_t and friends */
 #include <arpa/inet.h>		/* htonls() and friends */
 #include <string.h>		/* memcpy() */
 #include <unistd.h>		/* close() */
+
+#if ENABLE_TIPC
+#include <linux/tipc.h>		/* TIPC stuff */
+#endif
+
+#if ENABLE_TCP
 #include <netinet/tcp.h>	/* TCP stuff */
 #include <netdb.h>		/* gethostbyname() */
+#endif
 
 #include "nmdb.h"
 #include "net-const.h"
@@ -23,117 +29,16 @@
 #define TCP_CONN 2
 
 
-/* Like recv() but either fails, or returns a complete read; if we return less
- * than count is because EOF was reached */
-ssize_t srecv(int fd, unsigned char *buf, size_t count, int flags)
-{
-	ssize_t rv, c;
-
-	c = 0;
-
-	while (c < count) {
-		rv = recv(fd, buf + c, count - c, flags);
-
-		if (rv == count)
-			return count;
-		else if (rv < 0)
-			return rv;
-		else if (rv == 0)
-			return c;
-
-		c += rv;
-	}
-	return count;
-}
-
-/* Like srecv() but for send() */
-ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags)
-{
-	ssize_t rv, c;
-
-	c = 0;
-
-	while (c < count) {
-		rv = send(fd, buf + c, count - c, flags);
-
-		if (rv == count)
-			return count;
-		else if (rv < 0)
-			return rv;
-		else if (rv == 0)
-			return c;
-
-		c += rv;
-	}
-	return count;
-}
+static int compare_servers(const void *s1, const void *s2);
+ssize_t srecv(int fd, unsigned char *buf, size_t count, int flags);
+ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags);
 
 
+/*
+ * TIPC specific code
+ */
 
-/* Create a nmdb_t and set the first server to port. If port is < 0, the
- * standard port is used. */
-nmdb_t *nmdb_init()
-{
-	nmdb_t *db;
-
-	db = malloc(sizeof(nmdb_t));
-	if (db == NULL) {
-		return NULL;
-	}
-
-	db->servers = NULL;
-	db->nservers = 0;
-
-	return db;
-}
-
-/* Compare two servers by their connection identifiers. It is used internally
- * to keep the server array sorted with qsort(). */
-static int compare_servers(const void *s1, const void *s2)
-{
-	struct nmdb_srv *srv1 = (struct nmdb_srv *) s1;
-	struct nmdb_srv *srv2 = (struct nmdb_srv *) s2;
-
-	if (srv1->type != srv2->type) {
-		if (srv1->type < srv2->type)
-			return -1;
-		else
-			return 1;
-	}
-
-	if (srv1->type == TIPC_CONN) {
-		if (srv1->info.tipc.port < srv2->info.tipc.port)
-			return -1;
-		else if (srv1->info.tipc.port == srv2->info.tipc.port)
-			return 0;
-		else
-			return 1;
-	} else if (srv1->type == TCP_CONN) {
-		in_addr_t a1, a2;
-		a1 = srv1->info.tcp.srvsa.sin_addr.s_addr;
-		a2 = srv2->info.tcp.srvsa.sin_addr.s_addr;
-
-		if (a1 < a2) {
-			return -1;
-		} else if (a1 == a2) {
-			in_port_t p1, p2;
-			p1 = srv1->info.tcp.srvsa.sin_port;
-			p2 = srv2->info.tcp.srvsa.sin_port;
-
-			if (p1 < p2)
-				return -1;
-			else if (p1 == p2)
-				return 0;
-			else
-				return 1;
-		} else {
-			return 1;
-		}
-	}
-
-	/* We should never get here */
-	return 0;
-}
+#if ENABLE_TIPC
 
 /* Add a TIPC server to the db connection. Requests will select which server
  * to use by hashing the key. */
@@ -179,6 +84,77 @@ int nmdb_add_tipc_server(nmdb_t *db, int port)
 
 	return 1;
 }
+
+static int tipc_srv_send(struct nmdb_srv *srv,
+		const unsigned char *buf, size_t bsize)
+{
+	ssize_t rv;
+	rv = sendto(srv->fd, buf, bsize, 0,
+			(struct sockaddr *) &(srv->info.tipc.srvsa),
+			srv->info.tipc.srvlen);
+	if (rv <= 0)
+		return 0;
+	return 1;
+}
+
+/* Used internally to get and parse replies from the server. */
+static uint32_t tipc_get_rep(struct nmdb_srv *srv,
+		unsigned char *buf, size_t bsize,
+		unsigned char **payload, size_t *psize)
+{
+	ssize_t rv;
+	uint32_t id, reply;
+
+	rv = recv(srv->fd, buf, bsize, 0);
+	if (rv < 4 + 4) {
+		return -1;
+	}
+
+	id = * (uint32_t *) buf;
+	id = ntohl(id);
+	reply = * ((uint32_t *) buf + 1);
+	reply = ntohl(reply);
+
+	if (id != ID_CODE) {
+		return -1;
+	}
+
+	if (payload != NULL) {
+		*payload = buf + 4 + 4;
+		*psize = rv - 4 - 4;
+	}
+	return reply;
+}
+
+#else
+/* Stubs to use when TIPC is not enabled. */
+
+int nmdb_add_tipc_server(nmdb_t *db, int port)
+{
+	return 0;
+}
+
+static int tipc_srv_send(struct nmdb_srv *srv,
+		const unsigned char *buf, size_t bsize)
+{
+	return 0;
+}
+
+static uint32_t tipc_get_rep(struct nmdb_srv *srv,
+		unsigned char *buf, size_t bsize,
+		unsigned char **payload, size_t *psize)
+{
+	return -1;
+}
+
+#endif /* ENABLE_TIPC */
+
+
+/*
+ * TCP specific code
+ */
+
+#if ENABLE_TCP
 
 /* Used internally to really add the server once we have an IP address. */
 static int add_tcp_server_addr(nmdb_t *db, in_addr_t *inetaddr, int port)
@@ -265,31 +241,6 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 	return add_tcp_server_addr(db, &(ia.s_addr), port);
 }
 
-/* Frees a nmdb_t structure created with nmdb_init(). */
-int nmdb_free(nmdb_t *db)
-{
-	if (db->servers != NULL) {
-		int i;
-		for (i = 0; i < db->nservers; i++)
-			close(db->servers[i].fd);
-		free(db->servers);
-	}
-	free(db);
-	return 1;
-}
-
-static int tipc_srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
-{
-	ssize_t rv;
-	rv = sendto(srv->fd, buf, bsize, 0,
-			(struct sockaddr *) &(srv->info.tipc.srvsa),
-			srv->info.tipc.srvlen);
-	if (rv <= 0)
-		return 0;
-	return 1;
-}
-
 static int tcp_srv_send(struct nmdb_srv *srv,
 		const unsigned char *buf, size_t bsize)
 {
@@ -305,52 +256,6 @@ static int tcp_srv_send(struct nmdb_srv *srv,
 	if (rv != bsize)
 		return 0;
 	return 1;
-}
-
-/* Used internally to send a buffer to the given server. Calls the appropriate
- * sender according to the server protocol. */
-static int srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
-{
-	if (srv == NULL)
-		return 0;
-
-	if (srv->type == TIPC_CONN)
-		return tipc_srv_send(srv, buf, bsize);
-	else if (srv->type == TCP_CONN)
-		return tcp_srv_send(srv, buf, bsize);
-	else
-		return 0;
-}
-
-
-/* Used internally to get and parse replies from the server. */
-static uint32_t tipc_get_rep(struct nmdb_srv *srv,
-		unsigned char *buf, size_t bsize,
-		unsigned char **payload, size_t *psize)
-{
-	ssize_t rv;
-	uint32_t id, reply;
-
-	rv = recv(srv->fd, buf, bsize, 0);
-	if (rv < 4 + 4) {
-		return -1;
-	}
-
-	id = * (uint32_t *) buf;
-	id = ntohl(id);
-	reply = * ((uint32_t *) buf + 1);
-	reply = ntohl(reply);
-
-	if (id != ID_CODE) {
-		return -1;
-	}
-
-	if (payload != NULL) {
-		*payload = buf + 4 + 4;
-		*psize = rv - 4 - 4;
-	}
-	return reply;
 }
 
 /* Used internally to get and parse replies from the server. */
@@ -388,6 +293,180 @@ static uint32_t tcp_get_rep(struct nmdb_srv *srv,
 		*psize = rv - 4 - 4;
 	}
 	return reply;
+}
+
+#else
+/* Stubs to use when TCP is not enabled. */
+
+int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
+{
+	return 0;
+}
+
+static int tcp_srv_send(struct nmdb_srv *srv,
+		const unsigned char *buf, size_t bsize)
+{
+	return 0;
+}
+
+static uint32_t tcp_get_rep(struct nmdb_srv *srv,
+		unsigned char *buf, size_t bsize,
+		unsigned char **payload, size_t *psize)
+{
+	return -1;
+}
+
+#endif /* ENABLE_TCP */
+
+
+/* Compare two servers by their connection identifiers. It is used internally
+ * to keep the server array sorted with qsort(). */
+static int compare_servers(const void *s1, const void *s2)
+{
+	struct nmdb_srv *srv1 = (struct nmdb_srv *) s1;
+	struct nmdb_srv *srv2 = (struct nmdb_srv *) s2;
+
+	if (srv1->type != srv2->type) {
+		if (srv1->type < srv2->type)
+			return -1;
+		else
+			return 1;
+	}
+
+#if ENABLE_TIPC
+	if (srv1->type == TIPC_CONN) {
+		if (srv1->info.tipc.port < srv2->info.tipc.port)
+			return -1;
+		else if (srv1->info.tipc.port == srv2->info.tipc.port)
+			return 0;
+		else
+			return 1;
+	}
+#endif
+#if ENABLE_TCP
+	if (srv1->type == TCP_CONN) {
+		in_addr_t a1, a2;
+		a1 = srv1->info.tcp.srvsa.sin_addr.s_addr;
+		a2 = srv2->info.tcp.srvsa.sin_addr.s_addr;
+
+		if (a1 < a2) {
+			return -1;
+		} else if (a1 == a2) {
+			in_port_t p1, p2;
+			p1 = srv1->info.tcp.srvsa.sin_port;
+			p2 = srv2->info.tcp.srvsa.sin_port;
+
+			if (p1 < p2)
+				return -1;
+			else if (p1 == p2)
+				return 0;
+			else
+				return 1;
+		} else {
+			return 1;
+		}
+	}
+#endif
+
+	/* We should never get here */
+	return 0;
+}
+
+
+
+/*
+ * Generic code
+ */
+
+/* Like recv() but either fails, or returns a complete read; if we return less
+ * than count is because EOF was reached */
+ssize_t srecv(int fd, unsigned char *buf, size_t count, int flags)
+{
+	ssize_t rv, c;
+
+	c = 0;
+
+	while (c < count) {
+		rv = recv(fd, buf + c, count - c, flags);
+
+		if (rv == count)
+			return count;
+		else if (rv < 0)
+			return rv;
+		else if (rv == 0)
+			return c;
+
+		c += rv;
+	}
+	return count;
+}
+
+/* Like srecv() but for send() */
+ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags)
+{
+	ssize_t rv, c;
+
+	c = 0;
+
+	while (c < count) {
+		rv = send(fd, buf + c, count - c, flags);
+
+		if (rv == count)
+			return count;
+		else if (rv < 0)
+			return rv;
+		else if (rv == 0)
+			return c;
+
+		c += rv;
+	}
+	return count;
+}
+
+/* Create a nmdb_t and set the first server to port. If port is < 0, the
+ * standard port is used. */
+nmdb_t *nmdb_init()
+{
+	nmdb_t *db;
+
+	db = malloc(sizeof(nmdb_t));
+	if (db == NULL) {
+		return NULL;
+	}
+
+	db->servers = NULL;
+	db->nservers = 0;
+
+	return db;
+}
+
+/* Frees a nmdb_t structure created with nmdb_init(). */
+int nmdb_free(nmdb_t *db)
+{
+	if (db->servers != NULL) {
+		int i;
+		for (i = 0; i < db->nservers; i++)
+			close(db->servers[i].fd);
+		free(db->servers);
+	}
+	free(db);
+	return 1;
+}
+
+/* Used internally to send a buffer to the given server. Calls the appropriate
+ * sender according to the server protocol. */
+static int srv_send(struct nmdb_srv *srv,
+		const unsigned char *buf, size_t bsize)
+{
+	if (srv == NULL)
+		return 0;
+
+	if (srv->type == TIPC_CONN)
+		return tipc_srv_send(srv, buf, bsize);
+	else if (srv->type == TCP_CONN)
+		return tcp_srv_send(srv, buf, bsize);
+	else
+		return 0;
 }
 
 static uint32_t get_rep(struct nmdb_srv *srv,
@@ -445,7 +524,7 @@ static ssize_t do_get(nmdb_t *db,
 {
 	ssize_t rv, t;
 	unsigned char *buf, *p;
-	size_t bsize, reqsize, psize;
+	size_t bsize, reqsize, psize = 0;
 	uint32_t request, reply;
 	struct nmdb_srv *srv;
 
