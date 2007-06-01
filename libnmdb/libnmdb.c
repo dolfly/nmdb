@@ -201,6 +201,9 @@ static int add_tcp_server_addr(nmdb_t *db, in_addr_t *inetaddr, int port)
 	db->servers = newarray;
 	db->nservers++;
 
+	if (port < 0)
+		port = TCP_SERVER_PORT;
+
 	newsrv = &(db->servers[db->nservers - 1]);
 
 	newsrv->fd = fd;

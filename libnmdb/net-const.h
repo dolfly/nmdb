@@ -11,6 +11,10 @@
 #define TIPC_SERVER_TYPE 26001
 #define TIPC_SERVER_INST 10
 
+/* TCP default listen address and port. */
+#define TCP_SERVER_ADDR "0.0.0.0"
+#define TCP_SERVER_PORT 26010
+
 /* Protocol version, for checking in the network header. */
 #define PROTO_VER 1
 
