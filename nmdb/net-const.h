@@ -7,9 +7,9 @@
  * Isolated so it's shared between the server and the library code.
  */
 
-/* TIPC server type and instance -- Hardcoded for now. */
-#define SERVER_TYPE 26001
-#define SERVER_INST 10
+/* TIPC server type (hardcoded) and default instance. */
+#define TIPC_SERVER_TYPE 26001
+#define TIPC_SERVER_INST 10
 
 /* Protocol version, for checking in the network header. */
 #define PROTO_VER 1

@@ -165,7 +165,7 @@ int tipc_init(void)
 	else
 		srvsa.addrtype = TIPC_ADDR_NAMESEQ;
 
-	srvsa.addr.nameseq.type = SERVER_TYPE;
+	srvsa.addr.nameseq.type = TIPC_SERVER_TYPE;
 	srvsa.addr.nameseq.lower = settings.tipc_lower;
 	srvsa.addr.nameseq.upper = settings.tipc_upper;
 	srvsa.scope = TIPC_CLUSTER_SCOPE;

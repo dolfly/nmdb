@@ -85,7 +85,7 @@ static int load_settings(int argc, char **argv)
 	}
 
 	if (settings.tipc_lower == -1)
-		settings.tipc_lower = SERVER_INST;
+		settings.tipc_lower = TIPC_SERVER_INST;
 	if (settings.tipc_upper == -1)
 		settings.tipc_upper = settings.tipc_lower;
 	if (settings.numobjs == -1)

@@ -127,12 +127,12 @@ int nmdb_add_tipc_server(nmdb_t *db, int port)
 	newsrv->fd = fd;
 
 	if (port < 0)
-		port = SERVER_INST;
+		port = TIPC_SERVER_INST;
 
 	newsrv->info.tipc.port = port;
 	newsrv->info.tipc.srvsa.family = AF_TIPC;
 	newsrv->info.tipc.srvsa.addrtype = TIPC_ADDR_NAMESEQ;
-	newsrv->info.tipc.srvsa.addr.nameseq.type = SERVER_TYPE;
+	newsrv->info.tipc.srvsa.addr.nameseq.type = TIPC_SERVER_TYPE;
 	newsrv->info.tipc.srvsa.addr.nameseq.lower = port;
 	newsrv->info.tipc.srvsa.addr.nameseq.upper = port;
 	newsrv->info.tipc.srvsa.scope = TIPC_CLUSTER_SCOPE;
