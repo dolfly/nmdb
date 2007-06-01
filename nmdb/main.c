@@ -28,6 +28,8 @@ static void help(void) {
 	  "  -d dbpath	database path ('database', must be created with dpmgr)\n"
 	  "  -l lower	lower TIPC port number (10)\n"
 	  "  -L upper	upper TIPC port number (= lower)\n"
+	  "  -a addr	TCP listening address (all local addresses)\n"
+	  "  -P port	TCP listening port (26010)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
@@ -45,6 +47,8 @@ static int load_settings(int argc, char **argv)
 
 	settings.tipc_lower = -1;
 	settings.tipc_upper = -1;
+	settings.tcp_addr = NULL;
+	settings.tcp_port = -1;
 	settings.numobjs = -1;
 	settings.foreground = 0;
 	settings.passive = 0;
@@ -52,7 +56,7 @@ static int load_settings(int argc, char **argv)
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
 
-	while ((c = getopt(argc, argv, "d:l:L:c:fph?")) != -1) {
+	while ((c = getopt(argc, argv, "d:l:L:a:P:c:fph?")) != -1) {
 		switch(c) {
 		case 'd':
 			free(settings.dbname);
@@ -64,6 +68,12 @@ static int load_settings(int argc, char **argv)
 			break;
 		case 'L':
 			settings.tipc_upper = atoi(optarg);
+			break;
+		case 'a':
+			settings.tcp_addr = optarg;
+			break;
+		case 'P':
+			settings.tcp_port = atoi(optarg);
 			break;
 		case 'c':
 			settings.numobjs = atoi(optarg) * 1024;
@@ -88,6 +98,10 @@ static int load_settings(int argc, char **argv)
 		settings.tipc_lower = TIPC_SERVER_INST;
 	if (settings.tipc_upper == -1)
 		settings.tipc_upper = settings.tipc_lower;
+	if (settings.tcp_addr == NULL)
+		settings.tcp_addr = TCP_SERVER_ADDR;
+	if (settings.tcp_port == -1)
+		settings.tcp_port = TCP_SERVER_PORT;
 	if (settings.numobjs == -1)
 		settings.numobjs = 128 * 1024;
 

@@ -228,12 +228,16 @@ void tcp_reply_cas(struct req_info *req, uint32_t reply)
 int tcp_init(void)
 {
 	int fd, rv;
-	static struct sockaddr_in srvsa;
+	struct sockaddr_in srvsa;
+	struct in_addr ia;
 
+	rv = inet_pton(AF_INET, settings.tcp_addr, &ia);
+	if (rv <= 0)
+		return -1;
 
 	srvsa.sin_family = AF_INET;
-	srvsa.sin_addr.s_addr = INADDR_ANY;
-	srvsa.sin_port = htons(20026);
+	srvsa.sin_addr.s_addr = ia.s_addr;
+	srvsa.sin_port = htons(settings.tcp_port);
 
 
 	fd = socket(AF_INET, SOCK_STREAM, 0);

@@ -16,6 +16,8 @@ extern struct queue *op_queue;
 struct settings {
 	int tipc_lower;
 	int tipc_upper;
+	char *tcp_addr;
+	int tcp_port;
 	int numobjs;
 	int foreground;
 	int passive;
