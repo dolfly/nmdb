@@ -8,8 +8,7 @@
 #include <string.h>		/* memcpy() */
 #include <unistd.h>		/* close() */
 #include <netinet/tcp.h>	/* TCP stuff */
-
-#include <stdio.h>
+#include <netdb.h>		/* gethostbyname() */
 
 #include "nmdb.h"
 #include "net-const.h"
@@ -182,9 +181,8 @@ int nmdb_add_tipc_server(nmdb_t *db, int port)
 	return 1;
 }
 
-
-/* Same as nmdb_add_tipc_server() but for TCP connections. */
-int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
+/* Used internally to really add the server once we have an IP address. */
+static int add_tcp_server_addr(nmdb_t *db, in_addr_t *inetaddr, int port)
 {
 	int rv, fd;
 	struct nmdb_srv *newsrv, *newarray;
@@ -208,9 +206,7 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 	newsrv->fd = fd;
 	newsrv->info.tcp.srvsa.sin_family = AF_INET;
 	newsrv->info.tcp.srvsa.sin_port = htons(port);
-	rv = inet_pton(AF_INET, addr, &(newsrv->info.tcp.srvsa.sin_addr));
-	if (rv <= 0)
-		goto error_exit;
+	newsrv->info.tcp.srvsa.sin_addr.s_addr = *inetaddr;
 
 	rv = connect(fd, (struct sockaddr *) &(newsrv->info.tcp.srvsa),
 			sizeof(newsrv->info.tcp.srvsa));
@@ -247,6 +243,25 @@ error_exit:
 	return 0;
 }
 
+/* Same as nmdb_add_tipc_server() but for TCP connections. */
+int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
+{
+	int rv;
+	struct hostent *he;
+	struct in_addr ia;
+
+	/* We try to resolve and then pass it to add_tcp_server_addr(). */
+	rv = inet_pton(AF_INET, addr, &ia);
+	if (rv <= 0) {
+		he = gethostbyname(addr);
+		if (he == NULL)
+			return 0;
+
+		ia.s_addr = *( (in_addr_t *) (he->h_addr_list[0]) );
+	}
+
+	return add_tcp_server_addr(db, &(ia.s_addr), port);
+}
 
 /* Frees a nmdb_t structure created with nmdb_init(). */
 int nmdb_free(nmdb_t *db)
@@ -260,7 +275,6 @@ int nmdb_free(nmdb_t *db)
 	free(db);
 	return 1;
 }
-
 
 static int tipc_srv_send(struct nmdb_srv *srv,
 		const unsigned char *buf, size_t bsize)
