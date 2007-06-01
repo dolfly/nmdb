@@ -39,6 +39,7 @@ struct tcp_socket {
 	size_t pktsize;
 	size_t len;
 	struct req_info *req;
+	size_t excess;
 };
 
 static void tcp_recv(int fd, short event, void *arg);
@@ -68,6 +69,29 @@ static void tcp_socket_free(struct tcp_socket *tcpsock)
 		free(tcpsock->req);
 	}
 	free(tcpsock);
+}
+
+struct req_info *build_req(struct tcp_socket *tcpsock)
+{
+	struct req_info *req;
+
+	/* Our caller will take care of freeing this when the time comes */
+	req = malloc(sizeof(struct req_info));
+	if (req == NULL)
+		return NULL;
+
+	req->fd = tcpsock->fd;
+	req->type = REQTYPE_TCP;
+	req->clisa = (struct sockaddr *) &tcpsock->clisa;
+	req->clilen = tcpsock->clilen;
+	req->mini_reply = tcp_mini_reply;
+	req->reply_err = tcp_reply_err;
+	req->reply_get = tcp_reply_get;
+	req->reply_set = tcp_reply_set;
+	req->reply_del = tcp_reply_del;
+	req->reply_cas = tcp_reply_cas;
+
+	return req;
 }
 
 static void rep_send_error(const struct req_info *req, const unsigned int code)
@@ -247,7 +271,7 @@ void tcp_close(int fd)
 /* Called by libevent for each receive event on our listen fd */
 void tcp_newconnection(int fd, short event, void *arg)
 {
-	int newfd, rv;
+	int newfd;
 	struct tcp_socket *tcpsock;
 	struct event *new_event;
 
@@ -274,24 +298,13 @@ void tcp_newconnection(int fd, short event, void *arg)
 		return;
 	}
 
-	/* Disable nagle algorithm, as we often handle small amounts of data
-	 * it can make I/O quite slow.
-	 * XXX: back this up with real performance tests. */
-	/* inherits from the listen fd? */
-#if 0
-	rv = 1;
-	if (setsockopt(newfd, IPPROTO_TCP, TCP_NODELAY, &rv, sizeof(rv)) < 0 ) {
-		close(newfd);
-		return;
-	}
-#endif
-
 	tcpsock->fd = newfd;
 	tcpsock->evt = new_event;
 	tcpsock->buf = NULL;
 	tcpsock->pktsize = 0;
 	tcpsock->len = 0;
 	tcpsock->req = NULL;
+	tcpsock->excess = 0;
 
 	event_set(new_event, newfd, EV_READ | EV_PERSIST, tcp_recv,
 			(void *) tcpsock);
@@ -334,25 +347,7 @@ static void tcp_recv(int fd, short event, void *arg)
 			goto error_exit;
 		}
 
-		/* process_buf() will take care of freeing this when the time
-		 * comes */
-		req = malloc(sizeof(struct req_info));
-		if (req == NULL) {
-			free(req);
-			goto error_exit;
-		}
-
-		req->fd = fd;
-		req->type = REQTYPE_TCP;
-		req->clisa = (struct sockaddr *) &tcpsock->clisa;
-		req->clilen = tcpsock->clilen;
-		req->mini_reply = tcp_mini_reply;
-		req->reply_err = tcp_reply_err;
-		req->reply_get = tcp_reply_get;
-		req->reply_set = tcp_reply_set;
-		req->reply_del = tcp_reply_del;
-		req->reply_cas = tcp_reply_cas;
-
+		req = build_req(tcpsock);
 		process_buf(tcpsock, req, buf, rv);
 
 	} else {
@@ -409,7 +404,7 @@ static void process_buf(struct tcp_socket *tcpsock, struct req_info *req,
 
 	printf("totaltoget: %u vs %tu\n", totaltoget, len);
 
-	if (totaltoget != len) {
+	if (totaltoget > len) {
 		if (tcpsock->buf == NULL) {
 			/* The first incomplete recv() */
 			tcpsock->buf = buf;
@@ -424,6 +419,12 @@ static void process_buf(struct tcp_socket *tcpsock, struct req_info *req,
 			tcpsock->pktsize = totaltoget;
 		}
 		return;
+
+	} else if (totaltoget < len) {
+		/* Got more than one message in the same recv(); save the
+		 * amount of bytes exceeding so we can process it later. */
+		tcpsock->excess = len - totaltoget;
+		len = totaltoget;
 	}
 
 	printf("parsing\n");
@@ -442,16 +443,35 @@ exit:
 	/* We completed the read successfuly. buf and req were allocated by
 	 * tcp_recv(), but they are freed here only after we have fully parsed
 	 * the message. */
-	if (tcpsock->buf) {
-		tcpsock->buf = NULL;
-		tcpsock->len = 0;
-		tcpsock->pktsize = 0;
-		tcpsock->req = NULL;
+
+	if (tcpsock->excess) {
+		/* If there are buffer leftovers (because there was more than
+		 * one message on a recv()), leave the buffer, move the
+		 * leftovers to the beginning, adjust the numbers and parse
+		 * recursively. */
+		memmove(buf, buf + len, tcpsock->excess);
+		tcpsock->len = tcpsock->excess;
+		tcpsock->excess = 0;
+
+		/* The req is no longer needed here, we create a new one. */
+		free(req);
+
+		/* Build a new req just like when we first recv(). */
+		req = build_req(tcpsock);
+		process_buf(tcpsock, req, buf, len);
+		return;
+
+	} else {
+		if (tcpsock->buf) {
+			tcpsock->buf = NULL;
+			tcpsock->len = 0;
+			tcpsock->pktsize = 0;
+			tcpsock->req = NULL;
+		}
+
+		free(buf);
+		free(req);
 	}
-
-	free(buf);
-	free(req);
-
 	return;
 
 error_exit:
