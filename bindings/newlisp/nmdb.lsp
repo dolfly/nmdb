@@ -5,9 +5,10 @@
 ;
 ; Functions:
 ;
-;   (nmdb:init port) -> Connects with the DB at the given port.
-;   (nmdb:add-server port) -> Adds a new server to the connection.
-;   (nmdb:free ) -> Closes the connection.
+;   (nmdb:init) -> Creates a new database object.
+;   (nmdb:add-tipc-server port) -> Adds a new TIPC server to the database.
+;   (nmdb:add-tcp-server addr port) -> Adds a new TCP server to the database.
+;   (nmdb:free) -> Closes the database.
 ;
 ;   (nmdb:db-get key) -> Gets the value associated to the given key, or -1.
 ;   (nmdb:cache-get key) -> Like dbget but only get from the cache.
@@ -23,8 +24,8 @@
 ;
 ; Example:
 ;   (load "nmdb.lsp")
-;   (nmdb:init 10)
-;   (nmdb:add-server 11)
+;   (nmdb:init)
+;   (nmdb:add-tipc-server 10)
 ;   (nmdb:db-set "Hello" "Newlisp!")
 ;   (nmdb:db-get "Hello")
 ;   (nmdb:db-del "Hello")
@@ -40,7 +41,8 @@
 (set 'libnmdb "libnmdb.so")
 
 (import libnmdb "nmdb_init")
-(import libnmdb "nmdb_add_server")
+(import libnmdb "nmdb_add_tipc_server")
+(import libnmdb "nmdb_add_tcp_server")
 (import libnmdb "nmdb_free")
 
 (import libnmdb "nmdb_set")
@@ -65,8 +67,11 @@
   (if (= NMDB 0) (set NMDB nil))
   (not (= NMDB nil)))
 
-(define (add-server port)
-  (nmdb_add_server NMDB port))
+(define (add-tipc-server port)
+  (nmdb_add_tipc_server NMDB port))
+
+(define (add-tcp-server addr port)
+  (nmdb_add_tcp_server NMDB addr port))
 
 (define (free)
   (nmdb_free NMDB))

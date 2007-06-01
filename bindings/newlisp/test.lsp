@@ -3,10 +3,11 @@
 
 (load "nmdb.lsp")
 
-(println "init\t\t"		(nmdb:init 10))
-;(println "add-server\t"		(nmdb:add-server 11))
-;(println "add-server\t"		(nmdb:add-server 12))
-;(println "add-server\t"		(nmdb:add-server 13))
+(println "init\t\t"		(nmdb:init))
+(println "add-tipc-server\t"	(nmdb:add-tipc-server 10))
+;(println "add-tipc-server\t"	(nmdb:add-tipc-server 11))
+;(println "add-tipc-server\t"	(nmdb:add-tipc-server 12))
+;(println "add-tcp-server\t"	(nmdb:add-tcp-server "127.0.0.1" -1))
 (println)
 (println "db-set D1 V1\t"	(nmdb:db-set "D1" "D1"))
 (println "sync-set S2 V2\t"	(nmdb:sync-set "S2" "V2"))
