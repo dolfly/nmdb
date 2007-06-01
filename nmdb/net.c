@@ -29,30 +29,38 @@ static void passive_to_active_sighandler(int fd, short event, void *arg)
 
 void net_loop(void)
 {
-	int tipc_fd, tcp_fd;
+	int tipc_fd = -1;
+	int tcp_fd = -1;
 	struct event tipc_evt, tcp_evt, sigterm_evt, sigint_evt, sigusr2_evt;
-
-	tipc_fd = tipc_init();
-	if (tipc_fd < 0) {
-		perror("Error initializing TIPC");
-		exit(1);
-	}
-
-	tcp_fd = tcp_init();
-	if (tcp_fd < 0) {
-		perror("Error initializing TCP");
-		exit(1);
-	}
 
 	event_init();
 
-	event_set(&tipc_evt, tipc_fd, EV_READ | EV_PERSIST, tipc_recv,
-			&tipc_evt);
-	event_add(&tipc_evt, NULL);
+	/* ENABLE_TIPC and ENABLE_TCP are preprocessor constants defined on
+	 * the command line by make. */
 
-	event_set(&tcp_evt, tcp_fd, EV_READ | EV_PERSIST, tcp_newconnection,
-			&tcp_evt);
-	event_add(&tcp_evt, NULL);
+	if (ENABLE_TIPC) {
+		tipc_fd = tipc_init();
+		if (tipc_fd < 0) {
+			perror("Error initializing TIPC");
+			exit(1);
+		}
+
+		event_set(&tipc_evt, tipc_fd, EV_READ | EV_PERSIST, tipc_recv,
+				&tipc_evt);
+		event_add(&tipc_evt, NULL);
+	}
+
+	if (ENABLE_TCP) {
+		tcp_fd = tcp_init();
+		if (tcp_fd < 0) {
+			perror("Error initializing TCP");
+			exit(1);
+		}
+
+		event_set(&tcp_evt, tcp_fd, EV_READ | EV_PERSIST, tcp_newconnection,
+				&tcp_evt);
+		event_add(&tcp_evt, NULL);
+	}
 
 	signal_set(&sigterm_evt, SIGTERM, exit_sighandler, &sigterm_evt);
 	signal_add(&sigterm_evt, NULL);

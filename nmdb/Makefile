@@ -1,6 +1,10 @@
 
+ENABLE_TIPC = 1
+ENABLE_TCP = 1
+
 CFLAGS += -std=c99 -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 $(CFLAGS)
+ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) -DENABLE_TCP=$(ENABLE_TCP)
 
 ifdef DEBUG
 ALL_CFLAGS += -g
@@ -18,7 +22,20 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = be-qdbm.o cache.o db.o queue.o net.o parse.o tcp.o tipc.o main.o
+OBJS = be-qdbm.o cache.o db.o queue.o net.o parse.o main.o
+
+ifeq ($(ENABLE_TIPC), 1)
+	OBJS += tipc.o
+else
+	OBJS += tipc-stub.o
+endif
+
+ifeq ($(ENABLE_TCP), 1)
+	OBJS += tcp.o
+else
+	OBJS += tcp-stub.o
+endif
+
 
 default: all
 
