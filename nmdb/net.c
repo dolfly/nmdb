@@ -11,6 +11,7 @@ typedef unsigned char u_char;
 
 #include "common.h"
 #include "tipc.h"
+#include "tcp.h"
 #include "net.h"
 
 
@@ -28,8 +29,8 @@ static void passive_to_active_sighandler(int fd, short event, void *arg)
 
 void net_loop(void)
 {
-	int tipc_fd;
-	struct event srv_evt, sigterm_evt, sigint_evt, sigusr2_evt;
+	int tipc_fd, tcp_fd;
+	struct event tipc_evt, tcp_evt, sigterm_evt, sigint_evt, sigusr2_evt;
 
 	tipc_fd = tipc_init();
 	if (tipc_fd < 0) {
@@ -37,11 +38,21 @@ void net_loop(void)
 		exit(1);
 	}
 
+	tcp_fd = tcp_init();
+	if (tcp_fd < 0) {
+		perror("Error initializing TCP");
+		exit(1);
+	}
+
 	event_init();
 
-	event_set(&srv_evt, tipc_fd, EV_READ | EV_PERSIST, tipc_recv,
-			&srv_evt);
-	event_add(&srv_evt, NULL);
+	event_set(&tipc_evt, tipc_fd, EV_READ | EV_PERSIST, tipc_recv,
+			&tipc_evt);
+	event_add(&tipc_evt, NULL);
+
+	event_set(&tcp_evt, tcp_fd, EV_READ | EV_PERSIST, tcp_newconnection,
+			&tcp_evt);
+	event_add(&tcp_evt, NULL);
 
 	signal_set(&sigterm_evt, SIGTERM, exit_sighandler, &sigterm_evt);
 	signal_add(&sigterm_evt, NULL);
@@ -52,6 +63,15 @@ void net_loop(void)
 	signal_add(&sigusr2_evt, NULL);
 
 	event_dispatch();
+
+	event_del(&tipc_evt);
+	event_del(&tcp_evt);
+	signal_del(&sigterm_evt);
+	signal_del(&sigint_evt);
+	signal_del(&sigusr2_evt);
+
+	tipc_close(tipc_fd);
+	tcp_close(tcp_fd);
 }
 
 
