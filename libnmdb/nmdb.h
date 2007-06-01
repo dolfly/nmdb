@@ -5,21 +5,33 @@
 #include <sys/types.h>		/* socket defines */
 #include <sys/socket.h>		/* socklen_t */
 #include <linux/tipc.h>		/* struct sockaddr_tipc */
+#include <netinet/in.h>		/* struct sockaddr_in */
 
 struct nmdb_srv {
-	int port;
-	struct sockaddr_tipc srvsa;
-	socklen_t srvlen;
+	int fd;
+	int type;
+	union {
+		struct {
+			unsigned int port;
+			struct sockaddr_tipc srvsa;
+			socklen_t srvlen;
+		} tipc;
+		struct {
+			struct sockaddr_in srvsa;
+			socklen_t srvlen;
+		} tcp;
+	} info;
+	unsigned long id;
 };
 
 typedef struct nmdb_t {
-	int fd;
 	unsigned int nservers;
 	struct nmdb_srv *servers;
 } nmdb_t;
 
-nmdb_t *nmdb_init(int port);
-int nmdb_add_server(nmdb_t *db, int port);
+nmdb_t *nmdb_init();
+int nmdb_add_tipc_server(nmdb_t *db, int port);
+int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port);
 int nmdb_free(nmdb_t *db);
 
 ssize_t nmdb_get(nmdb_t *db, const unsigned char *key, size_t ksize,
