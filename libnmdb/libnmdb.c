@@ -143,20 +143,22 @@ int nmdb_add_tipc_server(nmdb_t *db, int port)
 	int fd;
 	struct nmdb_srv *newsrv, *newarray;
 
+	fd = socket(AF_TIPC, SOCK_RDM, 0);
+	if (fd < 0)
+		return 0;
+
 	newarray = realloc(db->servers,
 			sizeof(struct nmdb_srv) * (db->nservers + 1));
 	if (newarray == NULL) {
+		close(fd);
 		return 0;
 	}
+
 	db->servers = newarray;
 	db->nservers++;
 
 	newsrv = &(db->servers[db->nservers - 1]);
 
-	fd = socket(AF_TIPC, SOCK_RDM, 0);
-	if (fd < 0) {
-		return 0;
-	}
 	newsrv->fd = fd;
 
 	if (port < 0)
@@ -187,39 +189,39 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 	int rv, fd;
 	struct nmdb_srv *newsrv, *newarray;
 
+	fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (fd < 0)
+		return 0;
+
 	newarray = realloc(db->servers,
 			sizeof(struct nmdb_srv) * (db->nservers + 1));
 	if (newarray == NULL) {
+		close(fd);
 		return 0;
 	}
+
 	db->servers = newarray;
 	db->nservers++;
 
 	newsrv = &(db->servers[db->nservers - 1]);
-
-	fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (fd < 0)
-		return 0;
 
 	newsrv->fd = fd;
 	newsrv->info.tcp.srvsa.sin_family = AF_INET;
 	newsrv->info.tcp.srvsa.sin_port = htons(port);
 	rv = inet_pton(AF_INET, addr, &(newsrv->info.tcp.srvsa.sin_addr));
 	if (rv <= 0)
-		return 0;
+		goto error_exit;
 
 	rv = connect(fd, (struct sockaddr *) &(newsrv->info.tcp.srvsa),
 			sizeof(newsrv->info.tcp.srvsa));
 	if (rv < 0)
-		return 0;
+		goto error_exit;
 
 	/* Disable Nagle algorithm because we often send small packets. Huge
 	 * gain in performance. */
 	rv = 1;
-	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &rv, sizeof(rv)) < 0 ) {
-		close(fd);
-		return -1;
-	}
+	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &rv, sizeof(rv)) < 0 )
+		goto error_exit;
 
 	newsrv->type = TCP_CONN;
 
@@ -228,6 +230,21 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 			compare_servers);
 
 	return 1;
+
+error_exit:
+	close(fd);
+	newarray = realloc(db->servers,
+			sizeof(struct nmdb_srv) * (db->nservers - 1));
+	if (newarray == NULL) {
+		db->servers = NULL;
+		db->nservers = 0;
+		return 0;
+	}
+
+	db->servers = newarray;
+	db->nservers -= 1;
+
+	return 0;
 }
 
 
