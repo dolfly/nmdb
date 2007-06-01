@@ -88,19 +88,52 @@ nmdb_t *nmdb_init()
 	return db;
 }
 
-/* Compare two servers, using their ports. It is used internally to keep the
- * server array sorted with qsort(). */
+/* Compare two servers by their connection identifiers. It is used internally
+ * to keep the server array sorted with qsort(). */
 static int compare_servers(const void *s1, const void *s2)
 {
 	struct nmdb_srv *srv1 = (struct nmdb_srv *) s1;
 	struct nmdb_srv *srv2 = (struct nmdb_srv *) s2;
 
-	if (srv1->id < srv2->id)
-		return -1;
-	else if (srv1->id == srv2->id)
-		return 0;
-	else
-		return 1;
+	if (srv1->type != srv2->type) {
+		if (srv1->type < srv2->type)
+			return -1;
+		else
+			return 1;
+	}
+
+	if (srv1->type == TIPC_CONN) {
+		if (srv1->info.tipc.port < srv2->info.tipc.port)
+			return -1;
+		else if (srv1->info.tipc.port == srv2->info.tipc.port)
+			return 0;
+		else
+			return 1;
+	} else if (srv1->type == TCP_CONN) {
+		in_addr_t a1, a2;
+		a1 = srv1->info.tcp.srvsa.sin_addr.s_addr;
+		a2 = srv2->info.tcp.srvsa.sin_addr.s_addr;
+
+		if (a1 < a2) {
+			return -1;
+		} else if (a1 == a2) {
+			in_port_t p1, p2;
+			p1 = srv1->info.tcp.srvsa.sin_port;
+			p2 = srv2->info.tcp.srvsa.sin_port;
+
+			if (p1 < p2)
+				return -1;
+			else if (p1 == p2)
+				return 0;
+			else
+				return 1;
+		} else {
+			return 1;
+		}
+	}
+
+	/* We should never get here */
+	return 0;
 }
 
 /* Add a TIPC server to the db connection. Requests will select which server
@@ -137,9 +170,6 @@ int nmdb_add_tipc_server(nmdb_t *db, int port)
 	newsrv->info.tipc.srvsa.addr.nameseq.upper = port;
 	newsrv->info.tipc.srvsa.scope = TIPC_CLUSTER_SCOPE;
 	newsrv->info.tipc.srvlen = (socklen_t) sizeof(newsrv->info.tipc.srvsa);
-
-	/* we use the port as an id for sorting */
-	newsrv->id = port;
 
 	newsrv->type = TIPC_CONN;
 
@@ -190,9 +220,6 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 		close(fd);
 		return -1;
 	}
-
-	/* FIXME: find a decent ID to use */
-	newsrv->id = port;
 
 	newsrv->type = TCP_CONN;
 

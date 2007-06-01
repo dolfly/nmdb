@@ -21,7 +21,6 @@ struct nmdb_srv {
 			socklen_t srvlen;
 		} tcp;
 	} info;
-	unsigned long id;
 };
 
 typedef struct nmdb_t {
