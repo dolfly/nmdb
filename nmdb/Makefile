@@ -18,7 +18,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = be-qdbm.o cache.o db.o queue.o net.o tcp.o tipc.o main.o
+OBJS = be-qdbm.o cache.o db.o queue.o net.o parse.o tcp.o tipc.o main.o
 
 default: all
 

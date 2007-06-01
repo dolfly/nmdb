@@ -23,10 +23,11 @@ struct req_info {
 	/* operation information */
 	uint32_t id;
 	uint32_t cmd;
-	unsigned char *payload;
+	const unsigned char *payload;
 	size_t psize;
 
 	/* operations */
+	void (*mini_reply)(struct req_info *req, uint32_t reply);
 	void (*reply_err)(struct req_info *req, uint32_t reply);
 	void (*reply_get)(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize);
