@@ -99,6 +99,9 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 	uint32_t l, r, c;
 	unsigned char minibuf[4 * 4];
 
+	if (settings.passive)
+		return;
+
 	/* Network format: length (4), ID (4), REP_ERR (4), error code (4) */
 	l = htonl(4 + 4 + 4 + 4);
 	r = htonl(REP_ERR);
@@ -122,6 +125,9 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 {
 	int rv;
 
+	if (settings.passive)
+		return 1;
+
 	rv = send(req->fd, buf, size, 0);
 	if (rv < 0) {
 		rep_send_error(req, ERR_SEND);
@@ -138,6 +144,9 @@ void tcp_mini_reply(struct req_info *req, uint32_t reply)
 	 * malloc() overhead. */
 	uint32_t len;
 	unsigned char minibuf[12];
+
+	if (settings.passive)
+		return;
 
 	len = htonl(12);
 	reply = htonl(reply);
