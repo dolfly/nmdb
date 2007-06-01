@@ -156,13 +156,12 @@ int nmdb_add_tipc_server(nmdb_t *db, int port)
 	db->servers = newarray;
 	db->nservers++;
 
-	newsrv = &(db->servers[db->nservers - 1]);
-
-	newsrv->fd = fd;
-
 	if (port < 0)
 		port = TIPC_SERVER_INST;
 
+	newsrv = &(db->servers[db->nservers - 1]);
+
+	newsrv->fd = fd;
 	newsrv->info.tipc.port = port;
 	newsrv->info.tipc.srvsa.family = AF_TIPC;
 	newsrv->info.tipc.srvsa.addrtype = TIPC_ADDR_NAMESEQ;
