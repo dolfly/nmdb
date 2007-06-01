@@ -345,6 +345,7 @@ static void parse_msg(struct req_info *req, unsigned char *buf, size_t bsize)
 	/* FIXME: little endian-only */
 	ver = (hdr & 0xF0000000) >> 28;
 	id = hdr & 0x0FFFFFFF;
+	req->id = id;
 
 	cmd = ntohl(* ((uint32_t *) buf + 1));
 
