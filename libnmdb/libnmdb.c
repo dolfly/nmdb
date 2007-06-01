@@ -296,6 +296,9 @@ static int tcp_srv_send(struct nmdb_srv *srv,
 static int srv_send(struct nmdb_srv *srv,
 		const unsigned char *buf, size_t bsize)
 {
+	if (srv == NULL)
+		return 0;
+
 	if (srv->type == TIPC_CONN)
 		return tipc_srv_send(srv, buf, bsize);
 	else if (srv->type == TCP_CONN)
@@ -375,6 +378,9 @@ static uint32_t get_rep(struct nmdb_srv *srv,
 		unsigned char *buf, size_t bsize,
 		unsigned char **payload, size_t *psize)
 {
+	if (srv == NULL)
+		return -1;
+
 	if (srv->type == TIPC_CONN)
 		return tipc_get_rep(srv, buf, bsize, payload, psize);
 	else if (srv->type == TCP_CONN)
@@ -408,6 +414,9 @@ static struct nmdb_srv *select_srv(nmdb_t *db,
 		const unsigned char *key, size_t ksize)
 {
 	uint32_t n;
+
+	if (db->nservers == 0)
+		return NULL;
 
 	n = checksum(key, ksize) % db->nservers;
 	return &(db->servers[n]);
