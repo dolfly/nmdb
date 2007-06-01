@@ -20,10 +20,13 @@ way.
 Network interface
 =================
 
-The server communicates with its clients using TIPC_ messages, which are
-limited to 66000 bytes in size. It's completely connectionless, and uses the
-reliable datagram layer provided by TIPC_. The network protocol is specified
-in another document, and will not be subject of analysis here.
+The server communicates with its clients using messages, which can be
+delivered through TIPC_ or TCP. Messages are limited by design to 64k so they
+stay inside within TIPC_'s limits.
+
+TIPC_ is completely connectionless, and uses the reliable datagram layer
+provided by TIPC_. The network protocol is specified in another document, and
+will not be subject of analysis here.
 
 The interaction is very simple: the client sends a request message for an
 action, and the server replies to it. There is only one message per request,
@@ -152,12 +155,14 @@ acts upon them internally, but never sends any replies. It is used for
 redundancy purposes, allowing the administrator to have an up-to-date copy of
 the database in case the main one fails.
 
+It only makes sense if used with TIPC_ because it can multicast messages.
+
 The implementation is quite simple, because the code paths are exactly the
 same, with the exception of skipping the network replies, so they're done
 conditionally depending on the passive setting.
 
-Live switching of a server from passive to active (and vice-versa) should be
-possible, although it is not yet implemented.
+Live switching of a server from passive to active (and vice-versa) can be done
+at runtime by sending a *SIGUSR2* signal to the server.
 
 
 The cache layer
