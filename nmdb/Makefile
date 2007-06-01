@@ -3,6 +3,10 @@ CFLAGS += -std=c99 -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 $(CFLAGS)
 
 ifdef DEBUG
+ALL_CFLAGS += -g
+endif
+
+ifdef PROFILE
 ALL_CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
 endif
 
