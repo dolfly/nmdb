@@ -8,10 +8,10 @@ nmdb User Guide
 Introduction
 ============
 
-nmdb_ is a simple and fast cache and database for TIPC_ clusters. It allows
-applications in the cluster to use a centralized, shared cache and database in
-a very easy way. It stores *(key, value)* pairs, with each key having only one
-associated value.
+nmdb_ is a simple and fast cache and database for TIPC_ and TCP clusters. It
+allows applications in the cluster to use a centralized, shared cache and
+database in a very easy way. It stores *(key, value)* pairs, with each key
+having only one associated value.
 
 This document explains how to setup nmdb and a simple guide to writing
 clients. It also includes a "quick start" section for the anxious.
@@ -61,7 +61,8 @@ simple way to test it is to use the python module, like this::
   [GCC 4.1.1 (Gentoo 4.1.1)] on linux2
   Type "help", "copyright", "credits" or "license" for more information.
   >>> import nmdb               # import the module
-  >>> db = nmdb.DB()            # connect to the server
+  >>> db = nmdb.DB()            # create a DB object
+  >>> db.add_tipc_server()      # connect to the TIPC server 
   >>> db['x'] = 1               # store some data
   >>> db[(1, 2)] = (2, 6)
   >>> print db['x'], db[(1, 2)] # retreive the values
@@ -78,9 +79,10 @@ out how to setup a simple TIPC cluster.
 TIPC setup
 ==========
 
-If you want to use the server and the clients in different machines, you need
-to setup your TIPC network. If you just want to run everything in one machine,
-or you already have a TIPC network set up, you can skip this section.
+If you want to use the server and the clients in different machines using
+TIPC, you need to setup your TIPC network. If you just want to run everything
+in one machine, you already have a TIPC network set up, or you only want to
+use TCP connections, you can skip this section.
 
 Before we begin, all the machines should already be connected in an Ethernet
 LAN, and have the tipc-config application that should come with your Linux
@@ -141,7 +143,7 @@ Cache size
   nmdb's cache is a main component of the server. In fact you can use it
   exclusively for caching purposes, like memcached_. So the size becomes an
   important issue if you have performance requirements.
-  
+
   It is only possible to limit the cache size by the maximum number of objects
   in the cache.
 
@@ -262,12 +264,14 @@ objects as values, unless you know what you are doing.
 To start a connection to the servers, you must first decide which mode you are
 going to use: the normal database-backed mode, database-backed with
 synchronous access, or cache only. Let's say you want to use the normal mode
-and connect to the server at port 11, and then add the other two servers::
+and connect to the TIPC servers at port 11, 12, and a TCP server on localhost
+at the default port::
 
   import nmdb
-  db = nmdb.DB(11)
-  db.add_server(12)
-  db.add_server(13)
+  db = nmdb.DB()
+  db.add_tipc_server(11)
+  db.add_tipc_server(12)
+  db.add_tcp_server("127.0.0.1")
 
 Now you're ready to use it. Let's suppose you want to write a recursive
 function to calculate the factorial of a number. But before doing the
@@ -316,9 +320,10 @@ similar to what we did before, and has the advantage of not having to write
 our own cache management routines::
 
   import nmdb
-  db = nmdb.Cache(11)
-  db.add_server(12)
-  db.add_server(13)
+  db = nmdb.Cache()
+  db.add_tipc_server(11)
+  db.add_tipc_server(12)
+  db.add_tcp_server("127.0.0.1")
 
 Let's write the decorator::
 
@@ -360,15 +365,17 @@ The C library is in essence similar to the Python module, so we won't make a
 very long example here, only a brief display of the available functions.
 
 Let's begin by creating a "nmdb descriptor" which is of type *nmdb_t*, and
-connecting it to your three servers::
+connecting it to your three servers (two TIPC at ports 11 and 12, one TCP on
+localhost, default port)::
 
   unsigned char *key, *val;
   size_t ksize, vsize;
   nmdb_t *db;
 
-  db = nmdb_connect(11);
-  nmdb_add_server(db, 12);
-  nmdb_add_server(db, 13);
+  db = nmdb_init();
+  nmdb_add_tipc_server(db, 11);
+  nmdb_add_tipc_server(db, 12);
+  nmdb_add_tcp_server(db, "127.0.0.1", -1);
 
 Now you can do some operations (allocations and checks are not shown for brevity)::
 
