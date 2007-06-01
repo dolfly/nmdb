@@ -33,9 +33,9 @@ class DB
 	int mode = MODE_NORMAL;
 
 
-	this(int port = 10)
+	this()
 	{
-		db = nmdb_init(port);
+		db = nmdb_init();
 	}
 
 	~this()
@@ -43,9 +43,17 @@ class DB
 		nmdb_free(db);
 	}
 
-	void add_server(int port)
+	void add_tipc_server(int port = -1)
 	{
-		int r = nmdb_add_server(db, port);
+		int r = nmdb_add_tipc_server(db, port);
+		if (r == 0) {
+			throw new Exception("Can't add server");
+		}
+	}
+
+	void add_tcp_server(char[] addr, int port = -1)
+	{
+		int r = nmdb_add_tcp_server(db, cast(ubyte *) addr.ptr, port);
 		if (r == 0) {
 			throw new Exception("Can't add server");
 		}

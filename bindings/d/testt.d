@@ -9,6 +9,7 @@ int main()
 	char[] val1;
 
 	nmdb.DB db = new nmdb.DB();
+	db.add_tipc_server();
 
 	db.mode = MODE_CACHE;
 	db["1"] = "D";

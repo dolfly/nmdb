@@ -16,7 +16,8 @@ int main(char [][] argv)
 	auto times = atoi(argv[1]);
 	char[] val;
 
-	nmdb.DB db = new nmdb.DB(10);
+	nmdb.DB db = new nmdb.DB();
+	db.add_tipc_server();
 	db.mode = nmdb.MODE_CACHE;
 
 	auto counter = new PerformanceCounter;
