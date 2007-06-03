@@ -18,7 +18,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = libnmdb.o test1c.o test1d.o test2c.o test2cm.o test2d.o test2dm.o
+OBJS = libnmdb.o
 
 
 default: all
@@ -33,27 +33,6 @@ libnmdb.so: libnmdb.o
 
 libnmdb.a: libnmdb.o
 	$(AR) cr libnmdb.a libnmdb.o
-
-
-tests: test1c test1d test2c test2cm test2d test2dm
-
-test1c: test1c.o libnmdb.a
-	$(CC) $(ALL_CFLAGS) test1c.o libnmdb.a -o test1c
-
-test1d: test1d.o libnmdb.a
-	$(CC) $(ALL_CFLAGS) test1d.o libnmdb.a -o test1d
-
-test2c: test2c.o libnmdb.a
-	$(CC) $(ALL_CFLAGS) test2c.o libnmdb.a -o test2c
-
-test2cm: test2cm.o libnmdb.a
-	$(CC) $(ALL_CFLAGS) test2cm.o libnmdb.a -o test2cm
-
-test2d: test2d.o libnmdb.a
-	$(CC) $(ALL_CFLAGS) test2d.o libnmdb.a -o test2d
-
-test2dm: test2dm.o libnmdb.a
-	$(CC) $(ALL_CFLAGS) test2dm.o libnmdb.a -o test2dm
 
 
 install: libs
@@ -74,9 +53,8 @@ install: libs
 
 clean:
 	rm -f $(OBJS) libnmdb.so libnmdb.a
-	rm -f test1c test1d test2c test2cm test2d test2dm
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
-.PHONY: default all libs tests install clean
+.PHONY: default all libs install clean
 
 

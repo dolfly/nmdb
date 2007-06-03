@@ -43,9 +43,9 @@ Requisites:
 To compile the server and the library, you can just use "make" on their
 directories. To install them, use "make install".
 
-To run some tests, start the server and then go to the library directory. Run
-"make tests", and then use the "test1c" and "test2c" to test the cache layer,
-and "test1d" and "test2d" to test the database backend.
+To run some tests, start the server and then go to the "tests/" directory. Run
+"make", and then use the "test1c" and "test2c" to test the cache layer, and
+"test1d" and "test2d" to test the database backend.
 
 To compile the Python bindings, you need to have the library already
 installed. Go to the directory and run "python setup.py install", which will
