@@ -312,42 +312,39 @@ void tcp_newconnection(int fd, short event, void *arg)
 	return;
 }
 
+
+/* Static common buffer to avoid unnecessary allocation on the common case
+ * where we get an entire single message on each recv().
+ * Allocate a little bit more over the max. message size, which is 64kb. */
+#define SBSIZE (68 * 1024)
+static unsigned char static_buf[SBSIZE];
+
 /* Called by libevent for each receive event */
 static void tcp_recv(int fd, short event, void *arg)
 {
 	int rv;
 	size_t bsize;
-	unsigned char *buf = NULL;
 	struct tcp_socket *tcpsock;
 
 	tcpsock = (struct tcp_socket *) arg;
 
 	if (tcpsock->buf == NULL) {
 		/* New incoming message */
+		bsize = SBSIZE;
 
-		/* Allocate a little bit more over the max. message size,
-		 * which is 64k; it will be freed by process_buf(). */
-		bsize = 68 * 1024;
-		buf = malloc(bsize);
-		if (buf == NULL) {
-			goto error_exit;
-		}
-
-		rv = recv(fd, buf, bsize, 0);
+		rv = recv(fd, static_buf, bsize, 0);
 		if (rv < 0 && errno == EAGAIN) {
 			/* We were awoken but have no data to read, so we do
 			 * nothing */
-			free(buf);
 			return;
 		} else if (rv <= 0) {
 			/* Orderly shutdown or error; close the file
 			 * descriptor in either case. */
-			free(buf);
 			goto error_exit;
 		}
 
 		init_req(tcpsock);
-		process_buf(tcpsock, buf, rv);
+		process_buf(tcpsock, static_buf, rv);
 
 	} else {
 		/* We already got a partial message, complete it. */
@@ -405,8 +402,15 @@ static void process_buf(struct tcp_socket *tcpsock,
 
 	if (totaltoget > len) {
 		if (tcpsock->buf == NULL) {
-			/* The first incomplete recv() */
-			tcpsock->buf = buf;
+			/* The first incomplete recv().
+			 * Create a temporary buffer and copy the contents of
+			 * our current one (which is static_buf, otherwise
+			 * tcpsock->buf wouldn't be NULL) to it. */
+			tcpsock->buf = malloc(SBSIZE);
+			if (tcpsock->buf == NULL)
+				goto error_exit;
+
+			memcpy(tcpsock->buf, buf, len);
 			tcpsock->len = len;
 			tcpsock->pktsize = totaltoget;
 
@@ -446,7 +450,10 @@ exit:
 		/* If there are buffer leftovers (because there was more than
 		 * one message on a recv()), leave the buffer, move the
 		 * leftovers to the beginning, adjust the numbers and parse
-		 * recursively. */
+		 * recursively.
+		 * The buffer can be the static one or the one in tcpsock (if
+		 * we had a short recv()); we don't care because we know it
+		 * will be big enough to hold an entire message anyway. */
 		memmove(buf, buf + len, tcpsock->excess);
 		tcpsock->len = tcpsock->excess;
 		tcpsock->excess = 0;
@@ -456,25 +463,24 @@ exit:
 		process_buf(tcpsock, buf, len);
 		return;
 
-	} else {
-		if (tcpsock->buf) {
-			tcpsock->buf = NULL;
-			tcpsock->len = 0;
-			tcpsock->pktsize = 0;
-		}
-
-		free(buf);
 	}
+
+	if (tcpsock->buf) {
+		/* We had an incomplete read somewhere along the processing of
+		 * this message, and had to malloc() a temporary space. free()
+		 * it and reset the associated information. */
+		free(tcpsock->buf);
+		tcpsock->buf = NULL;
+		tcpsock->len = 0;
+		tcpsock->pktsize = 0;
+		tcpsock->excess = 0;
+	}
+
 	return;
 
 error_exit:
 	printf("pm error\n");
 		printf("t:%p b:%p\n", tcpsock->buf, buf);
-	if (tcpsock->buf != buf) {
-		free(tcpsock->buf);
-	}
-	free(buf);
-	tcpsock->buf = NULL;
 
 	close(tcpsock->fd);
 	event_del(tcpsock->evt);
