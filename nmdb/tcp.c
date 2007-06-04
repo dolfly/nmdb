@@ -416,8 +416,9 @@ static void process_buf(struct tcp_socket *tcpsock,
 			tcpsock->pktsize = totaltoget;
 		}
 		return;
+	}
 
-	} else if (totaltoget < len) {
+	if (totaltoget < len) {
 		/* Got more than one message in the same recv(); save the
 		 * amount of bytes exceeding so we can process it later. */
 		tcpsock->excess = len - totaltoget;
