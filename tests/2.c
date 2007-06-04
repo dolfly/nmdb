@@ -5,8 +5,9 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
-#include "nmdb.h"
+#include <nmdb.h>
 #include "timer.h"
+#include "prototypes.h"
 
 
 int main(int argc, char **argv)
@@ -49,13 +50,14 @@ int main(int argc, char **argv)
 		perror("nmdb_init() failed");
 		return 1;
 	}
-	nmdb_add_tipc_server(db, -1);
+
+	NADDSRV(db);
 
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
 		* (int *) val = i;
-		r = nmdb_cache_set(db, key, ksize, val, vsize);
+		r = NSET(db, key, ksize, val, vsize);
 		if (r < 0) {
 			perror("Set");
 			return 1;
@@ -69,7 +71,7 @@ int main(int argc, char **argv)
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
-		r = nmdb_cache_get(db, key, ksize, val, vsize);
+		r = NGET(db, key, ksize, val, vsize);
 		if (r < 0) {
 			perror("Get");
 			return 1;
@@ -83,7 +85,7 @@ int main(int argc, char **argv)
 	timer_start();
 	for (i = 0; i < times; i++) {
 		* (int *) key = i;
-		r = nmdb_cache_del(db, key, ksize);
+		r = NDEL(db, key, ksize);
 		if (r < 0) {
 			perror("Del");
 			return 1;
