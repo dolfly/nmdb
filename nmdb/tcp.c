@@ -38,12 +38,12 @@ struct tcp_socket {
 	unsigned char *buf;
 	size_t pktsize;
 	size_t len;
-	struct req_info *req;
+	struct req_info req;
 	size_t excess;
 };
 
 static void tcp_recv(int fd, short event, void *arg);
-static void process_buf(struct tcp_socket *tcpsock, struct req_info *req,
+static void process_buf(struct tcp_socket *tcpsock,
 		unsigned char *buf, size_t len);
 
 static void tcp_mini_reply(struct req_info *req, uint32_t reply);
@@ -65,33 +65,21 @@ static void tcp_socket_free(struct tcp_socket *tcpsock)
 		free(tcpsock->evt);
 	if (tcpsock->buf)
 		free(tcpsock->buf);
-	if (tcpsock->req) {
-		free(tcpsock->req);
-	}
 	free(tcpsock);
 }
 
-struct req_info *build_req(struct tcp_socket *tcpsock)
+static void init_req(struct tcp_socket *tcpsock)
 {
-	struct req_info *req;
-
-	/* Our caller will take care of freeing this when the time comes */
-	req = malloc(sizeof(struct req_info));
-	if (req == NULL)
-		return NULL;
-
-	req->fd = tcpsock->fd;
-	req->type = REQTYPE_TCP;
-	req->clisa = (struct sockaddr *) &tcpsock->clisa;
-	req->clilen = tcpsock->clilen;
-	req->mini_reply = tcp_mini_reply;
-	req->reply_err = tcp_reply_err;
-	req->reply_get = tcp_reply_get;
-	req->reply_set = tcp_reply_set;
-	req->reply_del = tcp_reply_del;
-	req->reply_cas = tcp_reply_cas;
-
-	return req;
+	tcpsock->req.fd = tcpsock->fd;
+	tcpsock->req.type = REQTYPE_TCP;
+	tcpsock->req.clisa = (struct sockaddr *) &tcpsock->clisa;
+	tcpsock->req.clilen = tcpsock->clilen;
+	tcpsock->req.mini_reply = tcp_mini_reply;
+	tcpsock->req.reply_err = tcp_reply_err;
+	tcpsock->req.reply_get = tcp_reply_get;
+	tcpsock->req.reply_set = tcp_reply_set;
+	tcpsock->req.reply_del = tcp_reply_del;
+	tcpsock->req.reply_cas = tcp_reply_cas;
 }
 
 static void rep_send_error(const struct req_info *req, const unsigned int code)
@@ -316,7 +304,6 @@ void tcp_newconnection(int fd, short event, void *arg)
 	tcpsock->buf = NULL;
 	tcpsock->pktsize = 0;
 	tcpsock->len = 0;
-	tcpsock->req = NULL;
 	tcpsock->excess = 0;
 
 	event_set(new_event, newfd, EV_READ | EV_PERSIST, tcp_recv,
@@ -333,7 +320,6 @@ static void tcp_recv(int fd, short event, void *arg)
 	size_t bsize;
 	unsigned char *buf = NULL;
 	struct tcp_socket *tcpsock;
-	struct req_info *req = NULL;
 
 	tcpsock = (struct tcp_socket *) arg;
 
@@ -360,8 +346,8 @@ static void tcp_recv(int fd, short event, void *arg)
 			goto error_exit;
 		}
 
-		req = build_req(tcpsock);
-		process_buf(tcpsock, req, buf, rv);
+		init_req(tcpsock);
+		process_buf(tcpsock, buf, rv);
 
 	} else {
 		/* We already got a partial message, complete it. */
@@ -378,7 +364,7 @@ static void tcp_recv(int fd, short event, void *arg)
 
 		tcpsock->len += rv;
 
-		process_buf(tcpsock, tcpsock->req, tcpsock->buf, tcpsock->len);
+		process_buf(tcpsock,tcpsock->buf, tcpsock->len);
 	}
 
 	return;
@@ -392,7 +378,7 @@ error_exit:
 
 
 /* Main message unwrapping */
-static void process_buf(struct tcp_socket *tcpsock, struct req_info *req,
+static void process_buf(struct tcp_socket *tcpsock,
 		unsigned char *buf, size_t len)
 {
 	uint32_t totaltoget = 0;
@@ -423,7 +409,6 @@ static void process_buf(struct tcp_socket *tcpsock, struct req_info *req,
 			tcpsock->buf = buf;
 			tcpsock->len = len;
 			tcpsock->pktsize = totaltoget;
-			tcpsock->req = req;
 
 		} else {
 			/* We already had an incomplete recv() and this is
@@ -444,7 +429,7 @@ static void process_buf(struct tcp_socket *tcpsock, struct req_info *req,
 
 	/* The buffer is complete, parse it as usual. */
 
-	if (parse_message(req, buf + 4, len - 4)) {
+	if (parse_message(&(tcpsock->req), buf + 4, len - 4)) {
 		goto exit;
 	} else {
 		goto error_exit;
@@ -466,12 +451,9 @@ exit:
 		tcpsock->len = tcpsock->excess;
 		tcpsock->excess = 0;
 
-		/* The req is no longer needed here, we create a new one. */
-		free(req);
-
 		/* Build a new req just like when we first recv(). */
-		req = build_req(tcpsock);
-		process_buf(tcpsock, req, buf, len);
+		init_req(tcpsock);
+		process_buf(tcpsock, buf, len);
 		return;
 
 	} else {
@@ -479,11 +461,9 @@ exit:
 			tcpsock->buf = NULL;
 			tcpsock->len = 0;
 			tcpsock->pktsize = 0;
-			tcpsock->req = NULL;
 		}
 
 		free(buf);
-		free(req);
 	}
 	return;
 
@@ -495,11 +475,6 @@ error_exit:
 	}
 	free(buf);
 	tcpsock->buf = NULL;
-
-	/* We know that if tcpsock->req != NULL => tcpsock->req == req; so
-	 * there is no need to do the conditional free(). */
-	free(req);
-	tcpsock->req = NULL;
 
 	close(tcpsock->fd);
 	event_del(tcpsock->evt);
