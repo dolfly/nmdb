@@ -352,6 +352,7 @@ static void tcp_recv(int fd, short event, void *arg)
 		if (rv < 0 && errno == EAGAIN) {
 			/* We were awoken but have no data to read, so we do
 			 * nothing */
+			free(buf);
 			return;
 		} else if (rv <= 0) {
 			/* Orderly shutdown or error; close the file
