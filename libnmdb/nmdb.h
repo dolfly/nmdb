@@ -7,6 +7,7 @@
 #include <linux/tipc.h>		/* struct sockaddr_tipc */
 #include <netinet/in.h>		/* struct sockaddr_in */
 
+
 struct nmdb_srv {
 	int fd;
 	int type;

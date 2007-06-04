@@ -18,7 +18,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = libnmdb.o
+OBJS = libnmdb.o tcp.o tipc.o
 
 
 default: all
@@ -28,11 +28,11 @@ all: libs
 
 libs: libnmdb.so libnmdb.a
 
-libnmdb.so: libnmdb.o
-	$(CC) $(ALL_CFLAGS) -shared -fPIC libnmdb.o -o libnmdb.so
+libnmdb.so: $(OBJS)
+	$(CC) $(ALL_CFLAGS) -shared -fPIC $(OBJS) -o libnmdb.so
 
-libnmdb.a: libnmdb.o
-	$(AR) cr libnmdb.a libnmdb.o
+libnmdb.a: $(OBJS)
+	$(AR) cr libnmdb.a $(OBJS)
 
 
 install: libs
