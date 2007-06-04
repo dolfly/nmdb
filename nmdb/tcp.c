@@ -380,11 +380,8 @@ static void process_buf(struct tcp_socket *tcpsock,
 {
 	uint32_t totaltoget = 0;
 
-	printf("parse l:%tu tl:%tu tb:%p ts:%tu \n", len, tcpsock->len, tcpsock->buf, tcpsock->pktsize);
-
 	if (len >= 4) {
 		totaltoget = * (uint32_t *) buf;
-		printf("got len: %u (%u)\n", ntohl(totaltoget), totaltoget);
 		totaltoget = ntohl(totaltoget);
 		if (totaltoget > (64 * 1024) || totaltoget <= 12) {
 			/* Message too big or too small, close the connection. */
@@ -397,8 +394,6 @@ static void process_buf(struct tcp_socket *tcpsock,
 		 * then care about the rest. */
 		totaltoget = 4;
 	}
-
-	printf("totaltoget: %u vs %tu\n", totaltoget, len);
 
 	if (totaltoget > len) {
 		if (tcpsock->buf == NULL) {
@@ -429,10 +424,7 @@ static void process_buf(struct tcp_socket *tcpsock,
 		len = totaltoget;
 	}
 
-	printf("parsing\n");
-
 	/* The buffer is complete, parse it as usual. */
-
 	if (parse_message(&(tcpsock->req), buf + 4, len - 4)) {
 		goto exit;
 	} else {
@@ -441,7 +433,6 @@ static void process_buf(struct tcp_socket *tcpsock,
 
 
 exit:
-	printf("pm exit\n");
 	/* We completed the read successfuly. buf and req were allocated by
 	 * tcp_recv(), but they are freed here only after we have fully parsed
 	 * the message. */
@@ -479,8 +470,7 @@ exit:
 	return;
 
 error_exit:
-	printf("pm error\n");
-		printf("t:%p b:%p\n", tcpsock->buf, buf);
+	printf("pm error - t:%p b:%p\n", tcpsock->buf, buf);
 
 	close(tcpsock->fd);
 	event_del(tcpsock->evt);
