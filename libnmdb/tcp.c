@@ -103,15 +103,13 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 }
 
 int tcp_srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
+		unsigned char *buf, size_t bsize)
 {
 	ssize_t rv;
 	uint32_t len;
 
-	len = htonl(bsize + 4);
-	rv = ssend(srv->fd, (unsigned char *) &len, 4, 0);
-	if (rv != 4)
-		return 0;
+	len = htonl(bsize);
+	memcpy(buf, (const void *) &len, 4);
 
 	rv = ssend(srv->fd, buf, bsize, 0);
 	if (rv != bsize)
@@ -119,30 +117,58 @@ int tcp_srv_send(struct nmdb_srv *srv,
 	return 1;
 }
 
+static ssize_t recv_msg(int fd, unsigned char *buf, size_t bsize)
+{
+	ssize_t rv, t;
+	uint32_t msgsize;
+
+	rv = recv(fd, buf, bsize, 0);
+	if (rv <= 0)
+		return rv;
+
+	if (rv < 4) {
+		t = srecv(fd, buf + rv, 4 - rv, 0);
+		if (t <= 0) {
+			return t;
+		}
+
+		rv = rv + t;
+	}
+
+	msgsize = * ((uint32_t *) buf);
+	msgsize = ntohl(msgsize);
+
+	if (msgsize > bsize)
+		return -1;
+
+	if (rv < msgsize) {
+		t = srecv(fd, buf + rv, msgsize - rv, 0);
+		if (t <= 0) {
+			return t;
+		}
+
+		rv = rv + t;
+	}
+
+	return rv;
+}
+
+
 /* Used internally to get and parse replies from the server. */
 uint32_t tcp_get_rep(struct nmdb_srv *srv,
 		unsigned char *buf, size_t bsize,
 		unsigned char **payload, size_t *psize)
 {
 	ssize_t rv;
-	uint32_t id, reply, msgsize;
+	uint32_t id, reply;
 
-	rv = srecv(srv->fd, (unsigned char *) &msgsize, 4, 0);
-	if (rv != 4)
+	rv = recv_msg(srv->fd, buf, bsize);
+	if (rv <= 0)
 		return -1;
 
-	msgsize = ntohl(msgsize);
-	if (bsize < msgsize)
-		return -1;
-
-	rv = srecv(srv->fd, buf, msgsize - 4, 0);
-	if (rv != msgsize - 4) {
-		return -1;
-	}
-
-	id = * (uint32_t *) buf;
+	id = * ((uint32_t *) buf + 1);
 	id = ntohl(id);
-	reply = * ((uint32_t *) buf + 1);
+	reply = * ((uint32_t *) buf + 2);
 	reply = ntohl(reply);
 
 	if (id != ID_CODE) {
@@ -150,8 +176,8 @@ uint32_t tcp_get_rep(struct nmdb_srv *srv,
 	}
 
 	if (payload != NULL) {
-		*payload = buf + 4 + 4;
-		*psize = rv - 4 - 4;
+		*payload = buf + 4 + 4 + 4;
+		*psize = rv - 4 - 4 - 4;
 	}
 	return reply;
 }
