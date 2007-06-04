@@ -7,6 +7,10 @@ ALL_CFLAGS = -D_XOPEN_SOURCE=500 -fPIC $(CFLAGS)
 ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) -DENABLE_TCP=$(ENABLE_TCP)
 
 ifdef DEBUG
+ALL_CFLAGS += -g
+endif
+
+ifdef PROFILE
 ALL_CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
 endif
 
