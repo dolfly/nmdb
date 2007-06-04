@@ -251,8 +251,7 @@ int tcp_init(void)
 	}
 
 	/* Disable nagle algorithm, as we often handle small amounts of data
-	 * it can make I/O quite slow.
-	 * XXX: back this up with real performance tests. */
+	 * it can make I/O quite slow. */
 	rv = 1;
 	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &rv, sizeof(rv)) < 0 ) {
 		close(fd);
@@ -338,6 +337,7 @@ static void tcp_recv(int fd, short event, void *arg)
 		if (rv < 0 && errno == EAGAIN) {
 			/* We were awoken but have no data to read, so we do
 			 * nothing */
+			free(buf);
 			return;
 		} else if (rv <= 0) {
 			/* Orderly shutdown or error; close the file
