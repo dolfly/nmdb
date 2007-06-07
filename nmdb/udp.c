@@ -216,9 +216,7 @@ void udp_recv(int fd, short event, void *arg)
 
 	rv = recvfrom(fd, buf, bsize, 0, (struct sockaddr *) &clisa,
 			&clilen);
-	if (rv <= 0) {
-		/* rv == 0 means "return of an undeliverable message", which
-		 * we ignore; -1 means other error. */
+	if (rv < 0) {
 		goto exit;
 	}
 
