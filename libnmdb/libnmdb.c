@@ -152,14 +152,16 @@ static int srv_send(struct nmdb_srv *srv,
 	if (srv == NULL)
 		return 0;
 
-	if (srv->type == TIPC_CONN)
-		return tipc_srv_send(srv, buf, bsize);
-	else if (srv->type == TCP_CONN)
-		return tcp_srv_send(srv, buf, bsize);
-	else if (srv->type == UDP_CONN)
-		return udp_srv_send(srv, buf, bsize);
-	else
-		return 0;
+	switch (srv->type) {
+		case TIPC_CONN:
+			return tipc_srv_send(srv, buf, bsize);
+		case TCP_CONN:
+			return tcp_srv_send(srv, buf, bsize);
+		case UDP_CONN:
+			return udp_srv_send(srv, buf, bsize);
+		default:
+			return 0;
+	}
 }
 
 static uint32_t get_rep(struct nmdb_srv *srv,
@@ -169,14 +171,16 @@ static uint32_t get_rep(struct nmdb_srv *srv,
 	if (srv == NULL)
 		return -1;
 
-	if (srv->type == TIPC_CONN)
-		return tipc_get_rep(srv, buf, bsize, payload, psize);
-	else if (srv->type == TCP_CONN)
-		return tcp_get_rep(srv, buf, bsize, payload, psize);
-	else if (srv->type == UDP_CONN)
-		return udp_get_rep(srv, buf, bsize, payload, psize);
-	else
-		return 0;
+	switch (srv->type) {
+		case TIPC_CONN:
+			return tipc_get_rep(srv, buf, bsize, payload, psize);
+		case TCP_CONN:
+			return tcp_get_rep(srv, buf, bsize, payload, psize);
+		case UDP_CONN:
+			return udp_get_rep(srv, buf, bsize, payload, psize);
+		default:
+			return 0;
+	}
 }
 
 static int srv_get_msg_offset(struct nmdb_srv *srv)
@@ -184,14 +188,16 @@ static int srv_get_msg_offset(struct nmdb_srv *srv)
 	if (srv == NULL)
 		return 0;
 
-	if (srv->type == TIPC_CONN)
-		return TIPC_MSG_OFFSET;
-	else if (srv->type == TCP_CONN)
-		return TCP_MSG_OFFSET;
-	else if (srv->type == UDP_CONN)
-		return UDP_MSG_OFFSET;
-	else
-		return 0;
+	switch (srv->type) {
+		case TIPC_CONN:
+			return TIPC_MSG_OFFSET;
+		case TCP_CONN:
+			return TCP_MSG_OFFSET;
+		case UDP_CONN:
+			return UDP_MSG_OFFSET;
+		default:
+			return 0;
+	}
 }
 
 
