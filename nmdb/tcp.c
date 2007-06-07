@@ -434,10 +434,6 @@ static void process_buf(struct tcp_socket *tcpsock,
 
 
 exit:
-	/* We completed the read successfuly. buf and req were allocated by
-	 * tcp_recv(), but they are freed here only after we have fully parsed
-	 * the message. */
-
 	if (tcpsock->excess) {
 		/* If there are buffer leftovers (because there was more than
 		 * one message on a recv()), leave the buffer, move the
