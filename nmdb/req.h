@@ -10,6 +10,7 @@
 /* req_info types, according to the protocol */
 #define REQTYPE_TIPC 1
 #define REQTYPE_TCP 2
+#define REQTYPE_UDP 3
 
 
 struct req_info {

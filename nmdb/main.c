@@ -30,6 +30,8 @@ static void help(void) {
 	  "  -L upper	upper TIPC port number (= lower)\n"
 	  "  -a addr	TCP listening address (all local addresses)\n"
 	  "  -P port	TCP listening port (26010)\n"
+	  "  -U addr	UDP listening address (all local addresses)\n"
+	  "  -u port	UDP listening port (26010)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
@@ -49,6 +51,8 @@ static int load_settings(int argc, char **argv)
 	settings.tipc_upper = -1;
 	settings.tcp_addr = NULL;
 	settings.tcp_port = -1;
+	settings.udp_addr = NULL;
+	settings.udp_port = -1;
 	settings.numobjs = -1;
 	settings.foreground = 0;
 	settings.passive = 0;
@@ -75,6 +79,13 @@ static int load_settings(int argc, char **argv)
 		case 'P':
 			settings.tcp_port = atoi(optarg);
 			break;
+		case 'U':
+			settings.udp_addr = optarg;
+			break;
+		case 'u':
+			settings.udp_port = atoi(optarg);
+			break;
+
 		case 'c':
 			settings.numobjs = atoi(optarg) * 1024;
 			break;
@@ -102,6 +113,10 @@ static int load_settings(int argc, char **argv)
 		settings.tcp_addr = TCP_SERVER_ADDR;
 	if (settings.tcp_port == -1)
 		settings.tcp_port = TCP_SERVER_PORT;
+	if (settings.udp_addr == NULL)
+		settings.udp_addr = UDP_SERVER_ADDR;
+	if (settings.udp_port == -1)
+		settings.udp_port = UDP_SERVER_PORT;
 	if (settings.numobjs == -1)
 		settings.numobjs = 128 * 1024;
 
