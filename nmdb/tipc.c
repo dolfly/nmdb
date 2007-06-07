@@ -157,7 +157,7 @@ void tipc_reply_cas(struct req_info *req, uint32_t reply)
 int tipc_init(void)
 {
 	int fd, rv;
-	static struct sockaddr_tipc srvsa;
+	struct sockaddr_tipc srvsa;
 
 	srvsa.family = AF_TIPC;
 	if (settings.tipc_lower == settings.tipc_upper)
