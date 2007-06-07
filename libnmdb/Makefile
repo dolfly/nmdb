@@ -1,10 +1,13 @@
 
 ENABLE_TIPC = 1
 ENABLE_TCP = 1
+ENABLE_UDP = 1
 
 CFLAGS += -std=c99 -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 -fPIC $(CFLAGS)
-ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) -DENABLE_TCP=$(ENABLE_TCP)
+ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
+		-DENABLE_TCP=$(ENABLE_TCP) \
+		-DENABLE_UDP=$(ENABLE_UDP)
 
 ifdef DEBUG
 ALL_CFLAGS += -g
@@ -22,7 +25,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = libnmdb.o tcp.o tipc.o
+OBJS = libnmdb.o tcp.o tipc.o udp.o
 
 
 default: all

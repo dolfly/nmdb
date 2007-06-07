@@ -21,6 +21,10 @@ struct nmdb_srv {
 			struct sockaddr_in srvsa;
 			socklen_t srvlen;
 		} tcp;
+		struct {
+			struct sockaddr_in srvsa;
+			socklen_t srvlen;
+		} udp;
 	} info;
 };
 
