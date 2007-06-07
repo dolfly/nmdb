@@ -193,6 +193,14 @@ void udp_close(int fd)
 }
 
 
+/* Static common buffer to avoid unnecessary allocations.
+ * Originally, this was malloc()ed, but making it static made it go from 27
+ * usec for each set operation, to 23 usec: it made test1 go from 3.213s to
+ * 2.345s for 37618 operations.
+ * Allocate enough to hold the max msg length of 64kbytes. */
+#define SBSIZE (68 * 1024)
+static unsigned char static_buf[SBSIZE];
+
 /* Called by libevent for each receive event */
 void udp_recv(int fd, short event, void *arg)
 {
@@ -200,21 +208,10 @@ void udp_recv(int fd, short event, void *arg)
 	struct req_info req;
 	struct sockaddr_in clisa;
 	socklen_t clilen;
-	size_t bsize;
-
-	/* Allocate enough to hold the max msg length of 66000 bytes.
-	 * Originally, this was malloc()ed, but using the stack made it go
-	 * from 27 usec for each set operation, to 23 usec. While it may sound
-	 * worthless, it made test1 go from 3.213s to 2.345s for 37618
-	 * operations.
-	 * TODO: check for negative impacts (beside being ugly, obviously)
-	 */
-	unsigned char buf[68 * 1024];
-	bsize = 68 * 1024;
 
 	clilen = sizeof(clisa);
 
-	rv = recvfrom(fd, buf, bsize, 0, (struct sockaddr *) &clisa,
+	rv = recvfrom(fd, static_buf, SBSIZE, 0, (struct sockaddr *) &clisa,
 			&clilen);
 	if (rv < 0) {
 		goto exit;
@@ -237,7 +234,7 @@ void udp_recv(int fd, short event, void *arg)
 	req.reply_cas = udp_reply_cas;
 
 	/* parse the message */
-	parse_message(&req, buf, rv);
+	parse_message(&req, static_buf, rv);
 
 exit:
 	return;

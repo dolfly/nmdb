@@ -323,16 +323,13 @@ static unsigned char static_buf[SBSIZE];
 static void tcp_recv(int fd, short event, void *arg)
 {
 	int rv;
-	size_t bsize;
 	struct tcp_socket *tcpsock;
 
 	tcpsock = (struct tcp_socket *) arg;
 
 	if (tcpsock->buf == NULL) {
 		/* New incoming message */
-		bsize = SBSIZE;
-
-		rv = recv(fd, static_buf, bsize, 0);
+		rv = recv(fd, static_buf, SBSIZE, 0);
 		if (rv < 0 && errno == EAGAIN) {
 			/* We were awoken but have no data to read, so we do
 			 * nothing */
