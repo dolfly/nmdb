@@ -8,6 +8,7 @@
 ;   (nmdb:init) -> Creates a new database object.
 ;   (nmdb:add-tipc-server port) -> Adds a new TIPC server to the database.
 ;   (nmdb:add-tcp-server addr port) -> Adds a new TCP server to the database.
+;   (nmdb:add-udp-server addr port) -> Adds a new UDP server to the database.
 ;   (nmdb:free) -> Closes the database.
 ;
 ;   (nmdb:db-get key) -> Gets the value associated to the given key, or -1.
@@ -43,6 +44,7 @@
 (import libnmdb "nmdb_init")
 (import libnmdb "nmdb_add_tipc_server")
 (import libnmdb "nmdb_add_tcp_server")
+(import libnmdb "nmdb_add_udp_server")
 (import libnmdb "nmdb_free")
 
 (import libnmdb "nmdb_set")
@@ -72,6 +74,9 @@
 
 (define (add-tcp-server addr port)
   (nmdb_add_tcp_server NMDB addr port))
+
+(define (add-udp-server addr port)
+  (nmdb_add_udp_server NMDB addr port))
 
 (define (free)
   (nmdb_free NMDB))
