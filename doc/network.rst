@@ -7,10 +7,10 @@ nmdb_ Network Protocol
 **NOTE:** All integers are in network byte order.
 
 The nmdb network protocol relies on a message passing underlying transport
-protocol. It normally uses TIPC, but can use TCP with a messaging layer too.
-This document describes the protocol in a transport-independent way, assuming
-the transport protocol can send and receive messages reliably and preserve
-message boundaries. No ordering guarantees are required.
+protocol. It normally uses TIPC, but can use UDP, or TCP with a messaging
+layer too. This document describes the protocol in a transport-independent
+way, assuming the transport protocol can send and receive messages reliably
+and preserve message boundaries. No ordering guarantees are required.
 
 
 Requests

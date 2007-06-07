@@ -21,8 +21,8 @@ Network interface
 =================
 
 The server communicates with its clients using messages, which can be
-delivered through TIPC_ or TCP. Messages are limited by design to 64k so they
-stay inside within TIPC_'s limits.
+delivered through TIPC_, TCP or UDP. Messages are limited by design to 64k so
+they stay inside within TIPC_'s limits.
 
 TIPC_ is completely connectionless, and uses the reliable datagram layer
 provided by TIPC_. The network protocol is specified in another document, and
