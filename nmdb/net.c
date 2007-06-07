@@ -12,6 +12,7 @@ typedef unsigned char u_char;
 #include "common.h"
 #include "tipc.h"
 #include "tcp.h"
+#include "udp.h"
 #include "net.h"
 
 
@@ -31,12 +32,14 @@ void net_loop(void)
 {
 	int tipc_fd = -1;
 	int tcp_fd = -1;
-	struct event tipc_evt, tcp_evt, sigterm_evt, sigint_evt, sigusr2_evt;
+	int udp_fd = -1;
+	struct event tipc_evt, tcp_evt, udp_evt,
+		     sigterm_evt, sigint_evt, sigusr2_evt;
 
 	event_init();
 
-	/* ENABLE_TIPC and ENABLE_TCP are preprocessor constants defined on
-	 * the command line by make. */
+	/* ENABLE_* are preprocessor constants defined on the command line by
+	 * make. */
 
 	if (ENABLE_TIPC) {
 		tipc_fd = tipc_init();
@@ -62,6 +65,18 @@ void net_loop(void)
 		event_add(&tcp_evt, NULL);
 	}
 
+	if (ENABLE_UDP) {
+		udp_fd = udp_init();
+		if (udp_fd < 0) {
+			perror("Error initializing UDP");
+			exit(1);
+		}
+
+		event_set(&udp_evt, udp_fd, EV_READ | EV_PERSIST, udp_recv,
+				&udp_evt);
+		event_add(&udp_evt, NULL);
+	}
+
 	signal_set(&sigterm_evt, SIGTERM, exit_sighandler, &sigterm_evt);
 	signal_add(&sigterm_evt, NULL);
 	signal_set(&sigint_evt, SIGINT, exit_sighandler, &sigint_evt);
@@ -80,6 +95,7 @@ void net_loop(void)
 
 	tipc_close(tipc_fd);
 	tcp_close(tcp_fd);
+	udp_close(udp_fd);
 }
 
 

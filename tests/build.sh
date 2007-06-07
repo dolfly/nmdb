@@ -33,7 +33,7 @@ case "$1" in
 esac;
 
 
-for p in TIPC TCP MULT; do
+for p in TIPC TCP UDP MULT; do
 	for v in NORMAL CACHE SYNC; do
 		OP=`echo $p-$v | tr '[A-Z]' '[a-z]'`
 		CF="-DUSE_$p=1 -DUSE_$v=1"

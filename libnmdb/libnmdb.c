@@ -11,6 +11,7 @@
 #include "net-const.h"
 #include "tipc.h"
 #include "tcp.h"
+#include "udp.h"
 #include "internal.h"
 
 
@@ -38,8 +39,8 @@ int compare_servers(const void *s1, const void *s2)
 			return 1;
 	}
 #endif
-#if ENABLE_TCP
-	if (srv1->type == TCP_CONN) {
+#if ENABLE_TCP || ENABLE_UDP
+	if (srv1->type == TCP_CONN || srv1->type == UDP_CONN) {
 		in_addr_t a1, a2;
 		a1 = srv1->info.tcp.srvsa.sin_addr.s_addr;
 		a2 = srv2->info.tcp.srvsa.sin_addr.s_addr;
@@ -155,6 +156,8 @@ static int srv_send(struct nmdb_srv *srv,
 		return tipc_srv_send(srv, buf, bsize);
 	else if (srv->type == TCP_CONN)
 		return tcp_srv_send(srv, buf, bsize);
+	else if (srv->type == UDP_CONN)
+		return udp_srv_send(srv, buf, bsize);
 	else
 		return 0;
 }
@@ -170,6 +173,8 @@ static uint32_t get_rep(struct nmdb_srv *srv,
 		return tipc_get_rep(srv, buf, bsize, payload, psize);
 	else if (srv->type == TCP_CONN)
 		return tcp_get_rep(srv, buf, bsize, payload, psize);
+	else if (srv->type == UDP_CONN)
+		return udp_get_rep(srv, buf, bsize, payload, psize);
 	else
 		return 0;
 }
@@ -183,6 +188,8 @@ static int srv_get_msg_offset(struct nmdb_srv *srv)
 		return TIPC_MSG_OFFSET;
 	else if (srv->type == TCP_CONN)
 		return TCP_MSG_OFFSET;
+	else if (srv->type == UDP_CONN)
+		return UDP_MSG_OFFSET;
 	else
 		return 0;
 }

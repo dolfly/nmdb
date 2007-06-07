@@ -39,6 +39,7 @@ version (X86_64) {
 extern (C) nmdb_t *nmdb_init();
 extern (C) int nmdb_add_tipc_server(nmdb_t *db, int port);
 extern (C) int nmdb_add_tcp_server(nmdb_t *db, ubyte *addr, int port);
+extern (C) int nmdb_add_udp_server(nmdb_t *db, ubyte *addr, int port);
 extern (C) int nmdb_free(nmdb_t *db);
 
 extern (C) ptrdiff_t nmdb_get(nmdb_t *db, ubyte *key, size_t ksize,

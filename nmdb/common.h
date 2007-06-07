@@ -18,6 +18,8 @@ struct settings {
 	int tipc_upper;
 	char *tcp_addr;
 	int tcp_port;
+	char *udp_addr;
+	int udp_port;
 	int numobjs;
 	int foreground;
 	int passive;

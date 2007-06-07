@@ -1,10 +1,13 @@
 
 ENABLE_TIPC = 1
 ENABLE_TCP = 1
+ENABLE_UDP = 1
 
 CFLAGS += -std=c99 -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 $(CFLAGS)
-ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) -DENABLE_TCP=$(ENABLE_TCP)
+ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
+		-DENABLE_TCP=$(ENABLE_TCP) \
+		-DENABLE_UDP=$(ENABLE_UDP)
 
 ifdef DEBUG
 ALL_CFLAGS += -g
@@ -34,6 +37,12 @@ ifeq ($(ENABLE_TCP), 1)
 	OBJS += tcp.o
 else
 	OBJS += tcp-stub.o
+endif
+
+ifeq ($(ENABLE_UDP), 1)
+	OBJS += udp.o
+else
+	OBJS += udp-stub.o
 endif
 
 

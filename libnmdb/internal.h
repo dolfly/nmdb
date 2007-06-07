@@ -6,6 +6,7 @@
  * and TCP connections in struct nmdb_srv. */
 #define TIPC_CONN 1
 #define TCP_CONN 2
+#define UDP_CONN 3
 
 /* The ID code for requests is hardcoded for now, until asynchronous requests
  *  * are implemented. */
@@ -15,6 +16,7 @@
  * the message contents. */
 #define TIPC_MSG_OFFSET 0
 #define TCP_MSG_OFFSET 4
+#define UDP_MSG_OFFSET 0
 
 /* Functions used internally but shared among the different files. */
 int compare_servers(const void *s1, const void *s2);

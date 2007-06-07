@@ -8,8 +8,8 @@ nmdb User Guide
 Introduction
 ============
 
-nmdb_ is a simple and fast cache and database for TIPC_ and TCP clusters. It
-allows applications in the cluster to use a centralized, shared cache and
+nmdb_ is a simple and fast cache and database for TIPC_, TCP and UDP clusters.
+It allows applications in the cluster to use a centralized, shared cache and
 database in a very easy way. It stores *(key, value)* pairs, with each key
 having only one associated value.
 
@@ -82,7 +82,7 @@ TIPC setup
 If you want to use the server and the clients in different machines using
 TIPC, you need to setup your TIPC network. If you just want to run everything
 in one machine, you already have a TIPC network set up, or you only want to
-use TCP connections, you can skip this section.
+use TCP or UDP connections, you can skip this section.
 
 Before we begin, all the machines should already be connected in an Ethernet
 LAN, and have the tipc-config application that should come with your Linux

@@ -15,6 +15,10 @@
 #define TCP_SERVER_ADDR "0.0.0.0"
 #define TCP_SERVER_PORT 26010
 
+/* UDP default listen address and port. */
+#define UDP_SERVER_ADDR "0.0.0.0"
+#define UDP_SERVER_PORT 26010
+
 /* Protocol version, for checking in the network header. */
 #define PROTO_VER 1
 

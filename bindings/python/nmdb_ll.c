@@ -70,6 +70,24 @@ static PyObject *db_add_tcp_server(nmdbobject *db, PyObject *args)
 	return PyLong_FromLong(rv);
 }
 
+/* add udp server */
+static PyObject *db_add_udp_server(nmdbobject *db, PyObject *args)
+{
+	int port;
+	char *addr;
+	int rv;
+
+	if (!PyArg_ParseTuple(args, "si:add_udp_server", &addr, &port)) {
+		return NULL;
+	}
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_add_udp_server(db->db, addr, port);
+	Py_END_ALLOW_THREADS
+
+	return PyLong_FromLong(rv);
+}
+
 /* cache set */
 static PyObject *db_cache_set(nmdbobject *db, PyObject *args)
 {
@@ -302,6 +320,8 @@ static PyMethodDef nmdb_methods[] = {
 	{ "add_tipc_server", (PyCFunction) db_add_tipc_server,
 		METH_VARARGS, NULL },
 	{ "add_tcp_server", (PyCFunction) db_add_tcp_server,
+		METH_VARARGS, NULL },
+	{ "add_udp_server", (PyCFunction) db_add_udp_server,
 		METH_VARARGS, NULL },
 	{ "cache_set", (PyCFunction) db_cache_set, METH_VARARGS, NULL },
 	{ "cache_get", (PyCFunction) db_cache_get, METH_VARARGS, NULL },

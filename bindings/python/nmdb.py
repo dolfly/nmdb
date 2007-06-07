@@ -71,6 +71,13 @@ class _nmdbDict (object):
 			raise NetworkError
 		return rv
 
+	def add_udp_server(self, addr, port = -1):
+		"Adds an UDP server to the server pool."
+		rv = self._db.add_udp_server(addr, port)
+		if not rv:
+			raise NetworkError
+		return rv
+
 	def __getitem__(self, key):
 		"d[k]   Returns the value associated with the key k."
 		if self.autopickle:
