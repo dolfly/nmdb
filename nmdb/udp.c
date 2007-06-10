@@ -193,11 +193,8 @@ void udp_close(int fd)
 }
 
 
-/* Static common buffer to avoid unnecessary allocations.
- * Originally, this was malloc()ed, but making it static made it go from 27
- * usec for each set operation, to 23 usec: it made test1 go from 3.213s to
- * 2.345s for 37618 operations.
- * Allocate enough to hold the max msg length of 64kbytes. */
+/* Static common buffer to avoid unnecessary allocations. See the comments on
+ * this same variable in tipc.c. */
 #define SBSIZE (68 * 1024)
 static unsigned char static_buf[SBSIZE];
 
