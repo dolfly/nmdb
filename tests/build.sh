@@ -39,11 +39,12 @@ for p in TIPC TCP UDP MULT; do
 		CF="-DUSE_$p=1 -DUSE_$v=1"
 
 		if [ "$CLEAN" == 1 ]; then
-			rm -vf 1-$OP 2-$OP
+			rm -vf 1-$OP 2-$OP 3-$OP
 		else
 			echo " * $OP"
 			cc -lnmdb $CF -o 1-$OP 1.c
 			cc -lnmdb $CF -o 2-$OP 2.c
+			cc -lnmdb $CF -o 3-$OP 3.c
 		fi
 	done
 done
