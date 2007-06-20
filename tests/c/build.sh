@@ -7,21 +7,20 @@ Use: build.sh [build|debug_build|strict_build|profile_build|clean]
 "
 
 
-CF="-std=c99 -Wall -O3"
-ALLCF="-D_XOPEN_SOURCE=500 -fPIC $CF"
+ALLCF="-D_XOPEN_SOURCE=500 -fPIC -std=c99 -Wall -O3"
 
 case "$1" in
 	"build" )
 		# defaults are just fine for build
 		;;
 	"debug_build" )
-		ALLCF="-g $CF"
+		ALLCF="$ALLCF -g"
 		;;
 	"strict_build" )
-		ALLCF="-ansi -pedantic $CF"
+		ALLCF="$ALLCF -ansi -pedantic"
 		;;
 	"profile_build" )
-		ALLCF="-g -pg -fprofile-arcs -ftest-coverage $CF"
+		ALLCF="$ALLCF -g -pg -fprofile-arcs -ftest-coverage"
 		;;
 	"clean" )
 		CLEAN=1
@@ -36,16 +35,16 @@ esac;
 for p in TIPC TCP UDP MULT; do
 	for v in NORMAL CACHE SYNC; do
 		OP=`echo $p-$v | tr '[A-Z]' '[a-z]'`
-		CF="-DUSE_$p=1 -DUSE_$v=1"
+		TF="-DUSE_$p=1 -DUSE_$v=1"
 
-		if [ "$CLEAN" == 1 ]; then
-			rm -vf 1-$OP 2-$OP 3-$OP
-		else
-			echo " * $OP"
-			cc -lnmdb $CF -o 1-$OP 1.c
-			cc -lnmdb $CF -o 2-$OP 2.c
-			cc -lnmdb $CF -o 3-$OP 3.c
-		fi
+		echo " * $OP"
+		for t in 1 2 3 "set" "get" "del"; do
+			if [ "$CLEAN" == 1 ]; then
+				rm -vf $t-$OP
+			else
+				cc -lnmdb $ALLCF $TF -o $t-$OP $t.c
+			fi
+		done
 	done
 done
 
