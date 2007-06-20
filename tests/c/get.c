@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	unsigned long g_elapsed, misses = 0;
 	nmdb_t *db;
 
-	if (argc != 4) {
+	if (argc != 3) {
 		printf("Usage: get-* TIMES KSIZE\n");
 		return 1;
 	}
