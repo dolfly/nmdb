@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 	nmdb_t *db;
 
 	if (argc != 4) {
-		printf("Usage: test1 TIMES KEY VAL\n");
+		printf("Usage: 1-* TIMES KEY VAL\n");
 		return 1;
 	}
 

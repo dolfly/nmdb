@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 	nmdb_t *db;
 
 	if (argc != 4) {
-		printf("Usage: test2 TIMES KSIZE VSIZE\n");
+		printf("Usage: 2-* TIMES KSIZE VSIZE\n");
 		return 1;
 	}
 
