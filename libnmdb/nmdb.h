@@ -36,6 +36,7 @@ typedef struct nmdb_t {
 nmdb_t *nmdb_init();
 int nmdb_add_tipc_server(nmdb_t *db, int port);
 int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port);
+int nmdb_add_udp_server(nmdb_t *db, const char *addr, int port);
 int nmdb_free(nmdb_t *db);
 
 ssize_t nmdb_get(nmdb_t *db, const unsigned char *key, size_t ksize,
