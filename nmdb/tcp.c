@@ -25,8 +25,6 @@ typedef unsigned char u_char;
 #include "parse.h"
 
 
-#define printf(...) do { } while (0)
-
 /* TCP socket structure. Used mainly to hold buffers from incomplete
  * recv()s. */
 struct tcp_socket {
@@ -346,13 +344,11 @@ static void tcp_recv(int fd, short event, void *arg)
 	} else {
 		/* We already got a partial message, complete it. */
 		size_t maxtoread = tcpsock->pktsize - tcpsock->len;
-		printf("\t recv-> %tu - %tu = %tu\n", tcpsock->pktsize, tcpsock->len, maxtoread);
 
 		rv = recv(fd, tcpsock->buf + tcpsock->len, maxtoread, 0);
 		if (rv < 0 && errno == EAGAIN) {
 			return;
 		} else if (rv <= 0) {
-			printf("err recv\n");
 			goto error_exit;
 		}
 
@@ -382,7 +378,6 @@ static void process_buf(struct tcp_socket *tcpsock,
 		totaltoget = ntohl(totaltoget);
 		if (totaltoget > (64 * 1024) || totaltoget <= 12) {
 			/* Message too big or too small, close the connection. */
-			printf("size err: %d\n", totaltoget);
 			goto error_exit;
 		}
 
@@ -464,8 +459,6 @@ exit:
 	return;
 
 error_exit:
-	printf("pm error - t:%p b:%p\n", tcpsock->buf, buf);
-
 	close(tcpsock->fd);
 	event_del(tcpsock->evt);
 	tcp_socket_free(tcpsock);
