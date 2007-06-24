@@ -65,7 +65,8 @@ the database. For
 .B nmdb_add_tcp_server()
 and
 .BR nmdb_add_udp_server() ,
-if you pass -1 as the port, it will select the default one.
+if you pass -1 as the port, it will select the default one. They return 1 on
+success or 0 on error (or if the specified protocol was not compiled in).
 
 
 To dispose a connection, use
