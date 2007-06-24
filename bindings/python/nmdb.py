@@ -138,10 +138,10 @@ class _nmdbDict (object):
 		r = self._cas(key, oldval, newval)
 		if r == 2:
 			# success
-			return 1
+			return 2
 		elif r == 1:
 			# no match
-			return 0
+			return 1
 		elif r == 0:
 			# not in
 			raise KeyError
