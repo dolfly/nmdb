@@ -184,13 +184,13 @@ Now that you know all that, starting a server should be quite simple: first
 create the database as explained above, and then run the daemon with
 ``nmdb -d /path/to/the/database``.
 
-To change the port, use ``-l port``, to change the cache size, use ``-c nobj``
-(where *nobj* is the number of objects in thousands), to make the server
-passive, use ``-p``. Of course you won't remember all that (I know I don't),
-that's why ``-h`` is your friend.
+There are several options you can change at start time. Of course you won't
+remember all that (I know I don't), so check out ``nmdb -h`` to see a complete
+list.
 
-Nothing prevents you from starting more than one server in the same machine,
-so be careful to select different ports and databases for each one.
+Nothing prevents you from starting more than one TIPC server in the same
+machine, so be careful to select different TIPC ports and databases for each
+one.
 
 
 Example

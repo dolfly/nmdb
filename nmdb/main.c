@@ -26,12 +26,12 @@ static void help(void) {
 	char h[] = \
 	  "nmdb [options]\n"
 	  "  -d dbpath	database path ('database', must be created with dpmgr)\n"
-	  "  -l lower	lower TIPC port number (10)\n"
-	  "  -L upper	upper TIPC port number (= lower)\n"
-	  "  -a addr	TCP listening address (all local addresses)\n"
-	  "  -P port	TCP listening port (26010)\n"
-	  "  -U addr	UDP listening address (all local addresses)\n"
+	  "  -l lower	TIPC lower port number (10)\n"
+	  "  -L upper	TIPC upper port number (= lower)\n"
+	  "  -t port	TCP listening port (26010)\n"
+	  "  -T addr	TCP listening address (all local addresses)\n"
 	  "  -u port	UDP listening port (26010)\n"
+	  "  -U addr	UDP listening address (all local addresses)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
@@ -67,23 +67,26 @@ static int load_settings(int argc, char **argv)
 			settings.dbname = malloc(strlen(optarg) + 1);
 			strcpy(settings.dbname, optarg);
 			break;
+
 		case 'l':
 			settings.tipc_lower = atoi(optarg);
 			break;
 		case 'L':
 			settings.tipc_upper = atoi(optarg);
 			break;
-		case 'a':
+
+		case 't':
+			settings.tcp_port = atoi(optarg);
+			break;
+		case 'T':
 			settings.tcp_addr = optarg;
 			break;
-		case 'P':
-			settings.tcp_port = atoi(optarg);
+
+		case 'u':
+			settings.udp_port = atoi(optarg);
 			break;
 		case 'U':
 			settings.udp_addr = optarg;
-			break;
-		case 'u':
-			settings.udp_port = atoi(optarg);
 			break;
 
 		case 'c':
@@ -95,6 +98,7 @@ static int load_settings(int argc, char **argv)
 		case 'p':
 			settings.passive = 1;
 			break;
+
 		case 'h':
 		case '?':
 			help();
