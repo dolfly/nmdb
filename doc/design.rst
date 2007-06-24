@@ -1,16 +1,16 @@
 
-=====================================
-nmdb - A TIPC-based database manager
-=====================================
+=================================================
+nmdb - A multiprotocol network database manager
+=================================================
 :Author: Alberto Bertogli (albertito@gmail.com)
 
 
 Introduction
 ============
 
-nmdb_ is a simple and fast cache and database for TIPC clusters. It allows
-applications in the cluster to use a centralized, shared cache and database in
-a very easy way. It stores *(key, value)* pairs, with each key having only one
+nmdb_ is a simple and fast cache and database for controlled networks. It
+allows applications to use a centralized, shared cache and database in a very
+easy way. It stores *(key, value)* pairs, with each key having only one
 associated value.
 
 This document explains how the server works internally, and why it works that

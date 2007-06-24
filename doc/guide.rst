@@ -30,8 +30,11 @@ Prerequisites
 Before you install nmdb, you will need the following software:
 
 - libevent_, a library for fast event handling.
-- `Linux kernel`_ 2.6.16 or newer, compiled with TIPC_ support.
 - QDBM_, for the database backend.
+
+And, if you're going to use TIPC_:
+
+- `Linux kernel`_ 2.6.16 or newer, compiled with TIPC_ support.
 
 
 Compiling and installing
@@ -40,9 +43,11 @@ Compiling and installing
 There are three components of the nmdb tarball: the server in the *nmdb/*
 directory, the C library in *libnmdb/*, and the Python module in *python/*.
 
-- To install the server, run ``cd nmdb; make install``.
-- To install the C library, run ``cd libnmdb; make install; ldconfig``.
-- To install the Python module, run ``cd python; python setup.py install``.
+To install the server and the C library, run ``make install; ldconfig``. To
+install the Python module, run ``make python_install``.
+
+If you want to disable support for some protocol (i.e. TIPC), you can do so by
+running ``make ENABLE_TIPC=0 install``.
 
 
 Quick start
@@ -62,7 +67,7 @@ simple way to test it is to use the python module, like this::
   Type "help", "copyright", "credits" or "license" for more information.
   >>> import nmdb               # import the module
   >>> db = nmdb.DB()            # create a DB object
-  >>> db.add_tipc_server()      # connect to the TIPC server 
+  >>> db.add_tcp_server("localhost")  # connect to the TCP server
   >>> db['x'] = 1               # store some data
   >>> db[(1, 2)] = (2, 6)
   >>> print db['x'], db[(1, 2)] # retreive the values
@@ -125,20 +130,6 @@ Starting the server
 
 Before starting the server, there are some things you need to know about it:
 
-Port numbers
-  Each server instance in your network (even the ones running in the same
-  machine) should get a **unique** port to listen to requests. Ports identify
-  an application instance inside the whole network, not just the machine as in
-  TCP/IP.
-
-  The port space is very very large, and it's private to nmdb, so you can
-  choose numbers without fear of colliding with other TIPC applications. The
-  default port is 10.
-
-  So, if you are going to start more than one nmdb server, **be careful**. If
-  you assign two active servers the same port you will get no error, but
-  everything will act weird.
-
 Cache size
   nmdb's cache is a main component of the server. In fact you can use it
   exclusively for caching purposes, like memcached_. So the size becomes an
@@ -173,6 +164,20 @@ Distributed queries
   If you have more than one server in the network, the library can distribute
   the queries among them. This is entirely done on the client side and the
   server doesn't know about it.
+
+TIPC Port numbers
+  With TIPC, each server instance in your network (even the ones running in
+  the same machine) should get a **unique** port to listen to requests. Ports
+  identify an application instance inside the whole network, not just the
+  machine as in TCP/IP.
+
+  The port space is very very large, and it's private to nmdb, so you can
+  choose numbers without fear of colliding with other TIPC applications. The
+  default port is 10.
+
+  So, if you are going to start more than one nmdb server, **be careful**. If
+  you assign two active servers the same port you will get no error, but
+  everything will act weird.
 
 
 Now that you know all that, starting a server should be quite simple: first
@@ -248,7 +253,8 @@ Distributed queries
 
 
 For all examples we will assume that you have three servers running in your
-network, in ports 11, 12 and 13.
+network, two in TIPC ports 11 and 12, and one TCP listening on localhost on
+the default port.
 
 
 The Python module

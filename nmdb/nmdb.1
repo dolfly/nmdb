@@ -1,14 +1,12 @@
 .TH nmdb 1 "11/Sep/2006"
 .SH NAME
-nmdb - A TIPC-based database manager
+nmdb - A multiprotocol network database manager
 .SH SYNOPSYS
 nmdb [-d dbpath] [-l lower] [-L upper] [-c nobj] [-f] [-p] [-h]
 .SH DESCRIPTION
 
-nmdb is a TIPC-based database manager.
-
-It allows all the applications in the cluster to store (key, value) pairs in a
-central cache and database in a transparent way.
+nmdb is a network database that can use several protocols to communicate with
+it's clients. At the moment, it supports TIPC, TCP and UDP.
 
 It can also be used as a generic caching system (pretty much like memcached),
 because it has a very fast cache that can be used without impacting on the

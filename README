@@ -1,10 +1,10 @@
 
-nmdb - A TIPC-based database manager
+nmdb - A multiprotocol network database manager
 Alberto Bertogli (albertito@gmail.com)
------------------------------------------
+---------------------------------------------------
 
-nmdb is a network database that uses the TIPC protocol to communicate with
-it's clients.
+nmdb is a network database that can use several protocols to communicate with
+it's clients. At the moment, it supports TIPC, TCP and UDP.
 
 It consists of an in-memory cache, that saves (key, value) pairs, and a
 persistent backend that stores the pairs on disk.
