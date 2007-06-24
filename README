@@ -47,7 +47,7 @@ protocols are enabled, including TIPC. To disable any of them, run something
 like "make ENABLE_TIPC=0".
 
 To run some tests, start the server and then go to the "tests/c/" directory.
-Run "build.sh build" and then run any of the generated tests.
+Run "make.sh build" and then run any of the generated tests.
 
 To compile the Python bindings, you need to have the library already
 installed. Use "make python_install" at the top level directory to build and
