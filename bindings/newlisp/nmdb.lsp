@@ -90,7 +90,7 @@
 	  (val (dup "\000" vallen))
 	)
     (set 'rv (func NMDB key keylen val vallen))
-    (if (> rv 0)
+    (if (>= rv 0)
       (slice val 0 rv)
       -1) ) )
 

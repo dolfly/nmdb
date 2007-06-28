@@ -54,10 +54,10 @@ int main(int argc, char **argv)
 	timer_start();
 	for (i = 0; i < times; i++) {
 		r = NGET(db, key, ksize, gval, vsize);
-		if (r < 0) {
+		if (r <= -2) {
 			perror("Get");
 			return 1;
-		} else if (r == 0) {
+		} else if (r == -1) {
 			misses++;
 		}
 	}

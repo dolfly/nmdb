@@ -129,11 +129,12 @@ static PyObject *db_cache_get(nmdbobject *db, PyObject *args)
 	rv = nmdb_cache_get(db->db, key, ksize, val, vsize);
 	Py_END_ALLOW_THREADS
 
-	if (rv < 0) {
+	if (rv <= -2) {
 		/* FIXME: define a better exception */
 		r = PyErr_SetFromErrno(PyExc_IOError);
-	} else if (rv == 0) {
-		r = PyString_FromStringAndSize("", 0);
+	} else if (rv == -1) {
+		/* Miss, handled in the high-level module. */
+		r = PyLong_FromLong(-1);
 	} else {
 		r = PyString_FromStringAndSize(val, rv);
 	}
@@ -223,11 +224,12 @@ static PyObject *db_get(nmdbobject *db, PyObject *args)
 	rv = nmdb_get(db->db, key, ksize, val, vsize);
 	Py_END_ALLOW_THREADS
 
-	if (rv < 0) {
+	if (rv <= -2) {
 		/* FIXME: define a better exception */
 		r = PyErr_SetFromErrno(PyExc_IOError);
-	} else if (rv == 0) {
-		r = PyString_FromStringAndSize("", 0);
+	} else if (rv == -1) {
+		/* Miss, handled in the high-level module. */
+		r = PyLong_FromLong(-1);
 	} else {
 		r = PyString_FromStringAndSize(val, rv);
 	}

@@ -86,7 +86,9 @@ class _nmdbDict (object):
 			r = self._get(key)
 		except:
 			raise NetworkError
-		if not r:
+		if r == -1:
+			# For key errors, get returns -1 instead of a string
+			# so we know it's a miss.
 			raise KeyError
 		if self.autopickle:
 			r = cPickle.loads(r)

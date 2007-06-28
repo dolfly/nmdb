@@ -278,21 +278,21 @@ static ssize_t do_get(nmdb_t *db,
 
 	t = srv_send(srv, buf, moff + reqsize);
 	if (t <= 0) {
-		rv = -1;
+		rv = -2;
 		goto exit;
 	}
 
 	reply = get_rep(srv, buf, bsize, &p, &psize);
 
 	if (reply == REP_CACHE_MISS || reply == REP_NOTIN) {
-		rv = 0;
+		rv = -1;
 		goto exit;
 	} else if (reply == REP_ERR) {
-		rv = -1;
+		rv = -2;
 		goto exit;
 	} else if (reply != REP_OK && reply != REP_CACHE_HIT) {
 		/* invalid response */
-		rv = -1;
+		rv = -2;
 		goto exit;
 	}
 

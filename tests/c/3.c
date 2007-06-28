@@ -66,10 +66,10 @@ int main(int argc, char **argv)
 
 		* (int *) key = i;
 		r = NGET(db, key, ksize, val, bsize);
-		if (r < 0) {
+		if (r <= -2) {
 			perror("Get");
 			return 1;
-		} else if (r == 0) {
+		} else if (r == -1) {
 			misses++;
 		}
 

@@ -83,9 +83,9 @@ class DB
 			throw new Exception("Invalid mode");
 		}
 
-		if (size == 0) {
+		if (size == -1) {
 			throw new KeyNotFound("Key not found: " ~ key);
-		} else if (size < 0) {
+		} else if (size <= -2) {
 			throw new Exception("Can't get value");
 		}
 
