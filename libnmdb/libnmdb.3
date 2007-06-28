@@ -21,10 +21,10 @@ libnmdb - Library for interacting with a nmdb server
 .BI "             const unsigned char *" key ", size_t " ksize ","
 .BI "             const unsigned char *" val ", size_t " vsize ");"
 .sp
-.BI "int nmdb_get(nmdb_t *" db ","
+.BI "ssize_t nmdb_get(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ","
 .BI "             unsigned char *" val ", size_t " vsize ");"
-.BI "int nmdb_cache_get(nmdb_t *" db ","
+.BI "ssize_t nmdb_cache_get(nmdb_t *" db ","
 .BI "             const unsigned char *" key ", size_t " ksize ","
 .BI "             unsigned char *" val ", size_t " vsize ");"
 .sp
