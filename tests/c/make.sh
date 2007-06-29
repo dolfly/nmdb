@@ -37,10 +37,11 @@ for p in TIPC TCP UDP MULT; do
 		OP=`echo $p-$v | tr '[A-Z]' '[a-z]'`
 		TF="-DUSE_$p=1 -DUSE_$v=1"
 
-		echo " * $OP"
+		echo " * $OP:"
 		for t in 1 2 3 "set" "get" "del"; do
+			echo "   * $t"
 			if [ "$CLEAN" == 1 ]; then
-				rm -vf $t-$OP
+				rm -f $t-$OP
 			else
 				cc -lnmdb $ALLCF $TF -o $t-$OP $t.c
 			fi
