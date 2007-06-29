@@ -1,0 +1,13 @@
+
+Here are the notes for upgrading nmdb from one version to another.
+
+While normally nothing should be done, sometimes things change in incompatible
+ways. Here's the listing for the releases, you should always check it before
+upgrading.
+
+0.20 -> 0.21
+ * nmdb_get() and nmdb_cache_get() now return -1 instead of 0 when there is a
+   missing key. This was done to allow setting a value to be "" (no data). All
+   bindings have been upgraded, so you only need to worry if you used the C
+   library.
+
