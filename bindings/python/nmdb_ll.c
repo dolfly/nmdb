@@ -360,8 +360,8 @@ static PyTypeObject nmdbType = {
  * The module
  */
 
-/* connect, returns an nmdb object */
-static PyObject *db_connect(PyObject *self, PyObject *args)
+/* new, returns an nmdb object */
+static PyObject *db_new(PyObject *self, PyObject *args)
 {
 	nmdbobject *db;
 
@@ -369,7 +369,7 @@ static PyObject *db_connect(PyObject *self, PyObject *args)
 	if (db == NULL)
 		return NULL;
 
-	if (!PyArg_ParseTuple(args, ":connect")) {
+	if (!PyArg_ParseTuple(args, ":new")) {
 		return NULL;
 	}
 
@@ -388,7 +388,7 @@ static PyObject *db_connect(PyObject *self, PyObject *args)
 }
 
 static PyMethodDef nmdb_functions[] = {
-	{ "connect", (PyCFunction) db_connect, METH_VARARGS, NULL },
+	{ "new", (PyCFunction) db_new, METH_VARARGS, NULL },
 	{ NULL }
 };
 

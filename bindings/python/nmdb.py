@@ -48,13 +48,9 @@ class NetworkError (Exception):
 	pass
 
 
-class _nmdbDict (object):
-	def __init__(self, db, op_get, op_set, op_delete, op_cas):
-		self._db = db
-		self._get = op_get
-		self._set = op_set
-		self._delete = op_delete
-		self._cas = op_cas
+class GenericDB (object):
+	def __init__(self):
+		self._db = nmdb_ll.new()
 		self.autopickle = True
 
 	def add_tipc_server(self, port = -1):
@@ -78,12 +74,13 @@ class _nmdbDict (object):
 			raise NetworkError
 		return rv
 
-	def __getitem__(self, key):
+
+	def generic_get(self, getf, key):
 		"d[k]   Returns the value associated with the key k."
 		if self.autopickle:
 			key = str(hash(key))
 		try:
-			r = self._get(key)
+			r = getf(key)
 		except:
 			raise NetworkError
 		if r == -1:
@@ -94,50 +91,61 @@ class _nmdbDict (object):
 			r = cPickle.loads(r)
 		return r
 
-	def __setitem__(self, key, val):
+	def cache_get(self, key):
+		return self.generic_get(self._db.cache_get, key)
+
+	def normal_get(self, key):
+		return self.generic_get(self._db.get, key)
+
+
+	def generic_set(self, setf, key, val):
 		"d[k] = v   Associates the value v to the key k."
 		if self.autopickle:
 			key = str(hash(key))
 			val = cPickle.dumps(val, protocol = -1)
-		r = self._set(key, val)
+		r = setf(key, val)
 		if r <= 0:
 			raise NetworkError
 		return 1
 
-	def __delitem__(self, key):
+	def cache_set(self, key, val):
+		return self.generic_set(self._db.cache_set, key, val)
+
+	def normal_set(self, key, val):
+		return self.generic_set(self._db.set, key, val)
+
+	def set_sync(self, key, val):
+		return self.generic_set(self._db.set_sync, key, val)
+
+
+	def generic_delete(self, delf, key):
 		"del d[k]   Deletes the key k."
 		if self.autopickle:
 			key = str(hash(key))
-		r = self._delete(key)
+		r = delf(key)
 		if r < 0:
 			raise NetworkError
 		elif r == 0:
 			raise KeyError
 		return 1
 
-	def __contains__(self, key):
-		"Returns True if the key is in the database, False otherwise."
-		if self.autopickle:
-			key = str(hash(key))
-		try:
-			r = self._get(key)
-		except KeyError:
-			return False
-		if not r:
-			return False
-		return True
+	def cache_delete(self, key):
+		return self.generic_delete(self._db.cache_delete, key)
 
-	def has_key(self, key):
-		"Returns True if the key is in the database, False otherwise."
-		return self.__contains__(key)
+	def normal_delete(self, key):
+		return self.generic_delete(self._db.delete, key)
 
-	def cas(self, key, oldval, newval):
+	def delete_sync(self, key):
+		return self.generic_delete(self._db.delete_sync, key)
+
+
+	def generic_cas(self, casf, key, oldval, newval):
 		"Perform a compare-and-swap."
 		if self.autopickle:
 			key = str(hash(key))
 			oldval = cPickle.dumps(oldval, protocol = -1)
 			newval = cPickle.dumps(newval, protocol = -1)
-		r = self._cas(key, oldval, newval)
+		r = casf(key, oldval, newval)
 		if r == 2:
 			# success
 			return 2
@@ -150,22 +158,60 @@ class _nmdbDict (object):
 		else:
 			raise NetworkError
 
+	def cache_cas(self, key, oldv, newv):
+		return self.generic_cas(self._db.cache_cas, key,
+				oldval, newval)
 
-class Cache (_nmdbDict):
-	def __init__(self):
-		db = nmdb_ll.connect()
-		_nmdbDict.__init__(self, db, db.cache_get, db.cache_set,
-					db.cache_delete, db.cache_cas)
+	def normal_cas(self, key, oldval, newval):
+		return self.generic_cas(self._db.cas, key,
+				oldval, newval)
 
-class DB (_nmdbDict):
-	def __init__(self):
-		db = nmdb_ll.connect()
-		_nmdbDict.__init__(self, db, db.get, db.set, db.delete, db.cas)
 
-class SyncDB (_nmdbDict):
-	def __init__(self):
-		db = nmdb_ll.connect()
-		_nmdbDict.__init__(self, db, db.get, db.set_sync,
-					db.delete_sync, db.cas)
+	# The following functions will assume the existance of self.set,
+	# self.get, self.delete and self.cas, which are supposed to be set
+	# by our subclasses.
+
+	def __getitem__(self, key):
+		return self.get(key)
+
+	def __setitem__(self, key, val):
+		return self.set(key, val)
+
+	def __delitem__(self, key):
+		return self.delete(key)
+
+	def __contains__(self, key):
+		"Returns True if the key is in the database, False otherwise."
+		try:
+			r = self.get(key)
+		except KeyError:
+			return False
+		if not r:
+			return False
+		return True
+
+	def has_key(self, key):
+		"Returns True if the key is in the database, False otherwise."
+		return self.__contains__(key)
+
+
+
+class Cache (GenericDB):
+	get = GenericDB.cache_get
+	set = GenericDB.cache_set
+	delete = GenericDB.cache_delete
+	cas = GenericDB.cache_cas
+
+class DB (GenericDB):
+	get = GenericDB.normal_get
+	set = GenericDB.normal_set
+	delete = GenericDB.normal_delete
+	cas = GenericDB.normal_cas
+
+class SyncDB (GenericDB):
+	get = GenericDB.normal_get
+	set = GenericDB.set_sync
+	delete = GenericDB.delete_sync
+	cas = GenericDB.normal_cas
 
 
