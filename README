@@ -13,8 +13,8 @@ Both work combined, but the use of the persistent backend is optional, so you
 can use the server only for cache queries, pretty much like memcached.
 
 This source distribution is composed of several parts: the server called
-"nmdb", the library and bindings for Python, D and NewLISP. Each one has a
-separate directory, and is licensed individually. See the LICENSE file for
+"nmdb", the library and bindings for Python, D, NewLISP and Ruby. Each one has
+a separate directory, and is licensed individually. See the LICENSE file for
 more information.
 
 
