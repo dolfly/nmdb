@@ -132,6 +132,23 @@ class GenericDB
 	def cache_cas(key, old, new)
 		return generic_cas(@db.method(:cache_cas), key, old, new)
 	end
+
+
+	# The following functions asume we have set(), get(), delete() and
+	# cas(), which are supposed to be implemented by our subclasses
+
+	def include?(key)
+		# we assume we have get() implemented
+		return get(key) == @default
+	end
+
+	def []=(key, val)
+		return set(key, val)
+	end
+
+	def [](key)
+		return get(key)
+	end
 end
 
 
@@ -140,8 +157,6 @@ class DB < GenericDB
 	alias get normal_get
 	alias delete normal_delete
 	alias cas normal_cas
-	alias []= set
-	alias [] get
 end
 
 class Cache < GenericDB
@@ -149,8 +164,6 @@ class Cache < GenericDB
 	alias get cache_get
 	alias delete cache_delete
 	alias cas cache_cas
-	alias []= set
-	alias [] get
 end
 
 class Sync < GenericDB
@@ -158,8 +171,6 @@ class Sync < GenericDB
 	alias get normal_get
 	alias delete delete_sync
 	alias cas normal_cas
-	alias []= set
-	alias [] get
 end
 
 end
