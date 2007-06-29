@@ -9,11 +9,13 @@ end
 
 
 class GenericDB
-	attr_writer :automarshal
+	attr_accessor :automarshal
+	attr_accessor :default
 
-	def initialize()
+	def initialize(default = nil)
 		@db = Nmdb_ll::DB.new
 		@automarshal = true
+		@default = default
 	end
 
 	def add_tipc_server(port = -1)
@@ -66,7 +68,7 @@ class GenericDB
 			return r
 		elsif r == -1 then
 			# key not in the database
-			return nil
+			return @default
 		elsif r <= 2 then
 			raise NetworkException
 		else
