@@ -406,10 +406,10 @@ The best place to go from here is to your text editor, to start writing some
 simple clients to play with.
 
 If you are in doubt about something, you can consult the manpages or the
-documentation inside the *doc/* directory. And if you can't find an answer to
-your question there, you can ask me, Alberto Bertogli, at
-*albertito@gmail.com*.
+documentation inside the *doc/* directory.
 
+To get in touch with nmdb developers and users, you can join the `mailing
+list`_, or just send an email to nmdb-devel@lists.auriga.wearlab.de.
 
 
 .. _nmdb: http://auriga.wearlab.de/~alb/nmdb/
@@ -419,4 +419,7 @@ your question there, you can ask me, Alberto Bertogli, at
 .. _QDBM: http://qdbm.sf.net
 .. _`Linux kernel`: http://kernel.org
 .. _tetrations: http://en.wikipedia.org/wiki/Tetration
+.. _`mailing list`:
+        http://lists.auriga.wearlab.de/cgi-bin/mailman/listinfo/nmdb-devel
+
 
