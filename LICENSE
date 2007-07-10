@@ -12,5 +12,7 @@ As a brief resume, here's how each sub-project is licensed:
  * bindings/python: BOLA (Public domain)
  * bindings/d: BOLA (Public domain)
  * bindings/newlisp: BOLA (Public domain)
+ * bindings/ruby: BOLA (Public domain)
+ * bindings/bigloo: BOLA (Public domain)
 
 
