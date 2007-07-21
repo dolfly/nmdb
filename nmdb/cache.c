@@ -27,6 +27,7 @@ struct cache *cache_create(size_t numobjs, unsigned int flags)
 	 * an arbitrary number. It's long enough to make LRU useful, and small
 	 * enough to make lookups fast. */
 	cd->chainlen = 4;
+	cd->numobjs = numobjs;
 	cd->hashlen = numobjs / cd->chainlen;
 
 	cd->table = (struct cache_chain *)
