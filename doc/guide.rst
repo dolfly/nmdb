@@ -8,10 +8,11 @@ nmdb User Guide
 Introduction
 ============
 
-nmdb_ is a simple and fast cache and database for TIPC_, TCP and UDP clusters.
-It allows applications in the cluster to use a centralized, shared cache and
+nmdb_ is a simple and fast cache and database for controlled networks.
+It allows applications in the network to use a centralized, shared cache and
 database in a very easy way. It stores *(key, value)* pairs, with each key
-having only one associated value.
+having only one associated value. At the moment, it supports the TIPC_, TCP
+and UDP protocols.
 
 This document explains how to setup nmdb and a simple guide to writing
 clients. It also includes a "quick start" section for the anxious.
