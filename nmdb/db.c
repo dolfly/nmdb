@@ -4,6 +4,7 @@
 #include <errno.h>		/* ETIMEDOUT */
 #include <stdio.h>		/* perror() */
 #include <string.h>		/* memcmp() */
+#include <stdlib.h>		/* malloc()/free() */
 
 #include "common.h"
 #include "db.h"
