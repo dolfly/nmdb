@@ -2,10 +2,18 @@
 #ifndef _BE_H
 #define _BE_H
 
-/* The following should be specific to the db backend we use. As we only
- * handle qdbm for now, there's no need to play with #ifdefs. */
-#include <depot.h>
-typedef DEPOT db_t;
+/* Depending on our backend, we define db_t to be different things so the
+ * generic code doesn't have to care about which backend we're using. */
+#if defined BACKEND_QDBM
+  #include <depot.h>
+  typedef DEPOT db_t;
+#elif defined BACKEND_NULL
+  typedef int db_t;
+#else
+  #error "Unknown backend"
+  /* Define it anyway, so this is the only warning/error the user sees. */
+  typedef int db_t;
+#endif
 
 
 db_t *db_open(const char *name, int flags);

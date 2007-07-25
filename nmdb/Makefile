@@ -1,7 +1,11 @@
 
+# Protocols to enable
 ENABLE_TIPC = 1
 ENABLE_TCP = 1
 ENABLE_UDP = 1
+
+# Backend to use, can be qdbm or null
+BACKEND = qdbm
 
 CFLAGS += -std=c99 -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 $(CFLAGS)
@@ -25,7 +29,9 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = be-qdbm.o cache.o db.o queue.o net.o parse.o main.o
+OBJS = cache.o db.o queue.o net.o parse.o main.o
+LIBS = -levent -lpthread -lrt
+
 
 ifeq ($(ENABLE_TIPC), 1)
 	OBJS += tipc.o
@@ -45,13 +51,22 @@ else
 	OBJS += udp-stub.o
 endif
 
+ifeq ($(BACKEND), qdbm)
+	OBJS += be-qdbm.o
+	ALL_CFLAGS += -DBACKEND_QDBM
+	LIBS += -lqdbm
+else ifeq ($(BACKEND), null)
+	OBJS += be-null.o
+	ALL_CFLAGS += -DBACKEND_NULL
+endif
+
 
 default: all
 
 all: nmdb
 
 nmdb: $(OBJS)
-	$(CC) $(ALL_CFLAGS) $(OBJS) -levent -lpthread -lrt -lqdbm -o nmdb
+	$(CC) $(ALL_CFLAGS) $(OBJS) $(LIBS) -o nmdb
 
 .c.o:
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
