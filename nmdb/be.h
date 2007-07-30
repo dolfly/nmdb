@@ -7,6 +7,12 @@
 #if defined BACKEND_QDBM
   #include <depot.h>
   typedef DEPOT db_t;
+#elif defined BACKEND_BDB
+  /* typedefs to work around db.h include bug */
+  typedef unsigned int u_int;
+  typedef unsigned long u_long;
+  #include <db.h>
+  typedef DB db_t;
 #elif defined BACKEND_NULL
   typedef int db_t;
 #else

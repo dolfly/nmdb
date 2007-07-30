@@ -4,7 +4,7 @@ ENABLE_TIPC = 1
 ENABLE_TCP = 1
 ENABLE_UDP = 1
 
-# Backend to use, can be qdbm or null
+# Backend to use, can be qdbm, bdb, or null
 BACKEND = qdbm
 
 CFLAGS += -std=c99 -Wall -O3
@@ -55,6 +55,10 @@ ifeq ($(BACKEND), qdbm)
 	OBJS += be-qdbm.o
 	ALL_CFLAGS += -DBACKEND_QDBM
 	LIBS += -lqdbm
+else ifeq ($(BACKEND), bdb)
+	OBJS += be-bdb.o
+	ALL_CFLAGS += -DBACKEND_BDB
+	LIBS += -ldb
 else ifeq ($(BACKEND), null)
 	OBJS += be-null.o
 	ALL_CFLAGS += -DBACKEND_NULL
