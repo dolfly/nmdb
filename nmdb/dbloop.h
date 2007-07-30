@@ -1,6 +1,6 @@
 
-#ifndef _DB_H
-#define _DB_H
+#ifndef _DBLOOP_H
+#define _DBLOOP_H
 
 #include <pthread.h>		/* for pthread_t */
 #include "be.h"			/* for db_t */

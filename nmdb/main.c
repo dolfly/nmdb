@@ -8,7 +8,7 @@
 
 #include "cache.h"
 #include "net.h"
-#include "db.h"
+#include "dbloop.h"
 #include "common.h"
 #include "net-const.h"
 

@@ -7,7 +7,7 @@
 #include <stdlib.h>		/* malloc()/free() */
 
 #include "common.h"
-#include "db.h"
+#include "dbloop.h"
 #include "be.h"
 #include "queue.h"
 #include "net-const.h"
