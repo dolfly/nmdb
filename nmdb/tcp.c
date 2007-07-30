@@ -109,16 +109,42 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 static int rep_send(const struct req_info *req, const unsigned char *buf,
 		const size_t size)
 {
-	int rv;
+	ssize_t rv, c;
 
 	if (settings.passive)
 		return 1;
 
-	rv = send(req->fd, buf, size, 0);
-	if (rv < 0) {
-		rep_send_error(req, ERR_SEND);
-		return 0;
+	c = 0;
+	while (c < size) {
+		rv = send(req->fd, buf + c, size - c, 0);
+
+		if (rv == size) {
+			return 1;
+		} else if (rv < 0) {
+			if (errno != EAGAIN || errno != EWOULDBLOCK) {
+				rep_send_error(req, ERR_SEND);
+				return 0;
+			} else {
+				/* With big packets, the receiver window might
+				 * get exhausted and send() would block, but
+				 * as the fd is set in non-blocking mode, it
+				 * returns EAGAIN. This makes us to retry when
+				 * send() fails in this way.
+				 *
+				 * The proper way to fix this would be to add
+				 * an event so we get notified when the fd is
+				 * available for writing, and retry the send;
+				 * but this is complex so leave it for when
+				 * it's really needed. */
+				continue;
+			}
+		} else if (rv == 0) {
+			return 1;
+		}
+
+		c += rv;
 	}
+
 	return 1;
 }
 
