@@ -9,7 +9,7 @@ db_t *db_open(const char *name, int flags)
 {
 	int f;
 
-	f = DP_OREADER | DP_OWRITER | DP_ONOLCK;
+	f = DP_OREADER | DP_OWRITER | DP_ONOLCK | DP_OCREAT;
 	return dpopen(name, f, 0);
 }
 
