@@ -3,7 +3,7 @@ ENABLE_TIPC = 1
 ENABLE_TCP = 1
 ENABLE_UDP = 1
 
-CFLAGS += -std=c99 -Wall -O3
+CFLAGS += -std=c99 -pedantic -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 -fPIC $(CFLAGS)
 ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
 		-DENABLE_TCP=$(ENABLE_TCP) \
@@ -17,9 +17,6 @@ ifdef PROFILE
 ALL_CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
 endif
 
-ifdef STRICT
-ALL_CFLAGS += -ansi -pedantic
-endif
 
 # prefix for installing the binaries
 PREFIX=/usr/local
