@@ -58,7 +58,7 @@ static int load_settings(int argc, char **argv)
 	settings.numobjs = -1;
 	settings.foreground = 0;
 	settings.passive = 0;
-	settings.logfname = NULL;
+	settings.logfname = "-";
 
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
