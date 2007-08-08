@@ -2,7 +2,6 @@
 #include <sys/types.h>		/* socket defines */
 #include <sys/socket.h>		/* socket functions */
 #include <stdlib.h>		/* malloc() */
-#include <stdio.h>		/* perror() */
 #include <stdint.h>		/* uint32_t and friends */
 #include <arpa/inet.h>		/* htonls() and friends */
 #include <netinet/in.h>		/* INET stuff */
@@ -23,6 +22,7 @@ typedef unsigned char u_char;
 #include "net-const.h"
 #include "req.h"
 #include "parse.h"
+#include "log.h"
 
 
 /* TCP socket structure. Used mainly to hold buffers from incomplete
@@ -101,7 +101,7 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 	r = send(req->fd, minibuf, 4 * 4, 0);
 
 	if (r < 0) {
-		perror("rep_send_error() failed");
+		errlog("rep_send_error() failed");
 	}
 }
 

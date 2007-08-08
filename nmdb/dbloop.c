@@ -2,7 +2,6 @@
 #include <pthread.h>		/* threading functions */
 #include <time.h>		/* nanosleep() */
 #include <errno.h>		/* ETIMEDOUT */
-#include <stdio.h>		/* perror() */
 #include <string.h>		/* memcmp() */
 #include <stdlib.h>		/* malloc()/free() */
 
@@ -12,6 +11,7 @@
 #include "queue.h"
 #include "net-const.h"
 #include "req.h"
+#include "log.h"
 
 
 static void *db_loop(void *arg);
@@ -71,7 +71,7 @@ static void *db_loop(void *arg)
 		}
 
 		if (rv != 0 && rv != ETIMEDOUT) {
-			perror("Error in queue_timedwait()");
+			errlog("Error in queue_timedwait()");
 			continue;
 		}
 
@@ -174,7 +174,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 		free(dbval);
 
 	} else {
-		printf("Unknown op 0x%x\n", e->operation);
+		wlog("Unknown op 0x%x\n", e->operation);
 	}
 }
 

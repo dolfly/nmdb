@@ -3,7 +3,6 @@
 #include <sys/socket.h>		/* socket functions */
 #include <stdlib.h>		/* malloc() */
 #include <linux/tipc.h>		/* tipc stuff */
-#include <stdio.h>		/* perror() */
 #include <stdint.h>		/* uint32_t and friends */
 #include <arpa/inet.h>		/* htonls() and friends */
 #include <string.h>		/* memcpy() */
@@ -14,6 +13,7 @@
 #include "net-const.h"
 #include "req.h"
 #include "parse.h"
+#include "log.h"
 
 
 static void tipc_mini_reply(struct req_info *req, uint32_t reply);
@@ -48,7 +48,7 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 	r = sendto(req->fd, minibuf, 3 * 4, 0, req->clisa, req->clilen);
 
 	if (r < 0) {
-		perror("rep_send_error() failed");
+		errlog("rep_send_error() failed");
 	}
 }
 
