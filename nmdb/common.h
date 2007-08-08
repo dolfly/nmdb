@@ -24,6 +24,7 @@ struct settings {
 	int foreground;
 	int passive;
 	char *dbname;
+	char *logfname;
 };
 extern struct settings settings;
 

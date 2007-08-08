@@ -1,6 +1,5 @@
 
 #include <signal.h>		/* signal constants */
-#include <stdio.h>		/* perror() */
 #include <stdlib.h>		/* exit() */
 
 /* Workaround for libevent 1.1a: the header assumes u_char is typedef'ed to an
@@ -14,17 +13,18 @@ typedef unsigned char u_char;
 #include "tcp.h"
 #include "udp.h"
 #include "net.h"
+#include "log.h"
 
 
 static void exit_sighandler(int fd, short event, void *arg)
 {
-	printf("Got signal! Puf!\n");
+	wlog("Got signal! Puf!\n");
 	event_loopexit(NULL);
 }
 
 static void passive_to_active_sighandler(int fd, short event, void *arg)
 {
-	printf("Passive toggle!\n");
+	wlog("Passive toggle!\n");
 	settings.passive = !settings.passive;
 }
 
@@ -44,7 +44,7 @@ void net_loop(void)
 	if (ENABLE_TIPC) {
 		tipc_fd = tipc_init();
 		if (tipc_fd < 0) {
-			perror("Error initializing TIPC");
+			errlog("Error initializing TIPC");
 			exit(1);
 		}
 
@@ -56,7 +56,7 @@ void net_loop(void)
 	if (ENABLE_TCP) {
 		tcp_fd = tcp_init();
 		if (tcp_fd < 0) {
-			perror("Error initializing TCP");
+			errlog("Error initializing TCP");
 			exit(1);
 		}
 
@@ -68,7 +68,7 @@ void net_loop(void)
 	if (ENABLE_UDP) {
 		udp_fd = udp_init();
 		if (udp_fd < 0) {
-			perror("Error initializing UDP");
+			errlog("Error initializing UDP");
 			exit(1);
 		}
 

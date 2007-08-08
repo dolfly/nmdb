@@ -11,6 +11,7 @@
 #include "dbloop.h"
 #include "common.h"
 #include "net-const.h"
+#include "log.h"
 
 #define DEFDBNAME "database"
 
@@ -33,6 +34,7 @@ static void help(void) {
 	  "  -u port	UDP listening port (26010)\n"
 	  "  -U addr	UDP listening address (all local addresses)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
+	  "  -o	fname	log to the file 'fname'.\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -h		show this help\n"
@@ -56,11 +58,12 @@ static int load_settings(int argc, char **argv)
 	settings.numobjs = -1;
 	settings.foreground = 0;
 	settings.passive = 0;
+	settings.logfname = NULL;
 
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
 
-	while ((c = getopt(argc, argv, "d:l:L:t:T:u:U:c:fph?")) != -1) {
+	while ((c = getopt(argc, argv, "d:l:L:t:T:u:U:c:o:fph?")) != -1) {
 		switch(c) {
 		case 'd':
 			free(settings.dbname);
@@ -92,6 +95,12 @@ static int load_settings(int argc, char **argv)
 		case 'c':
 			settings.numobjs = atoi(optarg) * 1024;
 			break;
+
+		case 'o':
+			settings.logfname = malloc(strlen(optarg) + 1);
+			strcpy(settings.logfname, optarg);
+			break;
+
 		case 'f':
 			settings.foreground = 1;
 			break;
@@ -148,25 +157,30 @@ int main(int argc, char **argv)
 	if (!load_settings(argc, argv))
 		return 1;
 
+	if (!log_init()) {
+		perror("Error opening log file");
+		return 1;
+	}
+
 	init_stats();
 
 	cd = cache_create(settings.numobjs, 0);
 	if (cd == NULL) {
-		perror("Error creating cache");
+		errlog("Error creating cache");
 		return 1;
 	}
 	cache_table = cd;
 
 	q = queue_create();
 	if (q == NULL) {
-		perror("Error creating queue");
+		errlog("Error creating queue");
 		return 1;
 	}
 	op_queue = q;
 
 	db = db_open(settings.dbname, 0);
 	if (db == NULL) {
-		perror("Error opening DB");
+		errlog("Error opening DB");
 		return 1;
 	}
 
@@ -176,7 +190,7 @@ int main(int argc, char **argv)
 			/* parent exits */
 			return 0;
 		} else if (pid < 0) {
-			perror("Error in fork()");
+			errlog("Error in fork()");
 			return 1;
 		}
 
