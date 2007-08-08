@@ -42,17 +42,21 @@ libnmdb.a: $(OBJS)
 	$(AR) cr libnmdb.a $(OBJS)
 
 
-install: libs
+install-lib: libs
 	install -d $(PREFIX)/lib
 	install -m 0755 libnmdb.so $(PREFIX)/lib
 	install -m 0755 libnmdb.a $(PREFIX)/lib
 	install -d $(PREFIX)/include
 	install -m 0644 nmdb.h $(PREFIX)/include
-	install -d $(PREFIX)/man/man3
-	install -m 0644 libnmdb.3 $(PREFIX)/man/man3/
 	@echo
 	@echo "Please run ldconfig to update your library cache"
 	@echo
+
+install-man:
+	install -d $(PREFIX)/man/man3
+	install -m 0644 libnmdb.3 $(PREFIX)/man/man3/
+
+install: install-lib install-man
 
 
 .c.o:
@@ -62,6 +66,6 @@ clean:
 	rm -f $(OBJS) libnmdb.so libnmdb.a
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
-.PHONY: default all libs install clean
+.PHONY: default all libs install-lib install-man install clean
 
 

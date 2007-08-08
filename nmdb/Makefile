@@ -75,16 +75,20 @@ nmdb: $(OBJS)
 .c.o:
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
-install: all
+install-bin: nmdb
 	install -d $(PREFIX)/bin
 	install -m 0755 nmdb $(PREFIX)/bin
+
+install-man:
 	install -d $(PREFIX)/man/man1
 	install -m 0644 nmdb.1 $(PREFIX)/man/man1/
+
+install: install-bin install-man
 
 clean:
 	rm -f $(OBJS) nmdb
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
-.PHONY: default all clean
+.PHONY: default all clean install-bin install-man install
 
 
