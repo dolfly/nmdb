@@ -60,8 +60,8 @@ void net_loop(void)
 			exit(1);
 		}
 
-		event_set(&tcp_evt, tcp_fd, EV_READ | EV_PERSIST, tcp_newconnection,
-				&tcp_evt);
+		event_set(&tcp_evt, tcp_fd, EV_READ | EV_PERSIST,
+				tcp_newconnection, &tcp_evt);
 		event_add(&tcp_evt, NULL);
 	}
 
