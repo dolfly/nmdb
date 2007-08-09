@@ -48,15 +48,20 @@ else
 	OBJS += udp-stub.o
 endif
 
+# Use series of ifeq-endif instead of else-ifeq because otherwise the nesting
+# is a mess. Using "else ifeq ..." in the same line is only supported from
+# gmake 3.81, which is too new.
 ifeq ($(BACKEND), qdbm)
 	OBJS += be-qdbm.o
 	ALL_CFLAGS += -DBACKEND_QDBM
 	LIBS += -lqdbm
-else ifeq ($(BACKEND), bdb)
+endif
+ifeq ($(BACKEND), bdb)
 	OBJS += be-bdb.o
 	ALL_CFLAGS += -DBACKEND_BDB
 	LIBS += -ldb
-else ifeq ($(BACKEND), null)
+endif
+ifeq ($(BACKEND), null)
 	OBJS += be-null.o
 	ALL_CFLAGS += -DBACKEND_NULL
 endif
