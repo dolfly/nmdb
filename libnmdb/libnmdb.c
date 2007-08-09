@@ -42,15 +42,15 @@ int compare_servers(const void *s1, const void *s2)
 #if ENABLE_TCP || ENABLE_UDP
 	if (srv1->type == TCP_CONN || srv1->type == UDP_CONN) {
 		in_addr_t a1, a2;
-		a1 = srv1->info.tcp.srvsa.sin_addr.s_addr;
-		a2 = srv2->info.tcp.srvsa.sin_addr.s_addr;
+		a1 = srv1->info.in.srvsa.sin_addr.s_addr;
+		a2 = srv2->info.in.srvsa.sin_addr.s_addr;
 
 		if (a1 < a2) {
 			return -1;
 		} else if (a1 == a2) {
 			in_port_t p1, p2;
-			p1 = srv1->info.tcp.srvsa.sin_port;
-			p2 = srv2->info.tcp.srvsa.sin_port;
+			p1 = srv1->info.in.srvsa.sin_port;
+			p2 = srv2->info.in.srvsa.sin_port;
 
 			if (p1 < p2)
 				return -1;

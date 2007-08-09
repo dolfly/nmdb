@@ -105,6 +105,7 @@ uint32_t tipc_get_rep(struct nmdb_srv *srv,
 #else
 /* Stubs to use when TIPC is not enabled. */
 
+#include <stdint.h>
 #include "nmdb.h"
 
 int nmdb_add_tipc_server(nmdb_t *db, int port)

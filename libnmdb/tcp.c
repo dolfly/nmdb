@@ -43,12 +43,12 @@ static int add_tcp_server_addr(nmdb_t *db, in_addr_t *inetaddr, int port)
 	newsrv = &(db->servers[db->nservers - 1]);
 
 	newsrv->fd = fd;
-	newsrv->info.tcp.srvsa.sin_family = AF_INET;
-	newsrv->info.tcp.srvsa.sin_port = htons(port);
-	newsrv->info.tcp.srvsa.sin_addr.s_addr = *inetaddr;
+	newsrv->info.in.srvsa.sin_family = AF_INET;
+	newsrv->info.in.srvsa.sin_port = htons(port);
+	newsrv->info.in.srvsa.sin_addr.s_addr = *inetaddr;
 
-	rv = connect(fd, (struct sockaddr *) &(newsrv->info.tcp.srvsa),
-			sizeof(newsrv->info.tcp.srvsa));
+	rv = connect(fd, (struct sockaddr *) &(newsrv->info.in.srvsa),
+			sizeof(newsrv->info.in.srvsa));
 	if (rv < 0)
 		goto error_exit;
 
@@ -185,6 +185,7 @@ uint32_t tcp_get_rep(struct nmdb_srv *srv,
 #else
 /* Stubs to use when TCP is not enabled. */
 
+#include <stdint.h>
 #include "nmdb.h"
 
 int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)

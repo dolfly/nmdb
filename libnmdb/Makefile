@@ -29,13 +29,20 @@ default: all
 
 all: libs
 
+nmdb.h:
+	@echo "generating nmdb.h"
+	@cat nmdb.skel.h | \
+		sed 's/++CONFIG_ENABLE_TIPC++/$(ENABLE_TIPC)/g' | \
+		sed 's/++CONFIG_ENABLE_UDP++/$(ENABLE_UDP)/g' | \
+		sed 's/++CONFIG_ENABLE_TCP++/$(ENABLE_TCP)/g' \
+		> nmdb.h
 
 libs: libnmdb.so libnmdb.a
 
-libnmdb.so: $(OBJS)
+libnmdb.so: nmdb.h $(OBJS)
 	$(CC) $(ALL_CFLAGS) -shared -fPIC $(OBJS) -o libnmdb.so
 
-libnmdb.a: $(OBJS)
+libnmdb.a: nmdb.h $(OBJS)
 	$(AR) cr libnmdb.a $(OBJS)
 
 
@@ -60,7 +67,7 @@ install: install-lib install-man
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) libnmdb.so libnmdb.a
+	rm -f nmdb.h $(OBJS) libnmdb.so libnmdb.a
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
 .PHONY: default all libs install-lib install-man install clean

@@ -43,10 +43,10 @@ static int add_udp_server_addr(nmdb_t *db, in_addr_t *inetaddr, int port)
 	newsrv = &(db->servers[db->nservers - 1]);
 
 	newsrv->fd = fd;
-	newsrv->info.udp.srvsa.sin_family = AF_INET;
-	newsrv->info.udp.srvsa.sin_port = htons(port);
-	newsrv->info.udp.srvsa.sin_addr.s_addr = *inetaddr;
-	newsrv->info.udp.srvlen = sizeof(struct sockaddr_in);
+	newsrv->info.in.srvsa.sin_family = AF_INET;
+	newsrv->info.in.srvsa.sin_port = htons(port);
+	newsrv->info.in.srvsa.sin_addr.s_addr = *inetaddr;
+	newsrv->info.in.srvlen = sizeof(struct sockaddr_in);
 
 	newsrv->type = UDP_CONN;
 
@@ -82,8 +82,8 @@ int udp_srv_send(struct nmdb_srv *srv,
 {
 	ssize_t rv;
 	rv = sendto(srv->fd, buf, bsize, 0,
-			(struct sockaddr *) &(srv->info.udp.srvsa),
-			srv->info.udp.srvlen);
+			(struct sockaddr *) &(srv->info.in.srvsa),
+			srv->info.in.srvlen);
 	if (rv <= 0)
 		return 0;
 	return 1;
@@ -121,9 +121,10 @@ uint32_t udp_get_rep(struct nmdb_srv *srv,
 #else
 /* Stubs to use when UDP is not enabled. */
 
+#include <stdint.h>
 #include "nmdb.h"
 
-int nmdb_add_udp_server(nmdb_t *db, int port)
+int nmdb_add_udp_server(nmdb_t *db, const char *addr, int port)
 {
 	return 0;
 }

@@ -1,30 +1,47 @@
 
+/* Header for the libnmdb library. */
+
 #ifndef _NMDB_H
 #define _NMDB_H
 
+/* Defined to 0 or 1 at libnmdb build time according the build configuration,
+ * not to be used externally. */
+#define _ENABLE_TIPC ++CONFIG_ENABLE_TIPC++
+#define _ENABLE_TCP ++CONFIG_ENABLE_TCP++
+#define _ENABLE_UDP ++CONFIG_ENABLE_UDP++
+
+
 #include <sys/types.h>		/* socket defines */
 #include <sys/socket.h>		/* socklen_t */
-#include <linux/tipc.h>		/* struct sockaddr_tipc */
-#include <netinet/in.h>		/* struct sockaddr_in */
 
+#if _ENABLE_TIPC
+#include <linux/tipc.h>		/* struct sockaddr_tipc */
+#endif
+
+#if (_ENABLE_TCP || _ENABLE_UDP)
+#include <netinet/in.h>		/* struct sockaddr_in */
+#endif
 
 struct nmdb_srv {
 	int fd;
 	int type;
 	union {
+
+#if _ENABLE_TIPC
 		struct {
 			unsigned int port;
 			struct sockaddr_tipc srvsa;
 			socklen_t srvlen;
 		} tipc;
+#endif
+
+#if (_ENABLE_TCP || _ENABLE_UDP)
 		struct {
 			struct sockaddr_in srvsa;
 			socklen_t srvlen;
-		} tcp;
-		struct {
-			struct sockaddr_in srvsa;
-			socklen_t srvlen;
-		} udp;
+		} in;
+#endif
+
 	} info;
 };
 
