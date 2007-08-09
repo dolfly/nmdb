@@ -12,3 +12,5 @@
 tests/c/*-*-cache
 tests/c/*-*-normal
 tests/c/*-*-sync
+/libnmdb/nmdb.h
+/tags
