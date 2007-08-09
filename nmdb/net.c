@@ -87,8 +87,13 @@ void net_loop(void)
 
 	event_dispatch();
 
-	event_del(&tipc_evt);
-	event_del(&tcp_evt);
+	if (ENABLE_TIPC)
+		event_del(&tipc_evt);
+	if (ENABLE_TCP)
+		event_del(&tcp_evt);
+	if (ENABLE_UDP)
+		event_del(&udp_evt);
+
 	signal_del(&sigterm_evt);
 	signal_del(&sigint_evt);
 	signal_del(&sigusr2_evt);
