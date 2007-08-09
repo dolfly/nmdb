@@ -24,7 +24,7 @@ int log_init(void)
 	}
 
 	if (strcmp(settings.logfname, "-") == 0) {
-		logfd = 0;
+		logfd = 1;
 	} else {
 		logfd = open(settings.logfname, O_WRONLY | O_APPEND | O_CREAT);
 		if (logfd < 0)
