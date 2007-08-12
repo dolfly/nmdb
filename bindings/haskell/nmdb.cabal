@@ -1,0 +1,22 @@
+Name: Nmdb
+Version: 0.1
+License: PublicDomain
+License-file: LICENSE
+Author: Alberto Bertogli
+Homepage: http://auriga.wearlab.de/~alb/nmdb/
+Category: Database
+Build-Depends: base
+Exposed-modules: Nmdb
+Extra-libraries: nmdb
+Extensions: ForeignFunctionInterface
+Synopsis: nmdb Haskell bindings
+Description:
+  nmdb is a network database (dbm-style) for controlled networks that can use
+  different protocols to to communicate with its clients. At the moment, it
+  supports TIPC, TCP and UDP.
+  It consists of an in-memory cache that saves (key, value) pairs, and a
+  persistent backend that stores the pairs on disk.  Both work combined, but
+  the use of the backend is optional, so you can use the server only for cache
+  queries, pretty much like memcached.
+  This are the Haskell bindings for the C nmdb library.
+
