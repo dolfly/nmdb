@@ -1,6 +1,6 @@
 
 ;
-; nmdb bindings for newlisp (http://www.newlisp.org/)
+; newlisp (http://www.newlisp.org/) bindings for nmdb
 ; Alberto Bertogli (albertito@gmail.com)
 ;
 ; Functions:
