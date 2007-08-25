@@ -180,8 +180,10 @@ int udp_init(void)
 	}
 
 	rv = bind(fd, (struct sockaddr *) &srvsa, sizeof(srvsa));
-	if (rv < 0)
+	if (rv < 0) {
+		close(fd);
 		return -1;
+	}
 
 	return fd;
 }
