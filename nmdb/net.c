@@ -12,6 +12,7 @@ typedef unsigned char u_char;
 #include "tipc.h"
 #include "tcp.h"
 #include "udp.h"
+#include "sctp.h"
 #include "net.h"
 #include "log.h"
 
@@ -33,7 +34,8 @@ void net_loop(void)
 	int tipc_fd = -1;
 	int tcp_fd = -1;
 	int udp_fd = -1;
-	struct event tipc_evt, tcp_evt, udp_evt,
+	int sctp_fd = -1;
+	struct event tipc_evt, tcp_evt, udp_evt, sctp_evt,
 		     sigterm_evt, sigint_evt, sigusr2_evt;
 
 	event_init();
@@ -77,6 +79,18 @@ void net_loop(void)
 		event_add(&udp_evt, NULL);
 	}
 
+	if (ENABLE_SCTP) {
+		sctp_fd = sctp_init();
+		if (sctp_fd < 0) {
+			errlog("Error initializing SCTP");
+			exit(1);
+		}
+
+		event_set(&sctp_evt, sctp_fd, EV_READ | EV_PERSIST, sctp_recv,
+				&sctp_evt);
+		event_add(&sctp_evt, NULL);
+	}
+
 	signal_set(&sigterm_evt, SIGTERM, exit_sighandler, &sigterm_evt);
 	signal_add(&sigterm_evt, NULL);
 	signal_set(&sigint_evt, SIGINT, exit_sighandler, &sigint_evt);
@@ -93,6 +107,8 @@ void net_loop(void)
 		event_del(&tcp_evt);
 	if (ENABLE_UDP)
 		event_del(&udp_evt);
+	if (ENABLE_SCTP)
+		event_del(&sctp_evt);
 
 	signal_del(&sigterm_evt);
 	signal_del(&sigint_evt);

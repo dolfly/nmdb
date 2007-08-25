@@ -3,6 +3,7 @@
 ENABLE_TIPC = 1
 ENABLE_TCP = 1
 ENABLE_UDP = 1
+ENABLE_SCTP = 1
 
 # Backend to use, can be qdbm, bdb, or null
 BACKEND = qdbm
@@ -11,7 +12,8 @@ CFLAGS += -std=c99 -pedantic -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 $(CFLAGS)
 ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
 		-DENABLE_TCP=$(ENABLE_TCP) \
-		-DENABLE_UDP=$(ENABLE_UDP)
+		-DENABLE_UDP=$(ENABLE_UDP) \
+		-DENABLE_SCTP=$(ENABLE_SCTP)
 
 ifdef DEBUG
 ALL_CFLAGS += -g
@@ -46,6 +48,12 @@ ifeq ($(ENABLE_UDP), 1)
 	OBJS += udp.o
 else
 	OBJS += udp-stub.o
+endif
+
+ifeq ($(ENABLE_SCTP), 1)
+	OBJS += sctp.o
+else
+	OBJS += sctp-stub.o
 endif
 
 # Use series of ifeq-endif instead of else-ifeq because otherwise the nesting

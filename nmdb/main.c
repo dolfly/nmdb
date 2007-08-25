@@ -33,6 +33,8 @@ static void help(void) {
 	  "  -T addr	TCP listening address (all local addresses)\n"
 	  "  -u port	UDP listening port (26010)\n"
 	  "  -U addr	UDP listening address (all local addresses)\n"
+	  "  -s port	SCTP listening port (26010)\n"
+	  "  -S addr	SCTP listening address (all local addresses)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
 	  "  -o	fname	log to the file 'fname'.\n"
 	  "  -f		don't fork and stay in the foreground\n"
@@ -55,6 +57,8 @@ static int load_settings(int argc, char **argv)
 	settings.tcp_port = -1;
 	settings.udp_addr = NULL;
 	settings.udp_port = -1;
+	settings.sctp_addr = NULL;
+	settings.sctp_port = -1;
 	settings.numobjs = -1;
 	settings.foreground = 0;
 	settings.passive = 0;
@@ -90,6 +94,13 @@ static int load_settings(int argc, char **argv)
 			break;
 		case 'U':
 			settings.udp_addr = optarg;
+			break;
+
+		case 's':
+			settings.sctp_port = atoi(optarg);
+			break;
+		case 'S':
+			settings.sctp_addr = optarg;
 			break;
 
 		case 'c':
@@ -130,6 +141,10 @@ static int load_settings(int argc, char **argv)
 		settings.udp_addr = UDP_SERVER_ADDR;
 	if (settings.udp_port == -1)
 		settings.udp_port = UDP_SERVER_PORT;
+	if (settings.sctp_addr == NULL)
+		settings.sctp_addr = SCTP_SERVER_ADDR;
+	if (settings.sctp_port == -1)
+		settings.sctp_port = SCTP_SERVER_PORT;
 	if (settings.numobjs == -1)
 		settings.numobjs = 128 * 1024;
 

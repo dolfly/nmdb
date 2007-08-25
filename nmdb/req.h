@@ -11,6 +11,7 @@
 #define REQTYPE_TIPC 1
 #define REQTYPE_TCP 2
 #define REQTYPE_UDP 3
+#define REQTYPE_SCTP 4
 
 
 struct req_info {

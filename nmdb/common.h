@@ -20,6 +20,8 @@ struct settings {
 	int tcp_port;
 	char *udp_addr;
 	int udp_port;
+	char *sctp_addr;
+	int sctp_port;
 	int numobjs;
 	int foreground;
 	int passive;
