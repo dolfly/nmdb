@@ -12,6 +12,7 @@
 #include "tipc.h"
 #include "tcp.h"
 #include "udp.h"
+#include "sctp.h"
 #include "internal.h"
 
 
@@ -39,8 +40,10 @@ int compare_servers(const void *s1, const void *s2)
 			return 1;
 	}
 #endif
-#if ENABLE_TCP || ENABLE_UDP
-	if (srv1->type == TCP_CONN || srv1->type == UDP_CONN) {
+#if ENABLE_TCP || ENABLE_UDP || ENABLE_SCTP
+	if (srv1->type == TCP_CONN
+			|| srv1->type == UDP_CONN
+			|| srv1->type == SCTP_CONN) {
 		in_addr_t a1, a2;
 		a1 = srv1->info.in.srvsa.sin_addr.s_addr;
 		a2 = srv2->info.in.srvsa.sin_addr.s_addr;
@@ -159,6 +162,8 @@ static int srv_send(struct nmdb_srv *srv,
 			return tcp_srv_send(srv, buf, bsize);
 		case UDP_CONN:
 			return udp_srv_send(srv, buf, bsize);
+		case SCTP_CONN:
+			return sctp_srv_send(srv, buf, bsize);
 		default:
 			return 0;
 	}
@@ -178,6 +183,8 @@ static uint32_t get_rep(struct nmdb_srv *srv,
 			return tcp_get_rep(srv, buf, bsize, payload, psize);
 		case UDP_CONN:
 			return udp_get_rep(srv, buf, bsize, payload, psize);
+		case SCTP_CONN:
+			return sctp_get_rep(srv, buf, bsize, payload, psize);
 		default:
 			return 0;
 	}
@@ -195,6 +202,8 @@ static int srv_get_msg_offset(struct nmdb_srv *srv)
 			return TCP_MSG_OFFSET;
 		case UDP_CONN:
 			return UDP_MSG_OFFSET;
+		case SCTP_CONN:
+			return SCTP_MSG_OFFSET;
 		default:
 			return 0;
 	}

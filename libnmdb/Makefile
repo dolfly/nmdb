@@ -2,12 +2,14 @@
 ENABLE_TIPC = 1
 ENABLE_TCP = 1
 ENABLE_UDP = 1
+ENABLE_SCTP = 1
 
 CFLAGS += -std=c99 -pedantic -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 -fPIC $(CFLAGS)
 ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
 		-DENABLE_TCP=$(ENABLE_TCP) \
-		-DENABLE_UDP=$(ENABLE_UDP)
+		-DENABLE_UDP=$(ENABLE_UDP) \
+		-DENABLE_SCTP=$(ENABLE_SCTP)
 
 ifdef DEBUG
 ALL_CFLAGS += -g
@@ -22,7 +24,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = libnmdb.o tcp.o tipc.o udp.o
+OBJS = libnmdb.o tcp.o tipc.o udp.o sctp.o
 
 
 default: all
@@ -33,8 +35,9 @@ nmdb.h:
 	@echo "generating nmdb.h"
 	@cat nmdb.skel.h | \
 		sed 's/++CONFIG_ENABLE_TIPC++/$(ENABLE_TIPC)/g' | \
+		sed 's/++CONFIG_ENABLE_TCP++/$(ENABLE_TCP)/g' | \
 		sed 's/++CONFIG_ENABLE_UDP++/$(ENABLE_UDP)/g' | \
-		sed 's/++CONFIG_ENABLE_TCP++/$(ENABLE_TCP)/g' \
+		sed 's/++CONFIG_ENABLE_SCTP++/$(ENABLE_SCTP)/g' \
 		> nmdb.h
 
 libs: libnmdb.so libnmdb.a

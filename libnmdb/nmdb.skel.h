@@ -9,6 +9,7 @@
 #define _ENABLE_TIPC ++CONFIG_ENABLE_TIPC++
 #define _ENABLE_TCP ++CONFIG_ENABLE_TCP++
 #define _ENABLE_UDP ++CONFIG_ENABLE_UDP++
+#define _ENABLE_SCTP ++CONFIG_ENABLE_SCTP++
 
 
 #include <sys/types.h>		/* socket defines */
@@ -18,7 +19,7 @@
 #include <linux/tipc.h>		/* struct sockaddr_tipc */
 #endif
 
-#if (_ENABLE_TCP || _ENABLE_UDP)
+#if (_ENABLE_TCP || _ENABLE_UDP || _ENABLE_SCTP)
 #include <netinet/in.h>		/* struct sockaddr_in */
 #endif
 
@@ -35,7 +36,7 @@ struct nmdb_srv {
 		} tipc;
 #endif
 
-#if (_ENABLE_TCP || _ENABLE_UDP)
+#if (_ENABLE_TCP || _ENABLE_UDP || _ENABLE_SCTP)
 		struct {
 			struct sockaddr_in srvsa;
 			socklen_t srvlen;
@@ -54,6 +55,7 @@ nmdb_t *nmdb_init();
 int nmdb_add_tipc_server(nmdb_t *db, int port);
 int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port);
 int nmdb_add_udp_server(nmdb_t *db, const char *addr, int port);
+int nmdb_add_sctp_server(nmdb_t *db, const char *addr, int port);
 int nmdb_free(nmdb_t *db);
 
 ssize_t nmdb_get(nmdb_t *db, const unsigned char *key, size_t ksize,
