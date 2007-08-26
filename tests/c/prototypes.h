@@ -25,6 +25,8 @@
   #define NADDSRV(db) nmdb_add_tcp_server(db, "localhost", -1)
 #elif USE_UDP
   #define NADDSRV(db) nmdb_add_udp_server(db, "localhost", -1)
+#elif USE_SCTP
+  #define NADDSRV(db) nmdb_add_sctp_server(db, "localhost", -1)
 #elif USE_TIPC
   #define NADDSRV(db) nmdb_add_tipc_server(db, -1)
 #elif USE_MULT
@@ -33,6 +35,7 @@
 		nmdb_add_tipc_server(db, -1); \
 		nmdb_add_tcp_server(db, "localhost", -1); \
 		nmdb_add_udp_server(db, "localhost", -1); \
+		nmdb_add_sctp_server(db, "localhost", -1); \
 	} while (0)
 #endif
 
