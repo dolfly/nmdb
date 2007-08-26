@@ -11,8 +11,8 @@ Introduction
 nmdb_ is a simple and fast cache and database for controlled networks.
 It allows applications in the network to use a centralized, shared cache and
 database in a very easy way. It stores *(key, value)* pairs, with each key
-having only one associated value. At the moment, it supports the TIPC_, TCP
-and UDP protocols.
+having only one associated value. At the moment, it supports the TIPC_, TCP,
+UDP and SCTP protocols.
 
 This document explains how to setup nmdb and a simple guide to writing
 clients. It also includes a "quick start" section for the anxious.
@@ -88,7 +88,7 @@ TIPC setup
 If you want to use the server and the clients in different machines using
 TIPC, you need to setup your TIPC network. If you just want to run everything
 in one machine, you already have a TIPC network set up, or you only want to
-use TCP or UDP connections, you can skip this section.
+use TCP, UDP or SCTP connections, you can skip this section.
 
 Before we begin, all the machines should already be connected in an Ethernet
 LAN, and have the tipc-config application that should come with your Linux

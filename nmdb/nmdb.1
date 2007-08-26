@@ -2,12 +2,16 @@
 .SH NAME
 nmdb - A multiprotocol network database manager
 .SH SYNOPSYS
-nmdb [-d dbpath] [-l lower] [-L upper] [-t tcpport] [-T tcpaddr]
-[-u udpport] [-U udpaddr] [-c nobj] [-f] [-p] [-h]
+nmdb [-d dbpath] [-l lower] [-L upper]
+  [-t tcpport] [-T tcpaddr]
+  [-u udpport] [-U udpaddr]
+  [-s sctpport] [-S sctpaddr]
+  [-c nobj] [-f] [-p] [-h]
+
 .SH DESCRIPTION
 
 nmdb is a network database that can use different protocols to communicate
-with its clients. At the moment, it supports TIPC, TCP and UDP.
+with its clients. At the moment, it supports TIPC, TCP, UDP and SCTP.
 
 It can also be used as a generic caching system (pretty much like memcached),
 because it has a very fast cache that can be used without impacting on the
@@ -59,6 +63,12 @@ UDP listening port. Defaults to 26010.
 .B "-U udpaddr"
 IP listening address for UDP. Defaults to all local addresses.
 .TP
+.B "-s sctpport"
+SCTP listening port. Defaults to 26010.
+.TP
+.B "-S sctpaddr"
+IP listening address for SCTP. Defaults to all local addresses.
+.TP
 .B "-c nobj"
 Sets the maximum number of objects the cache will held, in thousands. Note
 that the size of the memory used by the cache layer depends on the size of the
@@ -103,6 +113,7 @@ can't bind a port twice.
 .B TIPC
 (http://tipc.sf.net),
 .BR qdbm (3).
+
 .SH AUTHORS
 Created by Alberto Bertogli (albertito@gmail.com).
 

@@ -4,7 +4,7 @@ Alberto Bertogli (albertito@gmail.com)
 ---------------------------------------------------
 
 nmdb is a network database that can use different protocols to communicate
-with its clients. At the moment, it supports TIPC, TCP and UDP.
+with its clients. At the moment, it supports TIPC, TCP, UDP and SCTP.
 
 It consists of an in-memory cache, that saves (key, value) pairs, and a
 persistent backend that stores the pairs on disk.
@@ -44,7 +44,7 @@ Requisites to enable TIPC:
 To compile the server and the library, you can just use "make" on the top
 level directory. To install them, use "make install". By default, all
 protocols are enabled, including TIPC. To disable any of them, run something
-like "make ENABLE_TIPC=0".
+like "make ENABLE_TIPC=0 ENABLE_SCTP=0".
 
 To run some tests, start the server and then go to the "tests/c/" directory.
 Run "make.sh build" and then run any of the generated tests.
