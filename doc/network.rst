@@ -59,7 +59,7 @@ REQ_DEL_SYNC   0x106
 REQ_SET_ASYNC  0x107
 REQ_DEL_ASYNC  0x108
 REQ_CACHE_CAS  0x109
-REQ__CAS       0x110
+REQ_CAS        0x110
 ============== ======
 
 
