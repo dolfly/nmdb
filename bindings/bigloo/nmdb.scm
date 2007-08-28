@@ -16,6 +16,8 @@
 		 "nmdb_add_tcp_server")
 	  (macro _nmdb_add_udp_server::int (::_nmdb_t ::string ::int)
 		 "nmdb_add_udp_server")
+	  (macro _nmdb_add_sctp_server::int (::_nmdb_t ::string ::int)
+		 "nmdb_add_sctp_server")
 
 	  (macro _nmdb_set::int
 		 (::_nmdb_t ::string ::uint ::string ::uint)
@@ -60,6 +62,7 @@
 	  (nmdb-add-tipc-server db port)
 	  (nmdb-add-tcp-server db addr port)
 	  (nmdb-add-udp-server db addr port)
+	  (nmdb-add-sctp-server db addr port)
 
 	  (nmdb-get db key)
 	  (nmdb-cache-get db key)
@@ -87,6 +90,7 @@
 (define (nmdb-add-tipc-server db port) (_nmdb_add_tipc_server db port))
 (define (nmdb-add-tcp-server db addr port) (_nmdb_add_tcp_server db addr port))
 (define (nmdb-add-udp-server db addr port) (_nmdb_add_udp_server db addr port))
+(define (nmdb-add-sctp-server db addr port) (_nmdb_add_sctp_server db addr port))
 
 ;; get functions
 (define (nmdb-generic-get func db key)
