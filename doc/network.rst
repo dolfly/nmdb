@@ -60,6 +60,8 @@ REQ_SET_ASYNC  0x107
 REQ_DEL_ASYNC  0x108
 REQ_CACHE_CAS  0x109
 REQ_CAS        0x110
+REQ_CACHE_INCR 0x111
+REQ_INCR       0x112
 ============== ======
 
 
@@ -79,6 +81,9 @@ REQ_DEL_* and REQ_CACHE_DEL
 REQ_CAS and REQ_CACHE_CAS
   First the key size, then the old value size, then the new value size, and
   then the key, the old value and the new value.
+REQ_INCR and REQ_CACHE_INCR
+  First the key size (32 bits), then the key, and then the increment as a
+  signed network byte order 64 bit integer.
 
 
 Replies
