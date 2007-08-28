@@ -17,14 +17,6 @@ It can also be used as a generic caching system (pretty much like memcached),
 because it has a very fast cache that can be used without impacting on the
 database.
 
-Before using it, you need to create the backing database. As nmdb uses
-.BR qdbm (3)
-as a backend, you need to do this using the
-.I dpmgr
-command. See
-.B "INVOCATION EXAMPLE"
-below for more important information.
-
 The database is accessed with the
 .BR libnmdb (3)
 library. Consult its manual page for programming information. Python bindings
@@ -36,11 +28,8 @@ For additional documentation, go to the project's website at
 .SH OPTIONS
 .TP
 .B "-d dbpath"
-Indicate the path to the database file to use. It must have been created with
-.RB ' "dpmgr create"
-.IR "dbpath" '
-and have read and write permissions. If a name is not provided, "database"
-will be used.
+Indicate the path to the database file to use. It will be created if it
+doesn't exist. If a name is not provided, "database" will be used.
 .TP
 .B "-l lower"
 Lower TIPC port number to bind to. Defaults to 10. It's useful if you want to
@@ -93,10 +82,7 @@ some circumnstances, and doesn't make much sense anyway).
 Show a brief help.
 
 .SH INVOCATION EXAMPLE
-To create the database:
-.B "dpmgr create /var/lib/nmpc-db"
-
-To run the server with the said database:
+To run the server with the database at /var/lib/nmpc-db:
 .B "nmpc -d /var/lib/nmpc-db"
 
 Be
