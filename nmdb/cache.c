@@ -104,12 +104,9 @@ static uint32_t hash(const unsigned char *key, const size_t ksize)
 }
 
 
-/*
- * Looks given key up in the chain.
- * Returns NULL if not found, or a pointer to the cache entry if it's found.
- * The chain can be empty.
- * Used in cache_get() and cache_set().
- */
+/* Looks given key up in the chain. Returns NULL if not found, or a pointer to
+ * the cache entry if it's found. The chain can be empty. Used in cache_get()
+ * and cache_set(). */
 static struct cache_entry *find_in_chain(struct cache_chain *c,
 		const unsigned char *key, size_t ksize)
 {
@@ -136,10 +133,8 @@ static struct cache_entry *find_in_chain(struct cache_chain *c,
 
 }
 
-/*
- * Gets the matching value for the given key.
- * Returns 0 if no match was found, or 1 otherwise.
- */
+/* Gets the matching value for the given key.  Returns 0 if no match was
+ * found, or 1 otherwise. */
 int cache_get(struct cache *cd, const unsigned char *key, size_t ksize,
 		unsigned char **val, size_t *vsize)
 {
