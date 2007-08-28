@@ -31,7 +31,7 @@ default: all
 
 all: libs
 
-nmdb.h:
+nmdb.h: nmdb.skel.h
 	@echo "generating nmdb.h"
 	@cat nmdb.skel.h | \
 		sed 's/++CONFIG_ENABLE_TIPC++/$(ENABLE_TIPC)/g' | \
