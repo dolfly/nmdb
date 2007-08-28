@@ -8,16 +8,19 @@
   #define NSET(...) nmdb_set(__VA_ARGS__)
   #define NDEL(...) nmdb_del(__VA_ARGS__)
   #define NCAS(...) nmdb_cas(__VA_ARGS__)
+  #define NINCR(...) nmdb_incr(__VA_ARGS__)
 #elif USE_CACHE
   #define NGET(...) nmdb_cache_get(__VA_ARGS__)
   #define NSET(...) nmdb_cache_set(__VA_ARGS__)
   #define NDEL(...) nmdb_cache_del(__VA_ARGS__)
   #define NCAS(...) nmdb_cache_cas(__VA_ARGS__)
+  #define NINCR(...) nmdb_cache_incr(__VA_ARGS__)
 #elif USE_SYNC
   #define NGET(...) nmdb_get(__VA_ARGS__)
   #define NSET(...) nmdb_set_sync(__VA_ARGS__)
   #define NDEL(...) nmdb_del_sync(__VA_ARGS__)
   #define NCAS(...) nmdb_cas(__VA_ARGS__)
+  #define NINCR(...) nmdb_incr(__VA_ARGS__)
 #endif
 
 

@@ -38,7 +38,7 @@ for p in TIPC TCP UDP SCTP MULT; do
 		TF="-DUSE_$p=1 -DUSE_$v=1"
 
 		echo " * $OP:"
-		for t in 1 2 3 "set" "get" "del"; do
+		for t in 1 2 3 "set" "get" "del" "incr"; do
 			echo "   * $t"
 			if [ "$CLEAN" == 1 ]; then
 				rm -f $t-$OP
