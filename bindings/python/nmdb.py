@@ -167,9 +167,36 @@ class GenericDB (object):
 				oldval, newval)
 
 
+	def generic_incr(self, incrf, key, increment):
+		"""Atomically increment the value associated with the given
+		key by the given increment."""
+		if self.autopickle:
+			key = str(hash(key))
+		r = incrf(key, increment)
+		if r == 2:
+			# success
+			return 2
+		elif r == 1:
+			# no match, because the value didn't have the right
+			# format
+			raise TypeError, \
+				"The value must be a NULL-terminated string"
+		elif r == 0:
+			# not in
+			raise KeyError
+		else:
+			raise NetworkError
+
+	def cache_incr(self, key, increment = 1):
+		return self.generic_incr(self._db.cache_incr, key, increment)
+
+	def normal_incr(self, key, increment = 1):
+		return self.generic_incr(self._db.incr, key, increment)
+
+
 	# The following functions will assume the existance of self.set,
-	# self.get, self.delete and self.cas, which are supposed to be set
-	# by our subclasses.
+	# self.get, and self.delete, which are supposed to be set by our
+	# subclasses.
 
 	def __getitem__(self, key):
 		return self.get(key)
@@ -201,17 +228,20 @@ class Cache (GenericDB):
 	set = GenericDB.cache_set
 	delete = GenericDB.cache_delete
 	cas = GenericDB.cache_cas
+	incr = GenericDB.cache_incr
 
 class DB (GenericDB):
 	get = GenericDB.normal_get
 	set = GenericDB.normal_set
 	delete = GenericDB.normal_delete
 	cas = GenericDB.normal_cas
+	incr = GenericDB.normal_incr
 
 class SyncDB (GenericDB):
 	get = GenericDB.normal_get
 	set = GenericDB.set_sync
 	delete = GenericDB.delete_sync
 	cas = GenericDB.normal_cas
+	incr = GenericDB.normal_incr
 
 
