@@ -41,6 +41,10 @@ get *key*
   Retrieves the value for the given key. If the key is in the cache, it
   returns immediately. If not, it performs a query in the database.
 
+cas *key* *oldvalue* *newvalue*
+  Do a compare-and-swap, using *oldvalue* to compare with the value stored in
+  the database, and replacing it with *newvalue* if they match.
+
 incr *key* *increment*
   Increments the value associated to the given key by the given increment.
 
@@ -69,8 +73,7 @@ cache_del *key*
   Like *del*, but only affects the cache and not the database.
 
 cache_cas *key* *oldvalue* *newvalue*
-  Do a compare-and-swap, using *oldvalue* to compare with the value stored in
-  the database, and replacing it with *newvalue* if they match.
+  Like *cas*, but only affects the cache and not the database.
 
 cache_incr *key* *increment*
   Like *incr*, but only affects the cache and not the database.
