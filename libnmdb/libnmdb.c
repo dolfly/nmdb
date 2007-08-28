@@ -584,3 +584,110 @@ int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize, 0);
 }
 
+
+/* ntohll() is not standard, so we define it using an UGLY trick because there
+ * is no standard way to check for endianness at runtime! (same problem as the
+ * one in nmdb/parse.c) */
+static uint64_t htonll(uint64_t x)
+{
+	static int endianness = 0;
+
+	/* determine the endianness by checking how htonl() behaves; use -1
+	 * for little endian and 1 for big endian */
+	if (endianness == 0) {
+		if (htonl(1) == 1)
+			endianness = 1;
+		else
+			endianness = -1;
+	}
+
+	if (endianness == 1) {
+		/* big endian */
+		return x;
+	}
+
+	/* little endian */
+	return ( htonl( (x >> 32) & 0xFFFFFFFF ) | \
+			( (uint64_t) htonl(x & 0xFFFFFFFF) ) << 32 );
+}
+
+static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
+		int64_t increment, int impact_db)
+{
+	int moff;
+	ssize_t rv, t;
+	unsigned char *buf, *p;
+	size_t bsize;
+	uint32_t request, reply;
+	struct nmdb_srv *srv;
+
+	if (impact_db)
+		request = REQ_INCR;
+	else
+		request = REQ_CACHE_INCR;
+
+	srv = select_srv(db, key, ksize);
+	moff = srv_get_msg_offset(srv);
+
+	/* Use the same buffer for the request and the reply.
+	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize,
+	 *		ksize bytes key, 8 bytes increment.
+	 * Reply: 4 bytes id, 4 bytes reply code.
+	 */
+	bsize = moff + 4 + 4 + 4 + ksize + 8;
+	buf = malloc(bsize);
+	if (buf == NULL)
+		return -1;
+
+	increment = htonll(increment);
+
+	p = buf + moff;
+
+	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
+	* ((uint32_t *) p + 1) = htonl(request);
+	* ((uint32_t *) p + 2) = htonl(ksize);
+	memcpy(p + 3 * 4, key, ksize);
+	memcpy(p + 3 * 4 + ksize, &increment, sizeof(int64_t));
+
+	t = srv_send(srv, buf, bsize);
+	if (t <= 0) {
+		rv = -1;
+		goto exit;
+	}
+
+	reply = get_rep(srv, buf, bsize, NULL, NULL);
+
+	switch (reply) {
+		case REP_OK:
+			rv = 2;
+			break;
+		case REP_NOMATCH:
+			rv = 1;
+			break;
+		case REP_NOTIN:
+			rv = 0;
+			break;
+		default:
+			rv = -1;
+			break;
+	}
+
+exit:
+	free(buf);
+	return rv;
+
+}
+
+int nmdb_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
+		int64_t increment)
+{
+	return do_incr(db, key, ksize, increment, 1);
+}
+
+int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
+		int64_t increment)
+{
+	return do_incr(db, key, ksize, increment, 0);
+}
+
+

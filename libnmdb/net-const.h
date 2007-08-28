@@ -37,6 +37,8 @@
 #define REQ_DEL_ASYNC		0x108
 #define REQ_CACHE_CAS		0x109
 #define REQ_CAS			0x110
+#define REQ_CACHE_INCR		0x111
+#define REQ_INCR		0x112
 
 /* Network replies (different namespace from requests) */
 #define REP_ERR			0x800

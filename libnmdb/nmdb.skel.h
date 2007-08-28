@@ -81,6 +81,10 @@ int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize);
 
+int nmdb_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
+		                int64_t increment);
+int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
+		                int64_t increment);
 
 #endif
 
