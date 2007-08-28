@@ -380,7 +380,7 @@ int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
 	e = find_in_chain(c, key, ksize);
 
 	if (e == NULL)
-		return -3;
+		return -1;
 
 	val = e->val;
 	vsize = e->vsize;
