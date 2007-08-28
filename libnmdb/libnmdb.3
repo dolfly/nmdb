@@ -149,7 +149,7 @@ was not in the database/cache, or < 0 on failure.
 is used to compare-and-swap a key's value. It takes an old value to compare
 with the one in the database, and if they match, it sets the key to the given
 new value. Returns 2 if the swap was performed, 1 if the values didn't match,
-0 if the key was not on in the database/cache, and < 0 on failure.
+0 if the key was not on in the database/cache, or < 0 on failure.
 
 .BR nmdb_incr ()
 is used to atomically increment (or decrement) a key's value. It takes a 64
