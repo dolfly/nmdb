@@ -25,7 +25,7 @@ case "$1" in
 	"clean" )
 		CLEAN=1
 		;;
-	"help" | "--help" | "-h" | "" )
+	"help" | "--help" | "-h" | "" | *)
 		echo $USAGE
 		exit 1
 		;;
