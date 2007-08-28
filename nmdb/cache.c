@@ -6,10 +6,12 @@
  */
 
 #include <sys/types.h>		/* for size_t */
-#include <stdint.h>		/* for uint32_t */
+#include <stdint.h>		/* for [u]int*_t */
 #include <stdlib.h>		/* for malloc() */
 #include <string.h>		/* for memcpy()/memcmp() */
+#include <stdio.h>		/* snprintf() */
 #include "cache.h"
+
 
 struct cache *cache_create(size_t numobjs, unsigned int flags)
 {
@@ -351,4 +353,61 @@ int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 exit:
 	return rv;
 }
+
+
+/* Increment the value associated with the given key by the given increment.
+ * The increment is a signed 64 bit value, and the value size must be >= 8
+ * bytes.
+ * Returns:
+ *    1 if the increment succeeded.
+ *   -1 if the value was not in the cache.
+ *   -2 if the value was not null terminated.
+ *   -3 if there was a memory error.
+ */
+int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
+		int64_t increment)
+{
+	uint32_t h = 0;
+	unsigned char *val, *newval;
+	int64_t intval;
+	size_t vsize;
+	struct cache_chain *c;
+	struct cache_entry *e;
+
+	h = hash(key, ksize) % cd->hashlen;
+	c = cd->table + h;
+
+	e = find_in_chain(c, key, ksize);
+
+	if (e == NULL)
+		return -3;
+
+	val = e->val;
+	vsize = e->vsize;
+
+	/* the value must be a NULL terminated string, otherwise strtoll might
+	 * cause a segmentation fault */
+	if (val && val[vsize - 1] != '\0')
+		return -2;
+
+	intval = strtoll((char *) val, NULL, 10);
+	intval = intval + increment;
+
+	/* The max value for an unsigned long long is 18446744073709551615,
+	 * and strlen('18446744073709551615') = 20, so if the value is smaller
+	 * than 24 (just in case) we create a new buffer. */
+	if (vsize < 24) {
+		newval = malloc(24);
+		if (newval == NULL)
+			return -3;
+		free(val);
+		e->val = val = newval;
+		e->vsize = vsize = 24;
+	}
+
+	snprintf((char *) val, vsize, "%23lld", (long long int) intval);
+
+	return 1;
+}
+
 

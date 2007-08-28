@@ -16,6 +16,7 @@ static void parse_get(struct req_info *req, int impact_db);
 static void parse_set(struct req_info *req, int impact_db, int async);
 static void parse_del(struct req_info *req, int impact_db, int async);
 static void parse_cas(struct req_info *req, int impact_db);
+static void parse_incr(struct req_info *req, int impact_db);
 
 
 /* Create a queue entry structure based on the parameters passed. Memory
@@ -178,6 +179,10 @@ int parse_message(struct req_info *req,
 		parse_cas(req, 0);
 	else if (cmd == REQ_CAS)
 		parse_cas(req, 1);
+	else if (cmd == REQ_CACHE_INCR)
+		parse_incr(req, 0);
+	else if (cmd == REQ_INCR)
+		parse_incr(req, 1);
 	else {
 		stats.net_unk_req++;
 		req->reply_err(req, ERR_UNKREQ);
@@ -433,6 +438,100 @@ static void parse_cas(struct req_info *req, int impact_db)
 		queue_unlock(op_queue);
 		queue_signal(op_queue);
 	}
+	return;
+}
+
+
+/* ntohll() is not standard, so we define it using an UGLY trick because there
+ * is no standard way to check for endianness at runtime! */
+static uint64_t ntohll(uint64_t x)
+{
+	static int endianness = 0;
+
+	/* determine the endianness by checking how htonl() behaves; use -1
+	 * for little endian and 1 for big endian */
+	if (endianness == 0) {
+		if (htonl(1) == 1)
+			endianness = 1;
+		else
+			endianness = -1;
+	}
+
+	if (endianness == 1) {
+		/* big endian */
+		return x;
+	}
+
+	/* little endian */
+	return ( ntohl( (x >> 32) & 0xFFFFFFFF ) | \
+			( (uint64_t) ntohl(x & 0xFFFFFFFF) ) << 32 );
+}
+
+
+static void parse_incr(struct req_info *req, int impact_db)
+{
+	int cres;
+	const unsigned char *key;
+	uint32_t ksize;
+	int64_t increment;
+	const int max = 65536;
+
+	/* Request format:
+	 * 4		ksize
+	 * ksize	key
+	 * 8		increment (big endian int64_t)
+	 */
+	ksize = * (uint32_t *) req->payload;
+	ksize = ntohl(ksize);
+
+	/* Sanity check on sizes:
+	 * - ksize + 8 must be < req->psize
+	 * - ksize + 8 must be < 2^16 = 64k
+	 */
+	if ( (req->psize < ksize + 8) || ((ksize + 8) > max)) {
+		stats.net_broken_req++;
+		req->reply_err(req, ERR_BROKEN);
+		return;
+	}
+
+	key = req->payload + sizeof(uint32_t);
+	increment = ntohll( * (int64_t *) (key + ksize) );
+
+	cres = cache_incr(cache_table, key, ksize, increment);
+	if (cres == -3) {
+		req->reply_err(req, ERR_MEM);
+		return;
+	} else if (cres == -2) {
+		/* the value was not NULL terminated */
+		req->mini_reply(req, REP_NOMATCH);
+		return;
+	}
+
+	if (impact_db) {
+		struct queue_entry *e;
+
+		/* at this point, the cache_incr() was either successful or a
+		 * miss, but we don't really care */
+
+		e = make_queue_entry(req, REQ_INCR, key, ksize,
+				(unsigned char *) &increment,
+				sizeof(increment));
+		if (e == NULL) {
+			req->reply_err(req, ERR_MEM);
+			return;
+		}
+		queue_lock(op_queue);
+		queue_put(op_queue, e);
+		queue_unlock(op_queue);
+
+		queue_signal(op_queue);
+	} else {
+		if (cres == -1)
+			req->mini_reply(req, REP_NOTIN);
+		else
+			req->mini_reply(req, REP_OK);
+	}
+
 	return;
 }
 

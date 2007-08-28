@@ -5,6 +5,7 @@
 /* Generic cache layer. See cache.c for more information. */
 
 #include <sys/types.h>		/* for size_t */
+#include <stdint.h>		/* for int64_t */
 
 
 struct cache {
@@ -47,6 +48,8 @@ int cache_del(struct cache *cd, const unsigned char *key, size_t ksize);
 int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize);
+int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
+		int64_t increment);
 
 #endif
 

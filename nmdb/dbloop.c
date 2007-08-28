@@ -4,6 +4,7 @@
 #include <errno.h>		/* ETIMEDOUT */
 #include <string.h>		/* memcmp() */
 #include <stdlib.h>		/* malloc()/free() */
+#include <stdio.h>		/* snprintf() */
 
 #include "common.h"
 #include "dbloop.h"
@@ -171,6 +172,52 @@ static void process_op(db_t *db, struct queue_entry *e)
 		}
 
 		e->req->reply_cas(e->req, REP_NOMATCH);
+		free(dbval);
+
+	} else if (e->operation == REQ_INCR) {
+		unsigned char *dbval;
+		size_t dbvsize = 64 * 1024;
+		int64_t intval;
+
+		dbval = malloc(dbvsize);
+		if (dbval == NULL) {
+			e->req->reply_err(e->req, ERR_MEM);
+			return;
+		}
+		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
+		if (rv == 0) {
+			e->req->mini_reply(e->req, REP_NOTIN);
+			free(dbval);
+			return;
+		}
+
+		/* val must be NULL terminated; see cache_incr() */
+		if (dbval && dbval[dbvsize - 1] != '\0') {
+			e->req->mini_reply(e->req, REP_NOMATCH);
+			free(dbval);
+			return;
+		}
+
+		intval = strtoll((char *) dbval, NULL, 10);
+		intval = intval + * (int64_t *) e->val;
+
+		if (dbvsize < 24) {
+			/* We know dbval is long enough because we've
+			 * allocated it, so we only change dbvsize */
+			dbvsize = 24;
+		}
+
+		snprintf((char *) dbval, dbvsize, "%23lld",
+				(long long int) intval);
+
+		rv = db_set(db, e->key, e->ksize, dbval, dbvsize);
+		if (!rv) {
+			e->req->reply_err(e->req, ERR_DB);
+			return;
+		}
+
+		e->req->mini_reply(e->req, REP_OK);
+
 		free(dbval);
 
 	} else {
