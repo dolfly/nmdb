@@ -151,7 +151,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 		}
 		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
 		if (rv == 0) {
-			e->req->reply_get(e->req, REP_NOTIN, NULL, 0);
+			e->req->reply_cas(e->req, REP_NOTIN);
 			free(dbval);
 			return;
 		}
