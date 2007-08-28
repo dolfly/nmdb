@@ -41,6 +41,9 @@ get *key*
   Retrieves the value for the given key. If the key is in the cache, it
   returns immediately. If not, it performs a query in the database.
 
+incr *key* *increment*
+  Increments the value associated to the given key by the given increment.
+
 set_async *key* *value*
   Stores the *(key, value)* pair in the database. It does the set in the cache,
   queues the operation for the database, and returns.
@@ -68,6 +71,9 @@ cache_del *key*
 cache_cas *key* *oldvalue* *newvalue*
   Do a compare-and-swap, using *oldvalue* to compare with the value stored in
   the database, and replacing it with *newvalue* if they match.
+
+cache_incr *key* *increment*
+  Like *incr*, but only affects the cache and not the database.
 
 As you can see, it's possible to operate exclusively with the cache, ignoring
 the database completely. This is very similar to what memcached_ does. Note
