@@ -44,6 +44,13 @@ libnmdb - Library for interacting with a nmdb server
 .BI "             const unsigned char *" key " , size_t " ksize ","
 .BI "             const unsigned char *" oldval ", size_t " ovsize ","
 .BI "             const unsigned char *" newval ", size_t " nvsize ");"
+.sp
+.BI "int nmdb_incr(nmdb_t *" db ","
+.BI "             const unsigned char *" key " , size_t " ksize ","
+.BI "             int64_t " increment ");"
+.BI "int nmdb_cache_incr(nmdb_t *" db ","
+.BI "             const unsigned char *" key " , size_t " ksize ","
+.BI "             int64_t " increment ");"
 .fi
 .SH DESCRIPTION
 
@@ -88,17 +95,19 @@ of the keys and values apply: keys can't exceed 64Kb, values can't exceed
 64Kb, and the size of a key + the size of it's associated value can't exceed
 64Kb.
 
-There are four kinds of operations:
+There are five kinds of operations:
 .IR set ,
 which sets pairs;
 .IR get ,
 which gets pairs;
 .IR del ,
 which removes pairs;
-and
 .IR cas ,
-which compares-and-sets values. The normal set and del operations return as
-soon as they've been queued on the server for asynchronous completion. Note
+which compares-and-sets values;
+and
+.IR incr ,
+which atomically increments a value. The normal set and del operations return
+as soon as they've been queued on the server for asynchronous completion. Note
 that in this case no message is sent to the client when the operation
 completes.
 
@@ -141,6 +150,14 @@ is used to compare-and-swap a key's value. It takes an old value to compare
 with the one in the database, and if they match, it sets the key to the given
 new value. Returns 2 if the swap was performed, 1 if the values didn't match,
 0 if the key was not on in the database/cache, and < 0 on failure.
+
+.BR nmdb_incr ()
+is used to atomically increment (or decrement) a key's value. It takes a 64
+bit number to add to the value (it can be negative), and returns 2 if the
+increment was performed, 1 if the value was not in the appropriate format, 0
+if the key was not in the database/cache, or < 0 on failure.
+The value MUST be a NULL-terminated string with only a number in base 10 in it
+(i.e. it must be parseable by strtoll(3)).
 
 .SH SEE ALSO
 
