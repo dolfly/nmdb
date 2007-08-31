@@ -117,6 +117,7 @@ void net_loop(void)
 	tipc_close(tipc_fd);
 	tcp_close(tcp_fd);
 	udp_close(udp_fd);
+	sctp_close(sctp_fd);
 }
 
 
