@@ -53,6 +53,13 @@
 		 (::_nmdb_t ::string ::uint ::string ::uint ::string ::uint)
 		 "nmdb_cache_cas")
 
+	  (macro _nmdb_incr::ulong
+		 (::_nmdb_t ::string ::uint ::ulong)
+		 "nmdb_incr")
+	  (macro _nmdb_cache_incr::ulong
+		 (::_nmdb_t ::string ::uint ::ulong)
+		 "nmdb_cache_incr")
+
 	  )
 
 	(export
@@ -77,6 +84,9 @@
 
 	  (nmdb-cas db key oldval newval)
 	  (nmdb-cache-cas db key oldval newval)
+
+	  (nmdb-incr db key increment)
+	  (nmdb-cache-incr db key increment)
 	  )
 
 	)
@@ -134,4 +144,12 @@
   (nmdb-generic-cas _nmdb_cas db key oldval newval))
 (define (nmdb-cache-cas db key oldval newval)
   (nmdb-generic-cas _nmdb_cache_cas db key oldval newval))
+
+;; incr functions
+(define (nmdb-generic-incr func db key increment)
+  (func db key (string-length key) increment ) )
+(define (nmdb-incr db key increment)
+  (nmdb-generic-incr _nmdb_incr db key increment))
+(define (nmdb-cache-incr db key increment)
+  (nmdb-generic-incr _nmdb_cache_incr db key increment))
 
