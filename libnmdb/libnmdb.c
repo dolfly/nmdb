@@ -309,7 +309,9 @@ static ssize_t do_get(nmdb_t *db,
 	rv = * (uint32_t *) p;
 	rv = ntohl(rv);
 	if (rv > (psize - 4) || rv > vsize) {
-		rv = 0;
+		/* the value is too big for the packet size, or it is too big
+		 * to fit in the buffer we were given */
+		rv = -2;
 		goto exit;
 	}
 	memcpy(val, p + 4, rv);
