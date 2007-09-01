@@ -83,10 +83,10 @@ class DB
 
 		if (mode == MODE_NORMAL || mode == MODE_SYNC) {
 			size = nmdb_get(db, k, key.length,
-					cast(ubyte *) v, v.sizeof);
+					cast(ubyte *) v, v.length);
 		} else if (mode == MODE_CACHE) {
 			size = nmdb_cache_get(db, k, key.length,
-					cast(ubyte *) v, v.sizeof);
+					cast(ubyte *) v, v.length);
 		} else {
 			throw new Exception("Invalid mode");
 		}
