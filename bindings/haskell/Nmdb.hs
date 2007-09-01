@@ -6,6 +6,7 @@ module Nmdb (
 	NmdbStruct,
 	nmdbInit, nmdbFree,
 	nmdbAddTIPCServer, nmdbAddTCPServer, nmdbAddUDPServer,
+		nmdbAddSCTPServer,
 	nmdbSet, nmdbSetSync, nmdbCacheSet,
 	nmdbGet, nmdbCacheGet,
 	nmdbDel, nmdbDelSync, nmdbCacheDel,
@@ -41,6 +42,8 @@ foreign import ccall "nmdb.h nmdb_add_tcp_server" llNmdbAddTCPServer ::
 	NmdbPtr -> CString -> Int -> IO Int
 foreign import ccall "nmdb.h nmdb_add_udp_server" llNmdbAddUDPServer ::
 	NmdbPtr -> CString -> Int -> IO Int
+foreign import ccall "nmdb.h nmdb_add_sctp_server" llNmdbAddSCTPServer ::
+	NmdbPtr -> CString -> Int -> IO Int
 
 nmdbAddTIPCServer db port = do
 	r <- llNmdbAddTIPCServer db port
@@ -55,6 +58,12 @@ nmdbAddTCPServer db host port = do
 nmdbAddUDPServer db host port = do
 	hstr <- newCString host
 	r <- llNmdbAddUDPServer db hstr port
+	free hstr
+	return r
+
+nmdbAddSCTPServer db host port = do
+	hstr <- newCString host
+	r <- llNmdbAddSCTPServer db hstr port
 	free hstr
 	return r
 
