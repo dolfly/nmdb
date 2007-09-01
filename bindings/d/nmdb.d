@@ -97,7 +97,10 @@ class DB
 			throw new Exception("Can't get value");
 		}
 
-		return v[0 .. cast(size_t) size];
+		// resize using D's magic
+		v.length = cast(size_t) size;
+
+		return v;
 	}
 
 	private void do_set(char[] key, char[] val, int mode)
