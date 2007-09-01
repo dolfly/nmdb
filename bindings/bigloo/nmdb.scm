@@ -53,11 +53,11 @@
 		 (::_nmdb_t ::string ::uint ::string ::uint ::string ::uint)
 		 "nmdb_cache_cas")
 
-	  (macro _nmdb_incr::ulong
-		 (::_nmdb_t ::string ::uint ::ulong)
+	  (macro _nmdb_incr::int
+		 (::_nmdb_t ::string ::uint ::long)
 		 "nmdb_incr")
-	  (macro _nmdb_cache_incr::ulong
-		 (::_nmdb_t ::string ::uint ::ulong)
+	  (macro _nmdb_cache_incr::int
+		 (::_nmdb_t ::string ::uint ::long)
 		 "nmdb_cache_incr")
 
 	  )
