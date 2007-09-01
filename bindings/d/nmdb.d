@@ -67,6 +67,14 @@ class DB
 		}
 	}
 
+	void add_sctp_server(char[] addr, int port = -1)
+	{
+		int r = nmdb_add_sctp_server(db, cast(ubyte *) addr.ptr, port);
+		if (r == 0) {
+			throw new Exception("Can't add server");
+		}
+	}
+
 	private char[] do_get(char[] key, int mode)
 	{
 		ptrdiff_t size;
