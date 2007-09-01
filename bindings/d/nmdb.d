@@ -165,6 +165,21 @@ class DB
 		return res;
 	}
 
+	private int do_incr(char[] key, long increment, int mode)
+	{
+		ubyte* k = cast(ubyte *) key.ptr;
+		int res = 0;
+
+		if (mode == MODE_NORMAL || mode == MODE_SYNC) {
+			res = nmdb_incr(db, k, key.length, increment);
+		} else if (mode == MODE_CACHE) {
+			res = nmdb_cache_incr(db, k, key.length, increment);
+		} else {
+			throw new Exception("Invalid mode");
+		}
+		return res;
+	}
+
 
 	char[] get(char[] key)
 	{
@@ -237,6 +252,22 @@ class DB
 	int cache_cas(char[] key, char[] oldval, char[] newval)
 	{
 		return do_cas(key, oldval, newval, MODE_CACHE);
+	}
+
+
+	int incr(char[] key, long increment)
+	{
+		return do_incr(key, increment, mode);
+	}
+
+	int incr_normal(char[] key, long increment)
+	{
+		return do_incr(key, increment, MODE_NORMAL);
+	}
+
+	int cache_incr(char[] key, long increment)
+	{
+		return do_incr(key, increment, MODE_CACHE);
 	}
 
 
