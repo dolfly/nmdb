@@ -60,6 +60,16 @@ VALUE m_add_udp_server(VALUE self, VALUE hostname, VALUE port)
 	return INT2NUM(rv);
 }
 
+VALUE m_add_sctp_server(VALUE self, VALUE hostname, VALUE port)
+{
+	nmdb_t *db;
+	Data_Get_Struct(self, nmdb_t, db);
+
+	int rv = nmdb_add_sctp_server(db, StringValuePtr(hostname),
+			NUM2INT(port));
+	return INT2NUM(rv);
+}
+
 
 /* Set functions */
 typedef int (*setf_t) (nmdb_t *db,
@@ -202,6 +212,7 @@ void Init_nmdb_ll()
 	rb_define_method(rb_cDB, "add_tipc_server", m_add_tipc_server, 1);
 	rb_define_method(rb_cDB, "add_tcp_server", m_add_tcp_server, 2);
 	rb_define_method(rb_cDB, "add_udp_server", m_add_udp_server, 2);
+	rb_define_method(rb_cDB, "add_sctp_server", m_add_sctp_server, 2);
 
 	rb_define_method(rb_cDB, "set", m_set, 2);
 	rb_define_method(rb_cDB, "set_sync", m_set_sync, 2);

@@ -23,11 +23,15 @@ class GenericDB
 	end
 
 	def add_tcp_server(host, port = 26010)
-		return @db.add_tcp_server(port)
+		return @db.add_tcp_server(host, port)
 	end
 
 	def add_udp_server(host, port = 26010)
-		return @db.add_udp_server(port)
+		return @db.add_udp_server(host, port)
+	end
+
+	def add_sctp_server(host, port = 26010)
+		return @db.add_sctp_server(host, port)
 	end
 
 
