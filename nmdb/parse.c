@@ -213,7 +213,7 @@ static void parse_get(struct req_info *req, int impact_db)
 	hit = cache_get(cache_table, key, ksize, &val, &vsize);
 
 	if (!hit && !impact_db) {
-		req->mini_reply(req, REP_CACHE_MISS);
+		req->reply_mini(req, REP_CACHE_MISS);
 		return;
 	} else if (!hit && impact_db) {
 		struct queue_entry *e;
@@ -228,7 +228,7 @@ static void parse_get(struct req_info *req, int impact_db)
 		queue_signal(op_queue);
 		return;
 	} else {
-		req->reply_get(req, REP_CACHE_HIT, val, vsize);
+		req->reply_long(req, REP_CACHE_HIT, val, vsize);
 		return;
 	}
 }
@@ -292,7 +292,7 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 		queue_unlock(op_queue);
 
 		if (async) {
-			req->mini_reply(req, REP_OK);
+			req->reply_mini(req, REP_OK);
 		} else {
 			/* Signal the DB thread it has work only if it's a
 			 * synchronous operation, asynchronous don't mind
@@ -303,7 +303,7 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 		}
 		return;
 	} else {
-		req->mini_reply(req, REP_OK);
+		req->reply_mini(req, REP_OK);
 	}
 
 	return;
@@ -329,9 +329,9 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 	hit = cache_del(cache_table, key, ksize);
 
 	if (!impact_db && hit) {
-		req->mini_reply(req, REP_OK);
+		req->reply_mini(req, REP_OK);
 	} else if (!impact_db && !hit) {
-		req->mini_reply(req, REP_NOTIN);
+		req->reply_mini(req, REP_NOTIN);
 	} else if (impact_db) {
 		struct queue_entry *e;
 		uint32_t request;
@@ -350,7 +350,7 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 		queue_unlock(op_queue);
 
 		if (async) {
-			req->mini_reply(req, REP_OK);
+			req->reply_mini(req, REP_OK);
 		} else {
 			/* See comment on parse_set(). */
 			queue_signal(op_queue);
@@ -408,16 +408,16 @@ static void parse_cas(struct req_info *req, int impact_db)
 	if (rv == 0) {
 		/* If the cache doesn't match, there is no need to bother the
 		 * DB even if we were asked to impact. */
-		req->mini_reply(req, REP_NOMATCH);
+		req->reply_mini(req, REP_NOMATCH);
 		return;
 	}
 
 	if (!impact_db) {
 		if (rv == -1) {
-			req->mini_reply(req, REP_NOTIN);
+			req->reply_mini(req, REP_NOTIN);
 			return;
 		} else {
-			req->mini_reply(req, REP_OK);
+			req->reply_mini(req, REP_OK);
 			return;
 		}
 	} else {
@@ -503,7 +503,7 @@ static void parse_incr(struct req_info *req, int impact_db)
 		return;
 	} else if (cres == -2) {
 		/* the value was not NULL terminated */
-		req->mini_reply(req, REP_NOMATCH);
+		req->reply_mini(req, REP_NOMATCH);
 		return;
 	}
 
@@ -527,9 +527,9 @@ static void parse_incr(struct req_info *req, int impact_db)
 		queue_signal(op_queue);
 	} else {
 		if (cres == -1)
-			req->mini_reply(req, REP_NOTIN);
+			req->reply_mini(req, REP_NOTIN);
 		else
-			req->mini_reply(req, REP_OK);
+			req->reply_mini(req, REP_OK);
 	}
 
 	return;

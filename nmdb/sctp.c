@@ -17,13 +17,10 @@
 #include "log.h"
 
 
-static void sctp_mini_reply(struct req_info *req, uint32_t reply);
+static void sctp_reply_mini(struct req_info *req, uint32_t reply);
 static void sctp_reply_err(struct req_info *req, uint32_t reply);
-static void sctp_reply_get(struct req_info *req, uint32_t reply,
+static void sctp_reply_long(struct req_info *req, uint32_t reply,
 		unsigned char *val, size_t vsize);
-static void sctp_reply_set(struct req_info *req, uint32_t reply);
-static void sctp_reply_del(struct req_info *req, uint32_t reply);
-static void sctp_reply_cas(struct req_info *req, uint32_t reply);
 
 
 /*
@@ -72,7 +69,7 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 
 
 /* Send small replies, consisting in only a value. */
-static void sctp_mini_reply(struct req_info *req, uint32_t reply)
+static void sctp_reply_mini(struct req_info *req, uint32_t reply)
 {
 	/* We use a mini buffer to speedup the small replies, to avoid the
 	 * malloc() overhead. */
@@ -97,12 +94,12 @@ void sctp_reply_err(struct req_info *req, uint32_t reply)
 	rep_send_error(req, reply);
 }
 
-void sctp_reply_get(struct req_info *req, uint32_t reply,
+void sctp_reply_long(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {
 		/* miss */
-		sctp_mini_reply(req, reply);
+		sctp_reply_mini(req, reply);
 	} else {
 		unsigned char *buf;
 		size_t bsize;
@@ -131,23 +128,6 @@ void sctp_reply_get(struct req_info *req, uint32_t reply,
 	}
 	return;
 
-}
-
-
-void sctp_reply_set(struct req_info *req, uint32_t reply)
-{
-	sctp_mini_reply(req, reply);
-}
-
-
-void sctp_reply_del(struct req_info *req, uint32_t reply)
-{
-	sctp_mini_reply(req, reply);
-}
-
-void sctp_reply_cas(struct req_info *req, uint32_t reply)
-{
-	sctp_mini_reply(req, reply);
 }
 
 
@@ -241,12 +221,9 @@ void sctp_recv(int fd, short event, void *arg)
 	req.type = REQTYPE_SCTP;
 	req.clisa = (struct sockaddr *) &clisa;
 	req.clilen = clilen;
-	req.mini_reply = sctp_mini_reply;
+	req.reply_mini = sctp_reply_mini;
 	req.reply_err = sctp_reply_err;
-	req.reply_get = sctp_reply_get;
-	req.reply_set = sctp_reply_set;
-	req.reply_del = sctp_reply_del;
-	req.reply_cas = sctp_reply_cas;
+	req.reply_long = sctp_reply_long;
 
 	/* parse the message */
 	parse_message(&req, static_buf, rv);

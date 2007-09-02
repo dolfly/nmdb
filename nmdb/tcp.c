@@ -44,13 +44,10 @@ static void tcp_recv(int fd, short event, void *arg);
 static void process_buf(struct tcp_socket *tcpsock,
 		unsigned char *buf, size_t len);
 
-static void tcp_mini_reply(struct req_info *req, uint32_t reply);
+static void tcp_reply_mini(struct req_info *req, uint32_t reply);
 static void tcp_reply_err(struct req_info *req, uint32_t reply);
-static void tcp_reply_get(struct req_info *req, uint32_t reply,
+static void tcp_reply_long(struct req_info *req, uint32_t reply,
 		unsigned char *val, size_t vsize);
-static void tcp_reply_set(struct req_info *req, uint32_t reply);
-static void tcp_reply_del(struct req_info *req, uint32_t reply);
-static void tcp_reply_cas(struct req_info *req, uint32_t reply);
 
 
 /*
@@ -72,12 +69,9 @@ static void init_req(struct tcp_socket *tcpsock)
 	tcpsock->req.type = REQTYPE_TCP;
 	tcpsock->req.clisa = (struct sockaddr *) &tcpsock->clisa;
 	tcpsock->req.clilen = tcpsock->clilen;
-	tcpsock->req.mini_reply = tcp_mini_reply;
+	tcpsock->req.reply_mini = tcp_reply_mini;
 	tcpsock->req.reply_err = tcp_reply_err;
-	tcpsock->req.reply_get = tcp_reply_get;
-	tcpsock->req.reply_set = tcp_reply_set;
-	tcpsock->req.reply_del = tcp_reply_del;
-	tcpsock->req.reply_cas = tcp_reply_cas;
+	tcpsock->req.reply_long = tcp_reply_long;
 }
 
 static void rep_send_error(const struct req_info *req, const unsigned int code)
@@ -150,7 +144,7 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 
 
 /* Send small replies, consisting in only a value. */
-void tcp_mini_reply(struct req_info *req, uint32_t reply)
+void tcp_reply_mini(struct req_info *req, uint32_t reply)
 {
 	/* We use a mini buffer to speedup the small replies, to avoid the
 	 * malloc() overhead. */
@@ -175,12 +169,12 @@ void tcp_reply_err(struct req_info *req, uint32_t reply)
 	rep_send_error(req, reply);
 }
 
-void tcp_reply_get(struct req_info *req, uint32_t reply,
+void tcp_reply_long(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {
 		/* miss */
-		tcp_mini_reply(req, reply);
+		tcp_reply_mini(req, reply);
 	} else {
 		unsigned char *buf;
 		size_t bsize;
@@ -213,23 +207,6 @@ void tcp_reply_get(struct req_info *req, uint32_t reply,
 	}
 	return;
 
-}
-
-
-void tcp_reply_set(struct req_info *req, uint32_t reply)
-{
-	tcp_mini_reply(req, reply);
-}
-
-
-void tcp_reply_del(struct req_info *req, uint32_t reply)
-{
-	tcp_mini_reply(req, reply);
-}
-
-void tcp_reply_cas(struct req_info *req, uint32_t reply)
-{
-	tcp_mini_reply(req, reply);
 }
 
 

@@ -106,7 +106,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 			e->req->reply_err(e->req, ERR_DB);
 			return;
 		}
-		e->req->reply_set(e->req, REP_OK);
+		e->req->reply_mini(e->req, REP_OK);
 
 	} else if (e->operation == REQ_SET_ASYNC) {
 		db_set(db, e->key, e->ksize, e->val, e->vsize);
@@ -122,20 +122,20 @@ static void process_op(db_t *db, struct queue_entry *e)
 		}
 		rv = db_get(db, e->key, e->ksize, val, &vsize);
 		if (rv == 0) {
-			e->req->reply_get(e->req, REP_NOTIN, NULL, 0);
+			e->req->reply_mini(e->req, REP_NOTIN);
 			free(val);
 			return;
 		}
-		e->req->reply_get(e->req, REP_OK, val, vsize);
+		e->req->reply_long(e->req, REP_OK, val, vsize);
 		free(val);
 
 	} else if (e->operation == REQ_DEL_SYNC) {
 		rv = db_del(db, e->key, e->ksize);
 		if (rv == 0) {
-			e->req->reply_del(e->req, REP_NOTIN);
+			e->req->reply_mini(e->req, REP_NOTIN);
 			return;
 		}
-		e->req->reply_del(e->req, REP_OK);
+		e->req->reply_mini(e->req, REP_OK);
 
 	} else if (e->operation == REQ_DEL_ASYNC) {
 		db_del(db, e->key, e->ksize);
@@ -152,7 +152,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 		}
 		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
 		if (rv == 0) {
-			e->req->reply_cas(e->req, REP_NOTIN);
+			e->req->reply_mini(e->req, REP_NOTIN);
 			free(dbval);
 			return;
 		}
@@ -166,12 +166,12 @@ static void process_op(db_t *db, struct queue_entry *e)
 				return;
 			}
 
-			e->req->reply_cas(e->req, REP_OK);
+			e->req->reply_mini(e->req, REP_OK);
 			free(dbval);
 			return;
 		}
 
-		e->req->reply_cas(e->req, REP_NOMATCH);
+		e->req->reply_mini(e->req, REP_NOMATCH);
 		free(dbval);
 
 	} else if (e->operation == REQ_INCR) {
@@ -186,14 +186,14 @@ static void process_op(db_t *db, struct queue_entry *e)
 		}
 		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
 		if (rv == 0) {
-			e->req->mini_reply(e->req, REP_NOTIN);
+			e->req->reply_mini(e->req, REP_NOTIN);
 			free(dbval);
 			return;
 		}
 
 		/* val must be NULL terminated; see cache_incr() */
 		if (dbval && dbval[dbvsize - 1] != '\0') {
-			e->req->mini_reply(e->req, REP_NOMATCH);
+			e->req->reply_mini(e->req, REP_NOMATCH);
 			free(dbval);
 			return;
 		}
@@ -216,7 +216,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 			return;
 		}
 
-		e->req->mini_reply(e->req, REP_OK);
+		e->req->reply_mini(e->req, REP_OK);
 
 		free(dbval);
 

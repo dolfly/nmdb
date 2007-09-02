@@ -16,13 +16,10 @@
 #include "log.h"
 
 
-static void tipc_mini_reply(struct req_info *req, uint32_t reply);
+static void tipc_reply_mini(struct req_info *req, uint32_t reply);
 static void tipc_reply_err(struct req_info *req, uint32_t reply);
-static void tipc_reply_get(struct req_info *req, uint32_t reply,
+static void tipc_reply_long(struct req_info *req, uint32_t reply,
 		unsigned char *val, size_t vsize);
-static void tipc_reply_set(struct req_info *req, uint32_t reply);
-static void tipc_reply_del(struct req_info *req, uint32_t reply);
-static void tipc_reply_cas(struct req_info *req, uint32_t reply);
 
 
 /*
@@ -71,7 +68,7 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 
 
 /* Send small replies, consisting in only a value. */
-static void tipc_mini_reply(struct req_info *req, uint32_t reply)
+static void tipc_reply_mini(struct req_info *req, uint32_t reply)
 {
 	/* We use a mini buffer to speedup the small replies, to avoid the
 	 * malloc() overhead. */
@@ -96,12 +93,12 @@ void tipc_reply_err(struct req_info *req, uint32_t reply)
 	rep_send_error(req, reply);
 }
 
-void tipc_reply_get(struct req_info *req, uint32_t reply,
+void tipc_reply_long(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {
 		/* miss */
-		tipc_mini_reply(req, reply);
+		tipc_reply_mini(req, reply);
 	} else {
 		unsigned char *buf;
 		size_t bsize;
@@ -130,23 +127,6 @@ void tipc_reply_get(struct req_info *req, uint32_t reply,
 	}
 	return;
 
-}
-
-
-void tipc_reply_set(struct req_info *req, uint32_t reply)
-{
-	tipc_mini_reply(req, reply);
-}
-
-
-void tipc_reply_del(struct req_info *req, uint32_t reply)
-{
-	tipc_mini_reply(req, reply);
-}
-
-void tipc_reply_cas(struct req_info *req, uint32_t reply)
-{
-	tipc_mini_reply(req, reply);
 }
 
 
@@ -225,12 +205,9 @@ void tipc_recv(int fd, short event, void *arg)
 	req.type = REQTYPE_TIPC;
 	req.clisa = (struct sockaddr *) &clisa;
 	req.clilen = clilen;
-	req.mini_reply = tipc_mini_reply;
+	req.reply_mini = tipc_reply_mini;
 	req.reply_err = tipc_reply_err;
-	req.reply_get = tipc_reply_get;
-	req.reply_set = tipc_reply_set;
-	req.reply_del = tipc_reply_del;
-	req.reply_cas = tipc_reply_cas;
+	req.reply_long = tipc_reply_long;
 
 	/* parse the message */
 	parse_message(&req, static_buf, rv);
