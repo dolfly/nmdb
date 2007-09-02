@@ -13,9 +13,9 @@ Both work combined, but the use of the persistent backend is optional, so you
 can use the server only for cache queries, pretty much like memcached.
 
 This source distribution is composed of several parts: the server called
-"nmdb", the library and bindings for Python, D, NewLISP, Ruby and Bigloo
-Scheme. Each one has a separate directory, and is licensed individually. See
-the LICENSE file for more information.
+"nmdb", the library and bindings for Python, D, NewLISP, Ruby, Bigloo Scheme
+and Haskell. Each one has a separate directory, and is licensed individually.
+See the LICENSE file for more information.
 
 
 Documentation
