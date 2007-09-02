@@ -1,0 +1,68 @@
+
+Quick guide for the patience-impaired
+-------------------------------------
+
+At the top level directory, run:
+
+ $ make BACKEND=qdbm ENABLE_TIPC=0 ENABLE_SCTP=0 install
+
+to build and install the server without TIPC and SCTP support, and to use the
+qdbm backend.
+
+
+How to compile and install
+--------------------------
+
+The only mandatory requisite to build nmdb is libevent
+(http://www.monkey.org/~provos/libevent/).
+
+There are several build-time options, in two groups: supported network
+protocols, and backend databases.
+
+The network protocols can all be enabled at the same time:
+ * TCP and UDP, the well-known network protocols.
+ * TIPC (http://tipc.sf.net/), a cluster-oriented network protocol. You will
+	need a Linux kernel >= 2.6.16 with TIPC support (most distributions
+	enable it by default).
+ * SCTP, a network protocol similar to UDP and TCP, offering reliable message
+ 	passing over IP, among other very useful things. You will need the
+	lksctp-tools package.
+
+The backends, on the other hand, are mutually exclusive and only one can be
+selected:
+ * qdbm (http://qdbm.sf.net/).
+ * bdb (http://www.oracle.com/database/berkeley-db/).
+ * null backend, if you don't need a real one.
+
+By default, all network protocols are enabled, and the qdbm backend is
+selected.
+
+You can change the defaults by passing parameters to make, like this:
+
+ $ make BACKEND=[qbdm|bdb|null] ENABLE_$PROTO=[1|0]
+
+Where $PROTO can be TCP, UDP, TIPC or SCTP.
+
+For instance, to build with bdb backend and without TIPC and UDP support, use:
+
+ $ make BACKEND=bdb ENABLE_TIPC=0
+
+
+Tests
+-----
+
+To run some tests, start the server and then go to the "tests/c/" directory.
+Run "make.sh build" and then run any of the generated tests.
+
+
+Bindings
+--------
+
+To compile the Python bindings, you need to have the library already
+installed. Use "make python_install" at the top level directory to build and
+install the modules. The module will be named "nmdb".
+
+The other bindings do not have a properly defined install procedure, and
+you'll need knowledge of the language to install them.
+
+

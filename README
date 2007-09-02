@@ -29,31 +29,6 @@ For additional documentation and resources, go to the project's website at
 http://auriga.wearlab.de/~alb/nmdb.
 
 
-How to compile, test and install
---------------------------------
-
-General requisites:
- * libevent (http://www.monkey.org/~provos/libevent/).
- * qdbm (http://qdbm.sf.net/).
-
-Requisites to enable TIPC:
- * Running Linux kernel >= 2.6.16 with TIPC enabled.
- * Kernel headers also >= 2.6.16. Alternatively, you can run a TIPC patched
-     kernel, and have the tipc.h header somewhere in the include path.
-
-To compile the server and the library, you can just use "make" on the top
-level directory. To install them, use "make install". By default, all
-protocols are enabled, including TIPC. To disable any of them, run something
-like "make ENABLE_TIPC=0 ENABLE_SCTP=0".
-
-To run some tests, start the server and then go to the "tests/c/" directory.
-Run "make.sh build" and then run any of the generated tests.
-
-To compile the Python bindings, you need to have the library already
-installed. Use "make python_install" at the top level directory to build and
-install the modules. The module will be named "nmdb".
-
-
 Where to report bugs
 --------------------
 
