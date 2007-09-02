@@ -9,6 +9,7 @@
 ;(println "add-tipc-server\t"	(nmdb:add-tipc-server 12))
 ;(println "add-tcp-server\t"	(nmdb:add-tcp-server "127.0.0.1" -1))
 ;(println "add-udp-server\t"	(nmdb:add-udp-server "127.0.0.1" -1))
+;(println "add-sctp-server\t"	(nmdb:add-sctp-server "127.0.0.1" -1))
 (println)
 (println "db-set D1 V1\t"	(nmdb:db-set "D1" "D1"))
 (println "sync-set S2 V2\t"	(nmdb:sync-set "S2" "V2"))

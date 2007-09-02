@@ -45,6 +45,7 @@
 (import libnmdb "nmdb_add_tipc_server")
 (import libnmdb "nmdb_add_tcp_server")
 (import libnmdb "nmdb_add_udp_server")
+(import libnmdb "nmdb_add_sctp_server")
 (import libnmdb "nmdb_free")
 
 (import libnmdb "nmdb_set")
@@ -77,6 +78,9 @@
 
 (define (add-udp-server addr port)
   (nmdb_add_udp_server NMDB addr port))
+
+(define (add-sctp-server addr port)
+  (nmdb_add_sctp_server NMDB addr port))
 
 (define (free)
   (nmdb_free NMDB))
