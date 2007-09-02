@@ -14,13 +14,13 @@
 ;   (nmdb:db-get key) -> Gets the value associated to the given key, or -1.
 ;   (nmdb:cache-get key) -> Like dbget but only get from the cache.
 ;
-;   (nmdb:db-set key val ) -> Sets the given key to the given value.
-;   (nmdb:sync-set key val ) -> Like db-set but synchronous.
-;   (nmdb:cache-set key val ) -> Like db-set but only set to the the cache.
+;   (nmdb:db-set key val) -> Sets the given key to the given value.
+;   (nmdb:sync-set key val) -> Like db-set but synchronous.
+;   (nmdb:cache-set key val) -> Like db-set but only set to the the cache.
 ;
-;   (nmdb:db-del key ) -> Removes the given key from the database.
-;   (nmdb:sync-del key ) -> Like db-del but synchronous.
-;   (nmdb:cache-del key ) -> Like db-del but only delete from the cache.
+;   (nmdb:db-del key) -> Removes the given key from the database.
+;   (nmdb:sync-del key) -> Like db-del but synchronous.
+;   (nmdb:cache-del key) -> Like db-del but only delete from the cache.
 ;
 ;
 ; Example:
