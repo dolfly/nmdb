@@ -25,6 +25,10 @@
 (println "db-del D1\t"		(nmdb:db-del "D1"))
 (println "sync-del S2\t"	(nmdb:sync-del "S2"))
 (println "cache-del C3\t"	(nmdb:cache-del "C3"))
-
+(println)
+(println "cache-set I 10\t"	(nmdb:cache-set "I" "10\000"))
+(println "cache-incr I 10\t"	(nmdb:cache-incr "I" 10))
+(println "cache-get I\t"	(nmdb:cache-get "I"))
+(println)
 (exit)
 

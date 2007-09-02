@@ -62,6 +62,9 @@
 (import libnmdb "nmdb_cas")
 (import libnmdb "nmdb_cache_cas")
 
+(import libnmdb "nmdb_incr")
+(import libnmdb "nmdb_cache_incr")
+
 
 ; main functions
 
@@ -136,6 +139,14 @@
 (define (db-cas key oval nval) (priv-cas nmdb_cas key oval nval))
 (define (cache-cas key oval nval) (priv-cas nmdb_cache_cas key oval nval))
 
+
+; *-incr functions
+(define (priv-incr func key increment)
+  (letn ( (keylen (length key)) )
+    (func NMDB key keylen increment) ) )
+
+(define (db-incr key increment) (priv-incr nmdb_incr key increment))
+(define (cache-incr key increment) (priv-incr nmdb_cache_incr key increment))
 
 
 (context MAIN)
