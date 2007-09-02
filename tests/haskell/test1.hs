@@ -20,6 +20,7 @@ main = do
 	cshow "Add TIPC" $ nmdbAddTIPCServer db (-1)
 	cshow "Add TCP" $ nmdbAddTCPServer db "localhost" (-1)
 	cshow "Add UDP" $ nmdbAddUDPServer db "localhost" (-1)
+	cshow "Add SCTP" $ nmdbAddSCTPServer db "localhost" (-1)
 
 	cshow "Set 'Hello' 'Bye'" $ nmdbSet db "Hello" "Bye"
 
@@ -30,6 +31,11 @@ main = do
 	cshow "Get 'Hello'" $ nmdbGet db "Hello"
 
 	cshow "Del 'Hello'" $ nmdbDel db "Hello"
+
+
+	cshow "Set 'Hello' '10\\0'" $ nmdbSet db "Hello" "10\0"
+	cshow "Incr 'Hello' 10" $ nmdbIncr db "Hello" 10
+	cshow "Get 'Hello'" $ nmdbGet db "Hello"
 
 	cshow "Free" $ nmdbFree db
 
