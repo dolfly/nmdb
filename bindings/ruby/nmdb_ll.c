@@ -202,6 +202,34 @@ static VALUE m_cache_cas(VALUE self, VALUE key, VALUE oldval, VALUE newval) {
 }
 
 
+/* Del functions */
+typedef int (*incrf_t) (nmdb_t *db, const unsigned char *k, size_t ks,
+		int64_t increment);
+VALUE generic_incr(VALUE self, VALUE key, VALUE increment, incrf_t incr_func)
+{
+	ssize_t rv;
+	unsigned char *k;
+	size_t ksize;
+	int64_t cincr;
+	nmdb_t *db;
+	Data_Get_Struct(self, nmdb_t, db);
+
+	k = rb_str2cstr(key, &ksize);
+	cincr = rb_num2ll(increment);
+
+	rv = incr_func(db, k, ksize, cincr);
+	return INT2NUM(rv);
+}
+
+VALUE m_incr(VALUE self, VALUE key, VALUE increment) {
+	return generic_incr(self, key, increment, nmdb_incr);
+}
+
+VALUE m_cache_incr(VALUE self, VALUE key, VALUE increment) {
+	return generic_incr(self, key, increment, nmdb_cache_incr);
+}
+
+
 /* Module initialization */
 void Init_nmdb_ll()
 {
@@ -227,5 +255,8 @@ void Init_nmdb_ll()
 
 	rb_define_method(rb_cDB, "cas", m_cas, 3);
 	rb_define_method(rb_cDB, "cache_cas", m_cache_cas, 3);
+
+	rb_define_method(rb_cDB, "incr", m_incr, 2);
+	rb_define_method(rb_cDB, "cache_incr", m_cache_incr, 2);
 }
 

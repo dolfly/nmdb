@@ -138,6 +138,30 @@ class GenericDB
 	end
 
 
+	def generic_incr(gfunc, key, increment)
+		if @automarshal then
+			key = Marshal.dump(key)
+		end
+		r = gfunc.call(key, increment)
+		if r == 0 then
+			# key not in the database
+			return nil
+		elsif r == 1 or r < 0 then
+			raise NetworkException
+		else
+			return r
+		end
+	end
+
+	def normal_incr(key, increment)
+		return generic_incr(@db.method(:incr), key, increment)
+	end
+
+	def cache_incr(key, increment)
+		return generic_incr(@db.method(:cache_incr), key, increment)
+	end
+
+
 	# The following functions asume we have set(), get(), delete() and
 	# cas(), which are supposed to be implemented by our subclasses
 
@@ -161,6 +185,7 @@ class DB < GenericDB
 	alias get normal_get
 	alias delete normal_delete
 	alias cas normal_cas
+	alias incr normal_incr
 end
 
 class Cache < GenericDB
@@ -168,6 +193,7 @@ class Cache < GenericDB
 	alias get cache_get
 	alias delete cache_delete
 	alias cas cache_cas
+	alias incr cache_cas
 end
 
 class Sync < GenericDB
@@ -175,6 +201,7 @@ class Sync < GenericDB
 	alias get normal_get
 	alias delete delete_sync
 	alias cas normal_cas
+	alias incr normal_cas
 end
 
 end
