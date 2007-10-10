@@ -1,0 +1,12 @@
+
+prefix=++PREFIX++
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libnmdb
+Description: Library for interacting with a nmdb server
+URL: http://auriga.wearlab.de/~alb/nmdb/
+Version: 0.22
+Libs: -L${libdir} -lqdbm
+Cflags: -I${includedir}
+

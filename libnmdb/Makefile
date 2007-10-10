@@ -29,7 +29,7 @@ OBJS = libnmdb.o tcp.o tipc.o udp.o sctp.o
 
 default: all
 
-all: libs
+all: libs libnmdb.pc
 
 nmdb.h: nmdb.skel.h
 	@echo "generating nmdb.h"
@@ -40,6 +40,12 @@ nmdb.h: nmdb.skel.h
 		sed 's/++CONFIG_ENABLE_SCTP++/$(ENABLE_SCTP)/g' \
 		> nmdb.h
 
+libnmdb.pc: libnmdb.skel.pc
+	@echo "generating libnmdb.pc"
+	@cat libnmdb.skel.pc | \
+		sed 's@++PREFIX++@$(PREFIX)@g' \
+		> libnmdb.pc
+
 libs: libnmdb.so libnmdb.a
 
 libnmdb.so: nmdb.h $(OBJS)
@@ -49,12 +55,14 @@ libnmdb.a: nmdb.h $(OBJS)
 	$(AR) cr libnmdb.a $(OBJS)
 
 
-install-lib: libs
+install-lib: libs libnmdb.pc
 	install -d $(PREFIX)/lib
 	install -m 0755 libnmdb.so $(PREFIX)/lib
 	install -m 0755 libnmdb.a $(PREFIX)/lib
 	install -d $(PREFIX)/include
 	install -m 0644 nmdb.h $(PREFIX)/include
+	install -d $(PREFIX)/lib/pkgconfig
+	install -m 644 libnmdb.pc $(PREFIX)/lib/pkgconfig
 	@echo
 	@echo "Please run ldconfig to update your library cache"
 	@echo
@@ -70,7 +78,7 @@ install: install-lib install-man
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f nmdb.h $(OBJS) libnmdb.so libnmdb.a
+	rm -f nmdb.h libnmdb.pc $(OBJS) libnmdb.so libnmdb.a
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
 .PHONY: default all libs install-lib install-man install clean
