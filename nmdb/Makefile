@@ -61,8 +61,8 @@ endif
 # gmake 3.81, which is too new.
 ifeq ($(BACKEND), qdbm)
 	OBJS += be-qdbm.o
-	ALL_CFLAGS += -DBACKEND_QDBM
-	LIBS += -lqdbm
+	ALL_CFLAGS += `pkg-config qdbm --cflags` -DBACKEND_QDBM
+	LIBS += `pkg-config qdbm --libs-only-L` -lqdbm
 endif
 ifeq ($(BACKEND), bdb)
 	OBJS += be-bdb.o
