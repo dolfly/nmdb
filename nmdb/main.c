@@ -12,6 +12,7 @@
 #include "common.h"
 #include "net-const.h"
 #include "log.h"
+#include "stats.h"
 
 #define DEFDBNAME "database"
 
@@ -152,15 +153,6 @@ static int load_settings(int argc, char **argv)
 }
 
 
-static void init_stats(void)
-{
-	stats.net_version_mismatch = 0;
-	stats.net_broken_req = 0;
-	stats.net_unk_req = 0;
-	return;
-}
-
-
 int main(int argc, char **argv)
 {
 	struct cache *cd;
@@ -177,7 +169,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	init_stats();
+	stats_init(&stats);
 
 	cd = cache_create(settings.numobjs, 0);
 	if (cd == NULL) {

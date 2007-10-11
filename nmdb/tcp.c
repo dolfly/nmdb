@@ -421,6 +421,7 @@ static void process_buf(struct tcp_socket *tcpsock,
 	}
 
 	/* The buffer is complete, parse it as usual. */
+	stats.msg_tcp++;
 	if (parse_message(&(tcpsock->req), buf + 4, len - 4)) {
 		goto exit;
 	} else {

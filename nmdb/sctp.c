@@ -217,6 +217,8 @@ void sctp_recv(int fd, short event, void *arg)
 		goto exit;
 	}
 
+	stats.msg_sctp++;
+
 	req.fd = fd;
 	req.type = REQTYPE_SCTP;
 	req.clisa = (struct sockaddr *) &clisa;

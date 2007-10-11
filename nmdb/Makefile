@@ -28,7 +28,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = cache.o dbloop.o queue.o log.o net.o parse.o main.o
+OBJS = cache.o dbloop.o queue.o log.o net.o parse.o stats.o main.o
 LIBS = -levent -lpthread -lrt
 
 

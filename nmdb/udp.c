@@ -201,6 +201,8 @@ void udp_recv(int fd, short event, void *arg)
 		goto exit;
 	}
 
+	stats.msg_udp++;
+
 	req.fd = fd;
 	req.type = REQTYPE_UDP;
 	req.clisa = (struct sockaddr *) &clisa;

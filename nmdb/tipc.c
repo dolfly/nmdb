@@ -201,6 +201,8 @@ void tipc_recv(int fd, short event, void *arg)
 		goto exit;
 	}
 
+	stats.msg_tipc++;
+
 	req.fd = fd;
 	req.type = REQTYPE_TIPC;
 	req.clisa = (struct sockaddr *) &clisa;

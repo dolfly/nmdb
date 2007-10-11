@@ -159,31 +159,43 @@ int parse_message(struct req_info *req,
 	req->payload = payload;
 	req->psize = psize;
 
-	if (cmd == REQ_CACHE_GET)
+	if (cmd == REQ_CACHE_GET) {
+		stats.cache_get++;
 		parse_get(req, 0);
-	else if (cmd == REQ_CACHE_SET)
+	} else if (cmd == REQ_CACHE_SET) {
+		stats.cache_set++;
 		parse_set(req, 0, 0);
-	else if (cmd == REQ_CACHE_DEL)
+	} else if (cmd == REQ_CACHE_DEL) {
+		stats.cache_del++;
 		parse_del(req, 0, 0);
-	else if (cmd == REQ_GET)
+	} else if (cmd == REQ_GET) {
+		stats.db_get++;
 		parse_get(req, 1);
-	else if (cmd == REQ_SET_SYNC)
+	} else if (cmd == REQ_SET_SYNC) {
+		stats.db_set++;
 		parse_set(req, 1, 0);
-	else if (cmd == REQ_DEL_SYNC)
+	} else if (cmd == REQ_DEL_SYNC) {
+		stats.db_del++;
 		parse_del(req, 1, 0);
-	else if (cmd == REQ_SET_ASYNC)
+	} else if (cmd == REQ_SET_ASYNC) {
+		stats.db_set++;
 		parse_set(req, 1, 1);
-	else if (cmd == REQ_DEL_ASYNC)
+	} else if (cmd == REQ_DEL_ASYNC) {
+		stats.db_del++;
 		parse_del(req, 1, 1);
-	else if (cmd == REQ_CACHE_CAS)
+	} else if (cmd == REQ_CACHE_CAS) {
+		stats.cache_cas++;
 		parse_cas(req, 0);
-	else if (cmd == REQ_CAS)
+	} else if (cmd == REQ_CAS) {
+		stats.db_cas++;
 		parse_cas(req, 1);
-	else if (cmd == REQ_CACHE_INCR)
+	} else if (cmd == REQ_CACHE_INCR) {
+		stats.cache_incr++;
 		parse_incr(req, 0);
-	else if (cmd == REQ_INCR)
+	} else if (cmd == REQ_INCR) {
+		stats.db_incr++;
 		parse_incr(req, 1);
-	else {
+	} else {
 		stats.net_unk_req++;
 		req->reply_err(req, ERR_UNKREQ);
 	}
@@ -213,6 +225,7 @@ static void parse_get(struct req_info *req, int impact_db)
 	hit = cache_get(cache_table, key, ksize, &val, &vsize);
 
 	if (!hit && !impact_db) {
+		stats.cache_misses++;
 		req->reply_mini(req, REP_CACHE_MISS);
 		return;
 	} else if (!hit && impact_db) {
@@ -228,6 +241,7 @@ static void parse_get(struct req_info *req, int impact_db)
 		queue_signal(op_queue);
 		return;
 	} else {
+		stats.cache_hits++;
 		req->reply_long(req, REP_CACHE_HIT, val, vsize);
 		return;
 	}
