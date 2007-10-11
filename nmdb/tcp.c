@@ -379,7 +379,7 @@ static void process_buf(struct tcp_socket *tcpsock,
 	if (len >= 4) {
 		totaltoget = * (uint32_t *) buf;
 		totaltoget = ntohl(totaltoget);
-		if (totaltoget > (64 * 1024) || totaltoget <= 12) {
+		if (totaltoget > (64 * 1024) || totaltoget <= 8) {
 			/* Message too big or too small, close the connection. */
 			goto error_exit;
 		}

@@ -212,7 +212,7 @@ void sctp_recv(int fd, short event, void *arg)
 		goto exit;
 	}
 
-	if (rv < 2) {
+	if (rv < 8) {
 		stats.net_broken_req++;
 		goto exit;
 	}
