@@ -587,9 +587,10 @@ int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 }
 
 
-/* ntohll() is not standard, so we define it using an UGLY trick because there
- * is no standard way to check for endianness at runtime! (same problem as the
- * one in nmdb/parse.c) */
+/* htonll() is not standard, so we define it using an UGLY trick because there
+ * is no standard way to check for endianness at runtime! (this is the same as
+ * the one in nmdb/parse.c, the infraestructure to keep these common is not
+ * worth it)*/
 static uint64_t htonll(uint64_t x)
 {
 	static int endianness = 0;
@@ -612,6 +613,7 @@ static uint64_t htonll(uint64_t x)
 	return ( htonl( (x >> 32) & 0xFFFFFFFF ) | \
 			( (uint64_t) htonl(x & 0xFFFFFFFF) ) << 32 );
 }
+
 
 static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int64_t increment, int impact_db)
@@ -690,6 +692,79 @@ int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int64_t increment)
 {
 	return do_incr(db, key, ksize, increment, 0);
+}
+
+
+int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
+		unsigned int *nservers, unsigned int *nstats)
+{
+	int i, moff;
+	ssize_t t, reqsize, reply;
+	unsigned char *request, *p;
+	struct nmdb_srv *srv;
+
+	/* This buffer is used for a single reply, must be big enough to
+	 * hold STATS_REPLY_SIZE. 32 elements is enough to allow future
+	 * improvements. */
+	unsigned char tmpbuf[32 * sizeof(uint64_t)];
+	size_t tmpbufsize = 32 * sizeof(uint64_t);
+
+	unsigned char *payload;
+	size_t psize;
+
+	*nstats = 0;
+
+	for (i = 0; i < db->nservers; i++) {
+		srv = db->servers + i;
+
+		moff = srv_get_msg_offset(srv);
+
+		/* Request: 4 bytes ver+id, 4 bytes request code.
+		 * Reply: 4 bytes lenght + variable amount of uint64_t.*/
+
+		/* We need to tailor the request for the different message
+		 * offsets */
+		reqsize = moff + 4 + 4;
+		request = malloc(reqsize);
+		if (request == NULL)
+			return -1;
+
+		p = request + moff;
+		* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
+		* ((uint32_t *) p + 1) = htonl(REQ_STATS);
+
+		t = srv_send(srv, request, reqsize);
+		free(request);
+		if (t <= 0)
+			return -2;
+
+		reply = get_rep(srv, tmpbuf, tmpbufsize, &payload, &psize);
+		if (reply != REP_OK)
+			return -1;
+
+		/* Check if there is enough room for the copy */
+		if (bsize < psize)
+			return -3;
+
+		/* Now copy the reply in the buffer given to us, skipping the
+		 * 4 bytes of length */
+		memcpy(buf, payload + 4, psize);
+		buf += psize;
+		bsize -= psize;
+
+		/* nstats should be the same for all the servers; if not,
+		 * return error because the caller can't cope with that
+		 * situation */
+		if (*nstats == 0) {
+			*nstats = psize / sizeof(uint64_t);
+		} else if (*nstats != psize / sizeof(uint64_t)) {
+			return -4;
+		}
+	}
+
+	*nservers = db->nservers;
+
+	return 1;
 }
 
 

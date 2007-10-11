@@ -86,5 +86,8 @@ int nmdb_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		                int64_t increment);
 
+int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
+		unsigned int *nservers, unsigned int *nstats);
+
 #endif
 
