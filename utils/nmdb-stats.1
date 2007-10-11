@@ -1,0 +1,34 @@
+.TH nmdb-stats 1 "11/Oct/2007"
+.SH NAME
+nmdb-stats - Get the stats of a nmdb server.
+.SH SYNOPSYS
+nmdb-stats [ tipc
+.B port
+| [tcp|udp|sctp]
+.B host
+.B port
+]
+
+.SH DESCRIPTION
+
+This small application is used to query an nmdb server in order to get its
+statistics.
+
+It takes the protocol as the first parameter (can be "tipc", "tcp", "udp", or
+"sctp"), and then the server address.
+
+.SH INVOCATION EXAMPLE
+.B "nmdb-stats tcp localhost 26010"
+
+.SH SEE ALSO
+.BR nmdb (1).
+
+.SH AUTHORS
+Created by Alberto Bertogli (albertito@gmail.com).
+
+.SH CONTACT
+
+To get in touch with developers and users, join the mailing list at
+http://lists.auriga.wearlab.de/cgi-bin/mailman/listinfo/nmdb-devel or just
+send an email to nmdb-devel@lists.auriga.wearlab.de.
+

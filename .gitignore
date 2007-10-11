@@ -9,6 +9,7 @@
 *.gcda
 # *~
 /nmdb/nmdb
+/utils/nmdb-stats
 tests/c/*-*-cache
 tests/c/*-*-normal
 tests/c/*-*-sync
