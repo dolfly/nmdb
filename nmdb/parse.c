@@ -17,6 +17,7 @@ static void parse_set(struct req_info *req, int impact_db, int async);
 static void parse_del(struct req_info *req, int impact_db, int async);
 static void parse_cas(struct req_info *req, int impact_db);
 static void parse_incr(struct req_info *req, int impact_db);
+static void parse_stats(struct req_info *req);
 
 
 /* Create a queue entry structure based on the parameters passed. Memory
@@ -195,6 +196,8 @@ int parse_message(struct req_info *req,
 	} else if (cmd == REQ_INCR) {
 		stats.db_incr++;
 		parse_incr(req, 1);
+	} else if (cmd == REQ_STATS) {
+		parse_stats(req);
 	} else {
 		stats.net_unk_req++;
 		req->reply_err(req, ERR_UNKREQ);
@@ -456,8 +459,8 @@ static void parse_cas(struct req_info *req, int impact_db)
 }
 
 
-/* ntohll() is not standard, so we define it using an UGLY trick because there
- * is no standard way to check for endianness at runtime! */
+/* ntohll() and htonll() are not standard, so we define it using an UGLY trick
+ * because there is no standard way to check for endianness at runtime! */
 static uint64_t ntohll(uint64_t x)
 {
 	static int endianness = 0;
@@ -479,6 +482,29 @@ static uint64_t ntohll(uint64_t x)
 	/* little endian */
 	return ( ntohl( (x >> 32) & 0xFFFFFFFF ) | \
 			( (uint64_t) ntohl(x & 0xFFFFFFFF) ) << 32 );
+}
+
+static uint64_t htonll(uint64_t x)
+{
+	static int endianness = 0;
+
+	/* determine the endianness by checking how htonl() behaves; use -1
+	 * for little endian and 1 for big endian */
+	if (endianness == 0) {
+		if (htonl(1) == 1)
+			endianness = 1;
+		else
+			endianness = -1;
+	}
+
+	if (endianness == 1) {
+		/* big endian */
+		return x;
+	}
+
+	/* little endian */
+	return ( htonl( (x >> 32) & 0xFFFFFFFF ) | \
+			( (uint64_t) htonl(x & 0xFFFFFFFF) ) << 32 );
 }
 
 
@@ -545,6 +571,57 @@ static void parse_incr(struct req_info *req, int impact_db)
 		else
 			req->reply_mini(req, REP_OK);
 	}
+
+	return;
+}
+
+
+static void parse_stats(struct req_info *req)
+{
+	int i;
+	uint64_t response[STATS_REPLY_SIZE];
+
+	/* The packet is just the request, there's no payload. We need to
+	 * reply with the stats structure.
+	 * The response structure is just several uint64_t packed together,
+	 * each one corresponds to a single value of the stats structure. */
+
+	/* We define a macro to do the assignment easily; it's not nice, but
+	 * it's more portable than using a packed struct */
+	i = 0;
+	#define fcpy(field) \
+		do { response[i] = htonll(stats.field); i++; } while(0)
+
+
+	fcpy(cache_get);
+	fcpy(cache_set);
+	fcpy(cache_del);
+	fcpy(cache_cas);
+	fcpy(cache_incr);
+
+	fcpy(db_get);
+	fcpy(db_set);
+	fcpy(db_del);
+	fcpy(db_cas);
+	fcpy(db_incr);
+
+	fcpy(cache_hits);
+	fcpy(cache_misses);
+
+	fcpy(db_hits);
+	fcpy(db_misses);
+
+	fcpy(msg_tipc);
+	fcpy(msg_tcp);
+	fcpy(msg_udp);
+	fcpy(msg_sctp);
+
+	fcpy(net_version_mismatch);
+	fcpy(net_broken_req);
+	fcpy(net_unk_req);
+
+	req->reply_long(req, REP_OK, (unsigned char *) response,
+			sizeof(response));
 
 	return;
 }

@@ -39,6 +39,7 @@
 #define REQ_CAS			0x110
 #define REQ_CACHE_INCR		0x111
 #define REQ_INCR		0x112
+#define REQ_STATS		0x113
 
 /* Network replies (different namespace from requests) */
 #define REP_ERR			0x800
