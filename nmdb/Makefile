@@ -75,15 +75,22 @@ ifeq ($(BACKEND), null)
 endif
 
 
+ifneq ($(V), 1)
+	NICE_CC = @echo "  CC  $@"; $(CC)
+else
+	NICE_CC = $(CC)
+endif
+
+
 default: all
 
 all: nmdb
 
 nmdb: $(OBJS)
-	$(CC) $(ALL_CFLAGS) $(OBJS) $(LIBS) -o nmdb
+	$(NICE_CC) $(ALL_CFLAGS) $(OBJS) $(LIBS) -o nmdb
 
 .c.o:
-	$(CC) $(ALL_CFLAGS) -c $< -o $@
+	$(NICE_CC) $(ALL_CFLAGS) -c $< -o $@
 
 install-bin: nmdb
 	install -d $(PREFIX)/bin

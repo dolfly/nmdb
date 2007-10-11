@@ -27,6 +27,13 @@ PREFIX=/usr/local
 OBJS = libnmdb.o tcp.o tipc.o udp.o sctp.o
 
 
+ifneq ($(V), 1)
+	NICE_CC = @echo "  CC  $@"; $(CC)
+else
+	NICE_CC = $(CC)
+endif
+
+
 default: all
 
 all: libs libnmdb.pc
@@ -49,7 +56,7 @@ libnmdb.pc: libnmdb.skel.pc
 libs: libnmdb.so libnmdb.a
 
 libnmdb.so: nmdb.h $(OBJS)
-	$(CC) $(ALL_CFLAGS) -shared -fPIC $(OBJS) -o libnmdb.so
+	$(NICE_CC) $(ALL_CFLAGS) -shared -fPIC $(OBJS) -o libnmdb.so
 
 libnmdb.a: nmdb.h $(OBJS)
 	$(AR) cr libnmdb.a $(OBJS)
@@ -75,7 +82,7 @@ install: install-lib install-man
 
 
 .c.o:
-	$(CC) $(ALL_CFLAGS) -c $< -o $@
+	$(NICE_CC) $(ALL_CFLAGS) -c $< -o $@
 
 clean:
 	rm -f nmdb.h libnmdb.pc $(OBJS) libnmdb.so libnmdb.a
