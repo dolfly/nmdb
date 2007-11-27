@@ -37,7 +37,7 @@ static void help(void) {
 	  "  -s port	SCTP listening port (26010)\n"
 	  "  -S addr	SCTP listening address (all local addresses)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
-	  "  -o	fname	log to the file 'fname'.\n"
+	  "  -o fname	log to the given file (defaults to stdout).\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -h		show this help\n"
