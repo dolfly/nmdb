@@ -4,23 +4,23 @@ all: default
 default: nmdb libnmdb utils
 
 nmdb:
-	make -C nmdb
+	$(MAKE) -C nmdb
 
 libnmdb:
-	make -C libnmdb
+	$(MAKE) -C libnmdb
 
 utils:
-	make -C utils
+	$(MAKE) -C utils
 
 install:
-	make -C nmdb install
-	make -C libnmdb install
-	make -C utils install
+	$(MAKE) -C nmdb install
+	$(MAKE) -C libnmdb install
+	$(MAKE) -C utils install
 
 clean:
-	make -C nmdb clean
-	make -C libnmdb clean
-	make -C utils clean
+	$(MAKE) -C nmdb clean
+	$(MAKE) -C libnmdb clean
+	$(MAKE) -C utils clean
 
 
 python:
