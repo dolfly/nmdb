@@ -409,8 +409,8 @@ simple clients to play with.
 If you are in doubt about something, you can consult the manpages or the
 documentation inside the *doc/* directory.
 
-To get in touch with nmdb developers and users, you can join the `mailing
-list`_, or just send an email to nmdb-devel@lists.auriga.wearlab.de.
+If you want to report bugs, or have any questions or comments, just let me
+know at albertito@gmail.com.
 
 
 .. _nmdb: http://auriga.wearlab.de/~alb/nmdb/
@@ -420,7 +420,5 @@ list`_, or just send an email to nmdb-devel@lists.auriga.wearlab.de.
 .. _QDBM: http://qdbm.sf.net
 .. _`Linux kernel`: http://kernel.org
 .. _tetrations: http://en.wikipedia.org/wiki/Tetration
-.. _`mailing list`:
-        http://lists.auriga.wearlab.de/cgi-bin/mailman/listinfo/nmdb-devel
 
 
