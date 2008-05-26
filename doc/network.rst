@@ -11,7 +11,8 @@ protocol. It can be used on top of TIPC, UDP, TCP (with a thin messaging
 layer) or SCTP. This document describes the protocol in a
 transport-independent way, assuming the transport protocol can send and
 receive messages reliably and preserve message boundaries. No ordering
-guarantees are required.
+guarantee is required for the request-reply part of the protocol, but it is
+highly desirable to avoid reordering of requests.
 
 
 Requests
