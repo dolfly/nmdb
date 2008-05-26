@@ -200,9 +200,9 @@ Example
 Following the previous example, if you want to start three servers you can do
 it like this::
 
-  box1# ndbm -d /var/lib/nmdb/db-1 -l 11
-  box2# ndbm -d /var/lib/nmdb/db-2 -l 12
-  box3# ndbm -d /var/lib/nmdb/db-3 -l 13
+  box1# nmdb -d /var/lib/nmdb/db-1 -l 11
+  box2# nmdb -d /var/lib/nmdb/db-2 -l 12
+  box3# nmdb -d /var/lib/nmdb/db-3 -l 13
 
 
 Writing clients
