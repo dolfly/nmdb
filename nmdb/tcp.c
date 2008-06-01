@@ -144,7 +144,7 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 
 
 /* Send small replies, consisting in only a value. */
-void tcp_reply_mini(struct req_info *req, uint32_t reply)
+static void tcp_reply_mini(struct req_info *req, uint32_t reply)
 {
 	/* We use a mini buffer to speedup the small replies, to avoid the
 	 * malloc() overhead. */
@@ -164,12 +164,12 @@ void tcp_reply_mini(struct req_info *req, uint32_t reply)
 }
 
 
-void tcp_reply_err(struct req_info *req, uint32_t reply)
+static void tcp_reply_err(struct req_info *req, uint32_t reply)
 {
 	rep_send_error(req, reply);
 }
 
-void tcp_reply_long(struct req_info *req, uint32_t reply,
+static void tcp_reply_long(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {

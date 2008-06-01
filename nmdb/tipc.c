@@ -88,12 +88,12 @@ static void tipc_reply_mini(struct req_info *req, uint32_t reply)
 /* The tipc_reply_* functions are used by the db code to send the network
  * replies. */
 
-void tipc_reply_err(struct req_info *req, uint32_t reply)
+static void tipc_reply_err(struct req_info *req, uint32_t reply)
 {
 	rep_send_error(req, reply);
 }
 
-void tipc_reply_long(struct req_info *req, uint32_t reply,
+static void tipc_reply_long(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {

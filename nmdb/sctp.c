@@ -89,12 +89,12 @@ static void sctp_reply_mini(struct req_info *req, uint32_t reply)
 /* The sctp_reply_* functions are used by the db code to send the network
  * replies. */
 
-void sctp_reply_err(struct req_info *req, uint32_t reply)
+static void sctp_reply_err(struct req_info *req, uint32_t reply)
 {
 	rep_send_error(req, reply);
 }
 
-void sctp_reply_long(struct req_info *req, uint32_t reply,
+static void sctp_reply_long(struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {
