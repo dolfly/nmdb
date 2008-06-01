@@ -16,12 +16,6 @@
 #include "log.h"
 
 
-static void tipc_reply_mini(struct req_info *req, uint32_t reply);
-static void tipc_reply_err(struct req_info *req, uint32_t reply);
-static void tipc_reply_long(struct req_info *req, uint32_t reply,
-		unsigned char *val, size_t vsize);
-
-
 /*
  * Miscelaneous helper functions
  */
