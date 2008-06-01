@@ -13,7 +13,7 @@
 
 
 /* Logging file descriptor, -1 if logging is disabled */
-int logfd = -1;
+static int logfd = -1;
 
 
 int log_init(void)
