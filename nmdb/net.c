@@ -29,6 +29,12 @@ static void passive_to_active_sighandler(int fd, short event, void *arg)
 	settings.passive = !settings.passive;
 }
 
+static void logfd_reopen_sighandler(int fd, short event, void *arg)
+{
+	if (log_reopen())
+		wlog("Log reopened\n");
+}
+
 void net_loop(void)
 {
 	int tipc_fd = -1;
@@ -36,7 +42,7 @@ void net_loop(void)
 	int udp_fd = -1;
 	int sctp_fd = -1;
 	struct event tipc_evt, tcp_evt, udp_evt, sctp_evt,
-		     sigterm_evt, sigint_evt, sigusr2_evt;
+		     sigterm_evt, sigint_evt, sigusr1_evt, sigusr2_evt;
 
 	event_init();
 
@@ -95,6 +101,9 @@ void net_loop(void)
 	signal_add(&sigterm_evt, NULL);
 	signal_set(&sigint_evt, SIGINT, exit_sighandler, &sigint_evt);
 	signal_add(&sigint_evt, NULL);
+	signal_set(&sigusr1_evt, SIGUSR1, logfd_reopen_sighandler,
+			&sigusr1_evt);
+	signal_add(&sigusr1_evt, NULL);
 	signal_set(&sigusr2_evt, SIGUSR2, passive_to_active_sighandler,
 			&sigusr2_evt);
 	signal_add(&sigusr2_evt, NULL);
@@ -112,6 +121,7 @@ void net_loop(void)
 
 	signal_del(&sigterm_evt);
 	signal_del(&sigint_evt);
+	signal_del(&sigusr1_evt);
 	signal_del(&sigusr2_evt);
 
 	tipc_close(tipc_fd);

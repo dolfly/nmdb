@@ -35,6 +35,21 @@ int log_init(void)
 	return 1;
 }
 
+int log_reopen(void)
+{
+	if (settings.logfname == NULL)
+		return 1;
+
+	if (strcmp(settings.logfname, "-") == 0)
+		return 1;
+
+	logfd = open(settings.logfname, O_WRONLY | O_APPEND | O_CREAT, 0660);
+	if (logfd < 0)
+		return 0;
+
+	return 1;
+}
+
 void wlog(const char *fmt, ...)
 {
 	int r, tr;

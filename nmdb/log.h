@@ -6,6 +6,7 @@
 #define MAX_LOG_STR 512
 
 int log_init(void);
+int log_reopen(void);
 
 /* Normal logging, printf()-alike */
 void wlog(const char *fmt, ...);
