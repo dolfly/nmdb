@@ -26,7 +26,8 @@ int log_init(void)
 	if (strcmp(settings.logfname, "-") == 0) {
 		logfd = 1;
 	} else {
-		logfd = open(settings.logfname, O_WRONLY | O_APPEND | O_CREAT);
+		logfd = open(settings.logfname, O_WRONLY | O_APPEND | O_CREAT,
+				0660);
 		if (logfd < 0)
 			return 0;
 	}
