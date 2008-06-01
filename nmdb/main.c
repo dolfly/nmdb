@@ -205,6 +205,8 @@ int main(int argc, char **argv)
 		setsid();
 	}
 
+	wlog("Starting nmdb\n");
+
 	dbthread = db_loop_start(db);
 
 	net_loop();
