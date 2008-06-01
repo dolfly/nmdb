@@ -25,29 +25,21 @@ int log_init(void)
 
 	if (strcmp(settings.logfname, "-") == 0) {
 		logfd = 1;
-	} else {
-		logfd = open(settings.logfname, O_WRONLY | O_APPEND | O_CREAT,
-				0660);
-		if (logfd < 0)
-			return 0;
+		return 1;
 	}
-
-	return 1;
-}
-
-int log_reopen(void)
-{
-	if (settings.logfname == NULL)
-		return 1;
-
-	if (strcmp(settings.logfname, "-") == 0)
-		return 1;
 
 	logfd = open(settings.logfname, O_WRONLY | O_APPEND | O_CREAT, 0660);
 	if (logfd < 0)
 		return 0;
 
 	return 1;
+}
+
+int log_reopen(void)
+{
+	/* Just call log_init(), it will do just fine as we don't need any
+	 * special considerations for reopens */
+	return log_init();
 }
 
 void wlog(const char *fmt, ...)
