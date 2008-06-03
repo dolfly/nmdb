@@ -16,3 +16,4 @@ tests/c/*-*-sync
 /libnmdb/nmdb.h
 /libnmdb/libnmdb.pc
 /tags
+/bindings/python/build
