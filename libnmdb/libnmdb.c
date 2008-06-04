@@ -242,15 +242,80 @@ static struct nmdb_srv *select_srv(nmdb_t *db,
 	return &(db->servers[n]);
 }
 
+/* Creates a new buffer for packets */
+static unsigned char *new_packet(struct nmdb_srv *srv, unsigned int request,
+		size_t *bufsize, size_t *payload_offset, ssize_t payload_size)
+{
+	unsigned char *buf, *p;
+	unsigned int moff = srv_get_msg_offset(srv);
+
+	if (payload_size == -1) {
+		/* Because our callers will reuse the buffer to get the reply,
+		 * and we don't know how big it will be, we just alloc a bit
+		 * over the max packet (64kb) */
+		*bufsize = 68 * 1024;
+	} else {
+		*bufsize = moff + 8 + payload_size;
+	}
+	buf = malloc(*bufsize);
+	if (buf == NULL)
+		return NULL;
+
+	p = buf + moff;
+
+	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
+	* ((uint32_t *) p + 1) = htonl(request);
+
+	if (payload_offset != NULL)
+		*payload_offset = moff + 8;
+
+	return buf;
+}
+
+/* Functions to append different numbers of (value, len) to the given buffer;
+ * it's not worth the trouble of making this generic because we never go past
+ * three and they're quite trivial */
+static size_t append_1v(unsigned char *buf,
+		const unsigned char *datum, size_t dsize)
+{
+	* ((uint32_t *) buf) = htonl(dsize);
+	memcpy(buf + 4, datum, dsize);
+	return 4 + dsize;
+}
+
+static size_t append_2v(unsigned char *buf,
+		const unsigned char *datum1, size_t dsize1,
+		const unsigned char *datum2, size_t dsize2)
+{
+	* ((uint32_t *) buf) = htonl(dsize1);
+	* ((uint32_t *) buf + 1) = htonl(dsize2);
+	memcpy(buf + 8, datum1, dsize1);
+	memcpy(buf + 8 + dsize1, datum2, dsize2);
+	return 8 + dsize1 + dsize2;
+}
+
+static size_t append_3v(unsigned char *buf,
+		const unsigned char *datum1, size_t dsize1,
+		const unsigned char *datum2, size_t dsize2,
+		const unsigned char *datum3, size_t dsize3)
+{
+	* ((uint32_t *) buf) = htonl(dsize1);
+	* ((uint32_t *) buf + 1) = htonl(dsize2);
+	* ((uint32_t *) buf + 2) = htonl(dsize3);
+	memcpy(buf + 12, datum1, dsize1);
+	memcpy(buf + 12 + dsize1, datum2, dsize2);
+	memcpy(buf + 12 + dsize1 + dsize2, datum3, dsize3);
+	return 12 + dsize1 + dsize2 + dsize3;
+}
+
 
 static ssize_t do_get(nmdb_t *db,
 		const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize, int impact_db)
 {
-	int moff;
 	ssize_t rv, t;
 	unsigned char *buf, *p;
-	size_t bsize, reqsize, psize = 0;
+	size_t bufsize, reqsize, payload_offset, psize = 0;
 	uint32_t request, reply;
 	struct nmdb_srv *srv;
 
@@ -261,37 +326,19 @@ static ssize_t do_get(nmdb_t *db,
 	}
 
 	srv = select_srv(db, key, ksize);
-	moff = srv_get_msg_offset(srv);
-
-	/* Use the same buffer for the request and the reply.
-	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize,
-	 * 		ksize bytes key.
-	 * Reply: 4 bytes id, 4 bytes reply code, 4 bytes vsize,
-	 * 		vsize bytes key.
-	 *
-	 * We don't know vsize beforehand, but we do know our max packet size
-	 * is 64kb. We malloc 68kb just in case.
-	 */
-	bsize = 68 * 1024;
-	buf = malloc(bsize);
+	buf = new_packet(srv, request, &bufsize, &payload_offset, -1);
 	if (buf == NULL)
 		return -1;
+	reqsize = payload_offset;
+	reqsize += append_1v(buf + payload_offset, key, ksize);
 
-	p = buf + moff;
-
-	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-	* ((uint32_t *) p + 1) = htonl(request);
-	* ((uint32_t *) p + 2) = htonl(ksize);
-	memcpy(p + 3 * 4, key, ksize);
-	reqsize = 3 * 4 + ksize;
-
-	t = srv_send(srv, buf, moff + reqsize);
+	t = srv_send(srv, buf, reqsize);
 	if (t <= 0) {
 		rv = -2;
 		goto exit;
 	}
 
-	reply = get_rep(srv, buf, bsize, &p, &psize);
+	reply = get_rep(srv, buf, bufsize, &p, &psize);
 
 	if (reply == REP_CACHE_MISS || reply == REP_NOTIN) {
 		rv = -1;
@@ -339,10 +386,9 @@ static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize,
 		int impact_db, int async)
 {
-	int moff;
 	ssize_t rv, t;
-	unsigned char *buf, *p;
-	size_t bsize;
+	unsigned char *buf;
+	size_t bufsize, payload_offset, reqsize;
 	uint32_t request, reply;
 	struct nmdb_srv *srv;
 
@@ -356,34 +402,21 @@ static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 	}
 
 	srv = select_srv(db, key, ksize);
-	moff = srv_get_msg_offset(srv);
 
-	/* Use the same buffer for the request and the reply.
-	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize, 4
-	 *		bytes vsize, ksize bytes key, vsize bytes val.
-	 * Reply: 4 bytes id, 4 bytes reply code.
-	 */
-	bsize = moff + 4 + 4 + 4 + 4 + ksize + vsize;
-	buf = malloc(bsize);
+	buf = new_packet(srv, request, &bufsize, &payload_offset,
+			4 * 2 + ksize + vsize);
 	if (buf == NULL)
 		return -1;
+	reqsize = payload_offset;
+	reqsize += append_2v(buf + payload_offset, key, ksize, val, vsize);
 
-	p = buf + moff;
-
-	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-	* ((uint32_t *) p + 1) = htonl(request);
-	* ((uint32_t *) p + 2) = htonl(ksize);
-	* ((uint32_t *) p + 3) = htonl(vsize);
-	memcpy(p + 4 * 4, key, ksize);
-	memcpy(p + 4 * 4 + ksize, val, vsize);
-
-	t = srv_send(srv, buf, bsize);
+	t = srv_send(srv, buf, reqsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(srv, buf, bsize, NULL, NULL);
+	reply = get_rep(srv, buf, bufsize, NULL, NULL);
 
 	if (reply == REP_OK) {
 		rv = 1;
@@ -422,10 +455,9 @@ int nmdb_cache_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 static int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int impact_db, int async)
 {
-	int moff;
 	ssize_t rv, t;
-	unsigned char *buf, *p;
-	size_t bsize;
+	unsigned char *buf;
+	size_t bufsize, payload_offset, reqsize;
 	uint32_t request, reply;
 	struct nmdb_srv *srv;
 
@@ -439,32 +471,20 @@ static int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 	}
 
 	srv = select_srv(db, key, ksize);
-	moff = srv_get_msg_offset(srv);
 
-	/* Use the same buffer for the request and the reply.
-	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize,
-	 * 		ksize bytes key.
-	 * Reply: 4 bytes id, 4 bytes reply code.
-	 */
-	bsize = moff + 8 + 4 + ksize;
-	buf = malloc(bsize);
+	buf = new_packet(srv, request, &bufsize, &payload_offset, 4 + ksize);
 	if (buf == NULL)
 		return -1;
+	reqsize = payload_offset;
+	reqsize += append_1v(buf + payload_offset, key, ksize);
 
-	p = buf + moff;
-
-	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-	* ((uint32_t *) p + 1) = htonl(request);
-	* ((uint32_t *) p + 2) = htonl(ksize);
-	memcpy(p + 3 * 4, key, ksize);
-
-	t = srv_send(srv, buf, bsize);
+	t = srv_send(srv, buf, reqsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(srv, buf, bsize, NULL, NULL);
+	reply = get_rep(srv, buf, bufsize, NULL, NULL);
 
 	if (reply == REP_OK) {
 		rv = 1;
@@ -504,10 +524,9 @@ static int do_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *newval, size_t nvsize,
 		int impact_db)
 {
-	int moff;
 	ssize_t rv, t;
-	unsigned char *buf, *p, *q;
-	size_t bsize;
+	unsigned char *buf;
+	size_t bufsize, payload_offset, reqsize;
 	uint32_t request, reply;
 	struct nmdb_srv *srv;
 
@@ -516,41 +535,22 @@ static int do_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		request = REQ_CAS;
 
 	srv = select_srv(db, key, ksize);
-	moff = srv_get_msg_offset(srv);
 
-	/* Use the same buffer for the request and the reply.
-	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize, 4
-	 *		bytes ovsize, 4 bytes nvsize, ksize bytes key,
-	 *		ovsize bytes oldval, nvsize bytes newval.
-	 * Reply: 4 bytes id, 4 bytes reply code.
-	 */
-	bsize = moff + 4 + 4 + 4 + 4 + 4 + ksize + ovsize + nvsize;
-	buf = malloc(bsize);
+	buf = new_packet(srv, request, &bufsize, &payload_offset,
+			4 * 3 + ksize + ovsize + nvsize);
 	if (buf == NULL)
 		return -1;
+	reqsize = payload_offset;
+	reqsize += append_3v(buf + payload_offset, key, ksize, oldval, ovsize,
+			newval, nvsize);
 
-	p = buf + moff;
-
-	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-	* ((uint32_t *) p + 1) = htonl(request);
-	* ((uint32_t *) p + 2) = htonl(ksize);
-	* ((uint32_t *) p + 3) = htonl(ovsize);
-	* ((uint32_t *) p + 4) = htonl(nvsize);
-	q = p + 5 * 4;
-	memcpy(q, key, ksize);
-	q += ksize;
-	memcpy(q, oldval, ovsize);
-	q += ovsize;
-	memcpy(q, newval, nvsize);
-
-	srv = select_srv(db, key, ksize);
-	t = srv_send(srv, buf, bsize);
+	t = srv_send(srv, buf, reqsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(srv, buf, bsize, NULL, NULL);
+	reply = get_rep(srv, buf, bufsize, NULL, NULL);
 
 	if (reply == REP_OK) {
 		rv = 2;
@@ -618,10 +618,9 @@ static uint64_t htonll(uint64_t x)
 static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int64_t increment, int impact_db)
 {
-	int moff;
 	ssize_t rv, t;
-	unsigned char *buf, *p;
-	size_t bsize;
+	unsigned char *buf;
+	size_t bufsize, payload_offset, reqsize;
 	uint32_t request, reply;
 	struct nmdb_srv *srv;
 
@@ -631,35 +630,25 @@ static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		request = REQ_CACHE_INCR;
 
 	srv = select_srv(db, key, ksize);
-	moff = srv_get_msg_offset(srv);
-
-	/* Use the same buffer for the request and the reply.
-	 * Request: 4 bytes ver+id, 4 bytes request code, 4 bytes ksize,
-	 *		ksize bytes key, 8 bytes increment.
-	 * Reply: 4 bytes id, 4 bytes reply code.
-	 */
-	bsize = moff + 4 + 4 + 4 + ksize + 8;
-	buf = malloc(bsize);
-	if (buf == NULL)
-		return -1;
 
 	increment = htonll(increment);
 
-	p = buf + moff;
+	buf = new_packet(srv, request, &bufsize, &payload_offset,
+			4 + ksize + sizeof(int64_t));
+	if (buf == NULL)
+		return -1;
+	reqsize = payload_offset;
+	reqsize += append_1v(buf + payload_offset, key, ksize);
+	memcpy(buf + reqsize, &increment, sizeof(int64_t));
+	reqsize += sizeof(int64_t);
 
-	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-	* ((uint32_t *) p + 1) = htonl(request);
-	* ((uint32_t *) p + 2) = htonl(ksize);
-	memcpy(p + 3 * 4, key, ksize);
-	memcpy(p + 3 * 4 + ksize, &increment, sizeof(int64_t));
-
-	t = srv_send(srv, buf, bsize);
+	t = srv_send(srv, buf, reqsize);
 	if (t <= 0) {
 		rv = -1;
 		goto exit;
 	}
 
-	reply = get_rep(srv, buf, bsize, NULL, NULL);
+	reply = get_rep(srv, buf, bufsize, NULL, NULL);
 
 	switch (reply) {
 		case REP_OK:
@@ -698,9 +687,10 @@ int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
 		unsigned int *nservers, unsigned int *nstats)
 {
-	int i, moff;
-	ssize_t t, reqsize, reply;
-	unsigned char *request, *p;
+	int i;
+	size_t reqsize;
+	ssize_t t, reply;
+	unsigned char *request;
 	struct nmdb_srv *srv;
 
 	/* This buffer is used for a single reply, must be big enough to
@@ -716,22 +706,7 @@ int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
 
 	for (i = 0; i < db->nservers; i++) {
 		srv = db->servers + i;
-
-		moff = srv_get_msg_offset(srv);
-
-		/* Request: 4 bytes ver+id, 4 bytes request code.
-		 * Reply: 4 bytes lenght + variable amount of uint64_t.*/
-
-		/* We need to tailor the request for the different message
-		 * offsets */
-		reqsize = moff + 4 + 4;
-		request = malloc(reqsize);
-		if (request == NULL)
-			return -1;
-
-		p = request + moff;
-		* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-		* ((uint32_t *) p + 1) = htonl(REQ_STATS);
+		request = new_packet(srv, REQ_STATS, &reqsize, NULL, 0);
 
 		t = srv_send(srv, request, reqsize);
 		free(request);
