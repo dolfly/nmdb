@@ -83,16 +83,20 @@ def getrand():
 
 
 if __name__ == '__main__':
-	if len(sys.argv) != 2:
-		print 'Use: random1-cache.py number_of_keys'
+	if len(sys.argv) < 2:
+		print 'Use: random1-cache.py number_of_keys [key_prefix]'
 		sys.exit(1)
 
 	nkeys = int(sys.argv[1])
+	if len(sys.argv) > 2:
+		key_prefix = sys.argv[2]
+	else:
+		key_prefix = ''
 
 	# fill all the keys
 	print 'populate'
 	for i in xrange(nkeys):
-		set(getrand(), getrand())
+		set(key_prefix + str(getrand()), getrand())
 
 	print 'missing', find_missing()
 
