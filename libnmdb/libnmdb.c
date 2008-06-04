@@ -119,7 +119,7 @@ ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags)
 
 /* Create a nmdb_t and set the first server to port. If port is < 0, the
  * standard port is used. */
-nmdb_t *nmdb_init()
+nmdb_t *nmdb_init(void)
 {
 	nmdb_t *db;
 
@@ -150,7 +150,7 @@ int nmdb_free(nmdb_t *db)
 /* Used internally to send a buffer to the given server. Calls the appropriate
  * sender according to the server protocol. */
 static int srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
+		unsigned char *buf, size_t bsize)
 {
 	if (srv == NULL)
 		return 0;

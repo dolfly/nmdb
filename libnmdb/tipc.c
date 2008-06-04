@@ -14,6 +14,7 @@
 #include "nmdb.h"
 #include "net-const.h"
 #include "internal.h"
+#include "tipc.h"
 
 
 /* Add a TIPC server to the db connection. Requests will select which server
@@ -107,6 +108,7 @@ uint32_t tipc_get_rep(struct nmdb_srv *srv,
 
 #include <stdint.h>
 #include "nmdb.h"
+#include "tipc.h"
 
 int nmdb_add_tipc_server(nmdb_t *db, int port)
 {

@@ -15,6 +15,7 @@
 #include "nmdb.h"
 #include "net-const.h"
 #include "internal.h"
+#include "sctp.h"
 
 
 /* Used internally to really add the server once we have an IP address. */
@@ -85,8 +86,7 @@ int nmdb_add_sctp_server(nmdb_t *db, const char *addr, int port)
 	return add_sctp_server_addr(db, &(ia.s_addr), port);
 }
 
-int sctp_srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
+int sctp_srv_send(struct nmdb_srv *srv, unsigned char *buf, size_t bsize)
 {
 	ssize_t rv;
 	rv = sendto(srv->fd, buf, bsize, 0,
@@ -131,14 +131,14 @@ uint32_t sctp_get_rep(struct nmdb_srv *srv,
 
 #include <stdint.h>
 #include "nmdb.h"
+#include "sctp.h"
 
 int nmdb_add_sctp_server(nmdb_t *db, const char *addr, int port)
 {
 	return 0;
 }
 
-int sctp_srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
+int sctp_srv_send(struct nmdb_srv *srv, unsigned char *buf, size_t bsize)
 {
 	return 0;
 }

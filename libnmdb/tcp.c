@@ -15,6 +15,7 @@
 #include "nmdb.h"
 #include "net-const.h"
 #include "internal.h"
+#include "tcp.h"
 
 
 /* Used internally to really add the server once we have an IP address. */
@@ -102,8 +103,7 @@ int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 	return add_tcp_server_addr(db, &(ia.s_addr), port);
 }
 
-int tcp_srv_send(struct nmdb_srv *srv,
-		unsigned char *buf, size_t bsize)
+int tcp_srv_send(struct nmdb_srv *srv, unsigned char *buf, size_t bsize)
 {
 	ssize_t rv;
 	uint32_t len;
@@ -187,14 +187,14 @@ uint32_t tcp_get_rep(struct nmdb_srv *srv,
 
 #include <stdint.h>
 #include "nmdb.h"
+#include "tcp.h"
 
 int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port)
 {
 	return 0;
 }
 
-int tcp_srv_send(struct nmdb_srv *srv,
-		const unsigned char *buf, size_t bsize)
+int tcp_srv_send(struct nmdb_srv *srv, unsigned char *buf, size_t bsize)
 {
 	return 0;
 }
