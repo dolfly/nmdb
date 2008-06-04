@@ -56,8 +56,7 @@ Quick start
 
 For a very quick start, using a single host, you can do the following::
 
-  # dpmgr create /tmp/nmdb-db   # create the backend database
-  # nmdb -d /tmp/nmdb-db        # start the server
+  # nmdb -d /tmp/nmdb-db        # start the server, use the given database
 
 At this point you have created a database and started the server. An easy and
 simple way to test it is to use the python module, like this::
@@ -137,18 +136,17 @@ Cache size
   important issue if you have performance requirements.
 
   It is only possible to limit the cache size by the maximum number of objects
-  in the cache.
+  in it, and not by byte size.
 
 Backend database
-  You will need to create a backend database using QDBM_'s utilities. This is
-  quite simple, just run ``dpmgr create /path/to/the/database`` and you're
-  done.
+  The backend database engine can be selected at build time; QDBM_ is the
+  default.
 
   If for some reason (hardware failure, for instance) the database becomes
-  corrupt, you should use QDBM's utilities to fix it. It shouldn't happen, so
-  it's a good idea to report it if it does.
+  corrupt, you should use your database utilities to fix it. It shouldn't
+  happen, so it's a good idea to report it if it does.
 
-  QDBM databases are not meant to be shared among processes, so avoid having
+  Most databases are not meant to be shared among processes, so avoid having
   other processes using them.
 
 Database redundancy
@@ -181,9 +179,8 @@ TIPC Port numbers
   everything will act weird.
 
 
-Now that you know all that, starting a server should be quite simple: first
-create the database as explained above, and then run the daemon with
-``nmdb -d /path/to/the/database``.
+Now that you know all that, starting a server should be quite simple: just run
+the daemon with ``nmdb -d /path/to/the/database``.
 
 There are several options you can change at start time. Of course you won't
 remember all that (I know I don't), so check out ``nmdb -h`` to see a complete
@@ -222,16 +219,17 @@ Thread safety
   that needs it.
 
 Available operations
-  You can request the server to do four operations: *set* a value to a key,
+  You can request the server to do five operations: *set* a value to a key,
   *get* the value associated with the given key, *delete* a given key (with
-  its associated value), and perform a *compare-and-swap* of the values
-  associated with the given key.
+  its associated value), perform a *compare-and-swap* of the values associated
+  with the given key, and (atomically) *increment* the value associated with
+  the given key.
 
 Request modes
   For each operation, you will have three different modes available:
 
   - A *normal mode*, which makes the operation impact on the database
-    asynchronously (ie.  the functions return right after the operation was
+    asynchronously (i.e. the functions return right after the operation was
     queued, there is no completion notification).
   - A *synchronous mode* similar to the previous one, but when the functions
     return, the operation has hit the disk.
@@ -310,7 +308,7 @@ as their associated values. Applying this technique is commonly known as
 
 We can use a local dictionary to cache the data, but that would mean we would
 have to write some cache management code to avoid using too much memory, and,
-worse of all, each instance of the code running in the network would have its
+worst of all, each instance of the code running in the network would have its
 own private cache and can't reuse calculations performed by other instances.
 Instead, we can use nmdb to make a cache that is shared among the network.
 

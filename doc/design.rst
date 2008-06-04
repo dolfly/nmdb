@@ -85,7 +85,7 @@ out of sync with the database. You can only do this if you mix *cache_set*
 with *set* or *set_sync*, which is hard to miss, so it's unlikely you will do
 this.
 
-The server assumes you have a brain, and you will not make a mess out of it.
+The server assumes you have a brain, and that you will use it.
 
 
 Request processing
@@ -140,9 +140,8 @@ operation. A specific solution could have been used, and the database backend
 code is isolated enough to allow this to happen in the future if necessity
 arises.
 
-QDBM_ was chosen for the backend, because its speed, although most DBMs would
-have been equally useful regarding features, because the server is not at all
-demanding.
+Several backends are supported (at the moment QDBM_, BDB_, and a null
+backend); the selection is done at build time.
 
 The processing is performed by taking requests from the aforementioned queue,
 and acting upon the database accordingly, which involves calling the backend's
@@ -221,4 +220,5 @@ pattern involves handling lots of different keys.
 .. _TIPC: http://tipc.sf.net
 .. _memcached: http://www.danga.com/memcached/
 .. _QDBM: http://qdbm.sf.net
+.. _BDB: http://www.oracle.com/technology/products/berkeley-db/db/
 
