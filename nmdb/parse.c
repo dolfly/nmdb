@@ -12,11 +12,11 @@
 #include "common.h"
 
 
-static void parse_get(struct req_info *req, int impact_db);
-static void parse_set(struct req_info *req, int impact_db, int async);
-static void parse_del(struct req_info *req, int impact_db, int async);
-static void parse_cas(struct req_info *req, int impact_db);
-static void parse_incr(struct req_info *req, int impact_db);
+static void parse_get(struct req_info *req);
+static void parse_set(struct req_info *req);
+static void parse_del(struct req_info *req);
+static void parse_cas(struct req_info *req);
+static void parse_incr(struct req_info *req);
 static void parse_stats(struct req_info *req);
 
 
@@ -120,13 +120,15 @@ static struct queue_entry *make_queue_entry(struct req_info *req,
 int parse_message(struct req_info *req,
 		const unsigned char *buf, size_t len)
 {
-	uint32_t hdr, ver, id, cmd;
+	uint32_t hdr, ver, id;
+	uint16_t cmd, flags;
 	const unsigned char *payload;
 	size_t psize;
 
 	/* The header is:
 	 * 4 bytes	Version + ID
-	 * 4 bytes	Command
+	 * 2 bytes	Command
+	 * 2 bytes	Flags
 	 * Variable 	Payload
 	 */
 
@@ -138,7 +140,8 @@ int parse_message(struct req_info *req,
 	id = hdr & 0x0FFFFFFF;
 	req->id = id;
 
-	cmd = ntohl(* ((uint32_t *) buf + 1));
+	cmd = ntohs(* ((uint16_t *) buf + 2));
+	flags = ntohs(* ((uint16_t *) buf + 3));
 
 	if (ver != PROTO_VER) {
 		stats.net_version_mismatch++;
@@ -157,45 +160,20 @@ int parse_message(struct req_info *req,
 	 * to calculate it at send time. */
 	req->id = htonl(id);
 	req->cmd = cmd;
+	req->flags = flags;
 	req->payload = payload;
 	req->psize = psize;
 
-	if (cmd == REQ_CACHE_GET) {
-		stats.cache_get++;
-		parse_get(req, 0);
-	} else if (cmd == REQ_CACHE_SET) {
-		stats.cache_set++;
-		parse_set(req, 0, 0);
-	} else if (cmd == REQ_CACHE_DEL) {
-		stats.cache_del++;
-		parse_del(req, 0, 0);
-	} else if (cmd == REQ_GET) {
-		stats.db_get++;
-		parse_get(req, 1);
-	} else if (cmd == REQ_SET_SYNC) {
-		stats.db_set++;
-		parse_set(req, 1, 0);
-	} else if (cmd == REQ_DEL_SYNC) {
-		stats.db_del++;
-		parse_del(req, 1, 0);
-	} else if (cmd == REQ_SET_ASYNC) {
-		stats.db_set++;
-		parse_set(req, 1, 1);
-	} else if (cmd == REQ_DEL_ASYNC) {
-		stats.db_del++;
-		parse_del(req, 1, 1);
-	} else if (cmd == REQ_CACHE_CAS) {
-		stats.cache_cas++;
-		parse_cas(req, 0);
+	if (cmd == REQ_GET) {
+		parse_get(req);
+	} else if (cmd == REQ_SET) {
+		parse_set(req);
+	} else if (cmd == REQ_DEL) {
+		parse_del(req);
 	} else if (cmd == REQ_CAS) {
-		stats.db_cas++;
-		parse_cas(req, 1);
-	} else if (cmd == REQ_CACHE_INCR) {
-		stats.cache_incr++;
-		parse_incr(req, 0);
+		parse_cas(req);
 	} else if (cmd == REQ_INCR) {
-		stats.db_incr++;
-		parse_incr(req, 1);
+		parse_incr(req);
 	} else if (cmd == REQ_STATS) {
 		parse_stats(req);
 	} else {
@@ -207,9 +185,23 @@ int parse_message(struct req_info *req,
 }
 
 
-static void parse_get(struct req_info *req, int impact_db)
+/* Small macros used to handle flags in the parse_*() functions */
+#define FILL_CACHE_FLAG(OP) \
+	do { \
+		cache_only = req->flags & FLAGS_CACHE_ONLY; \
+		if (cache_only) stats.cache_##OP++; \
+		else stats.db_##OP++; \
+	} while (0)
+
+#define FILL_SYNC_FLAG() \
+	do { \
+		sync = req->flags & FLAGS_SYNC; \
+	} while(0)
+
+
+static void parse_get(struct req_info *req)
 {
-	int hit;
+	int hit, cache_only;
 	const unsigned char *key;
 	uint32_t ksize;
 	unsigned char *val = NULL;
@@ -223,15 +215,17 @@ static void parse_get(struct req_info *req, int impact_db)
 		return;
 	}
 
+	FILL_CACHE_FLAG(get);
+
 	key = req->payload + sizeof(uint32_t);
 
 	hit = cache_get(cache_table, key, ksize, &val, &vsize);
 
-	if (!hit && !impact_db) {
+	if (cache_only && !hit) {
 		stats.cache_misses++;
 		req->reply_mini(req, REP_CACHE_MISS);
 		return;
-	} else if (!hit && impact_db) {
+	} else if (!cache_only && !hit) {
 		struct queue_entry *e;
 		e = make_queue_entry(req, REQ_GET, key, ksize, NULL, 0);
 		if (e == NULL) {
@@ -250,10 +244,9 @@ static void parse_get(struct req_info *req, int impact_db)
 	}
 }
 
-
-static void parse_set(struct req_info *req, int impact_db, int async)
+static void parse_set(struct req_info *req)
 {
-	int rv;
+	int rv, cache_only, sync;
 	const unsigned char *key, *val;
 	uint32_t ksize, vsize;
 	const int max = 65536;
@@ -282,6 +275,9 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 		return;
 	}
 
+	FILL_CACHE_FLAG(set);
+	FILL_SYNC_FLAG();
+
 	key = req->payload + sizeof(uint32_t) * 2;
 	val = key + ksize;
 
@@ -291,15 +287,10 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 		return;
 	}
 
-	if (impact_db) {
+	if (!cache_only) {
 		struct queue_entry *e;
-		uint32_t request;
 
-		request = REQ_SET_SYNC;
-		if (async)
-			request = REQ_SET_ASYNC;
-
-		e = make_queue_entry(req, request, key, ksize, val, vsize);
+		e = make_queue_entry(req, REQ_SET, key, ksize, val, vsize);
 		if (e == NULL) {
 			req->reply_err(req, ERR_MEM);
 			return;
@@ -308,16 +299,17 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 		queue_put(op_queue, e);
 		queue_unlock(op_queue);
 
-		if (async) {
-			req->reply_mini(req, REP_OK);
-		} else {
+		if (sync) {
 			/* Signal the DB thread it has work only if it's a
 			 * synchronous operation, asynchronous don't mind
 			 * waiting. It does have a measurable impact on
 			 * performance (2083847usec vs 2804973usec for sets on
 			 * "test2d 100000 10 10"). */
 			queue_signal(op_queue);
+		} else {
+			req->reply_mini(req, REP_OK);
 		}
+
 		return;
 	} else {
 		req->reply_mini(req, REP_OK);
@@ -327,9 +319,9 @@ static void parse_set(struct req_info *req, int impact_db, int async)
 }
 
 
-static void parse_del(struct req_info *req, int impact_db, int async)
+static void parse_del(struct req_info *req)
 {
-	int hit;
+	int hit, cache_only, sync;
 	const unsigned char *key;
 	uint32_t ksize;
 
@@ -341,23 +333,21 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 		return;
 	}
 
+	FILL_CACHE_FLAG(del);
+	FILL_SYNC_FLAG();
+
 	key = req->payload + sizeof(uint32_t);
 
 	hit = cache_del(cache_table, key, ksize);
 
-	if (!impact_db && hit) {
+	if (cache_only && hit) {
 		req->reply_mini(req, REP_OK);
-	} else if (!impact_db && !hit) {
+	} else if (cache_only && !hit) {
 		req->reply_mini(req, REP_NOTIN);
-	} else if (impact_db) {
+	} else if (!cache_only) {
 		struct queue_entry *e;
-		uint32_t request;
 
-		request = REQ_DEL_SYNC;
-		if (async)
-			request = REQ_DEL_ASYNC;
-
-		e = make_queue_entry(req, request, key, ksize, NULL, 0);
+		e = make_queue_entry(req, REQ_DEL, key, ksize, NULL, 0);
 		if (e == NULL) {
 			req->reply_err(req, ERR_MEM);
 			return;
@@ -366,11 +356,11 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 		queue_put(op_queue, e);
 		queue_unlock(op_queue);
 
-		if (async) {
-			req->reply_mini(req, REP_OK);
-		} else {
+		if (sync) {
 			/* See comment on parse_set(). */
 			queue_signal(op_queue);
+		} else {
+			req->reply_mini(req, REP_OK);
 		}
 
 		return;
@@ -379,9 +369,9 @@ static void parse_del(struct req_info *req, int impact_db, int async)
 	return;
 }
 
-static void parse_cas(struct req_info *req, int impact_db)
+static void parse_cas(struct req_info *req)
 {
-	int rv;
+	int rv, cache_only;
 	const unsigned char *key, *oldval, *newval;
 	uint32_t ksize, ovsize, nvsize;
 	const int max = 65536;
@@ -416,6 +406,8 @@ static void parse_cas(struct req_info *req, int impact_db)
 		return;
 	}
 
+	FILL_CACHE_FLAG(cas);
+
 	key = req->payload + sizeof(uint32_t) * 3;
 	oldval = key + ksize;
 	newval = oldval + ovsize;
@@ -429,7 +421,7 @@ static void parse_cas(struct req_info *req, int impact_db)
 		return;
 	}
 
-	if (!impact_db) {
+	if (cache_only) {
 		if (rv == -1) {
 			req->reply_mini(req, REP_NOTIN);
 			return;
@@ -438,7 +430,7 @@ static void parse_cas(struct req_info *req, int impact_db)
 			return;
 		}
 	} else {
-		/* impact_db = 1 and the key is either not in the cache, or
+		/* !cache_only and the key is either not in the cache, or
 		 * cache_cas() was successful. We now need to queue the CAS in
 		 * the database. */
 		struct queue_entry *e;
@@ -508,9 +500,9 @@ static uint64_t htonll(uint64_t x)
 }
 
 
-static void parse_incr(struct req_info *req, int impact_db)
+static void parse_incr(struct req_info *req)
 {
-	int cres;
+	int cres, cache_only;
 	const unsigned char *key;
 	uint32_t ksize;
 	int64_t increment;
@@ -534,6 +526,8 @@ static void parse_incr(struct req_info *req, int impact_db)
 		return;
 	}
 
+	FILL_CACHE_FLAG(incr);
+
 	key = req->payload + sizeof(uint32_t);
 	increment = ntohll( * (int64_t *) (key + ksize) );
 
@@ -547,7 +541,7 @@ static void parse_incr(struct req_info *req, int impact_db)
 		return;
 	}
 
-	if (impact_db) {
+	if (!cache_only) {
 		struct queue_entry *e;
 
 		/* at this point, the cache_incr() was either successful or a

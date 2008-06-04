@@ -41,6 +41,12 @@ get *key*
   Retrieves the value for the given key. If the key is in the cache, it
   returns immediately. If not, it performs a query in the database.
 
+set *key* *value*
+  Stores the *(key, value)* pair in the database.
+
+del *key*
+  Removes the key and its associated value from the database.
+
 cas *key* *oldvalue* *newvalue*
   Do a compare-and-swap, using *oldvalue* to compare with the value stored in
   the database, and replacing it with *newvalue* if they match.
@@ -48,42 +54,19 @@ cas *key* *oldvalue* *newvalue*
 incr *key* *increment*
   Increments the value associated to the given key by the given increment.
 
-set_async *key* *value*
-  Stores the *(key, value)* pair in the database. It does the set in the cache,
-  queues the operation for the database, and returns.
-
-del_async *key*
-  Removes the key and it's associated value from the database. It does the del
-  in the cache, queues the operation for the database, and returns.
-
-set_sync *key* *value*
-  Like *set*, but return only after the database has completed the operation.
-
-del_sync *key*
-  Like *del*, but return only after the database has completed the operation.
-
-cache_get *key*
-  Like *get*, but only affects the cache and not the database. If the key is
-  not in the cache, returns a special value indicating "miss".
-
-cache_set *key* *value*
-  Like *set*, but only affects the cache and not the database.
-
-cache_del *key*
-  Like *del*, but only affects the cache and not the database.
-
-cache_cas *key* *oldvalue* *newvalue*
-  Like *cas*, but only affects the cache and not the database.
-
-cache_incr *key* *increment*
-  Like *incr*, but only affects the cache and not the database.
+Request can have flags that affect their behaviour. The *cache-only* flag
+makes the operation affect only the cache but not the database; and the
+*sync* flag makes the server wait until the request has been performed to
+reply, instead of replying as soon as the request is queued for processing.
+Not all the flags make sense for all the operations, consult the library
+documentation for details.
 
 As you can see, it's possible to operate exclusively with the cache, ignoring
 the database completely. This is very similar to what memcached_ does. Note
 that the downside is that it's possible to mess with the cache, and leave it
-out of sync with the database. You can only do this if you mix *cache_set*
-with *set* or *set_sync*, which is hard to miss, so it's unlikely you will do
-this.
+out of sync with the database. You can only do this if you mix a *cache-only
+set* with a normal *set*, which is hard to miss, so it's unlikely you will do
+this by mistake.
 
 The server assumes you have a brain, and that you will use it.
 

@@ -21,23 +21,32 @@ Requests
 All requests begin with a common header, and then have a request-specific
 payload. They look like this::
 
-  +-----+------------+------------------+--- - - - ---+
-  | Ver | Request ID |   Request code   |   Payload   |
-  +-----+------------+------------------+--- - - - ---+
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |    Version    |                 Request ID                    |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |         Request code          |             Flags             |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  :                            Payload                            :
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 
 Where the fields are:
 
-Ver
-  Version of the protocol. 4 bits. Must be 1.
-Request ID
+Ver (4 bits)
+  Version of the protocol. Must be 1.
+Request ID (28 bits)
   A number identifying the request. A request is uniquely represented by the
   *(ID, sender)* pair, where *sender* is the sender host information. IDs can
-  be reused once a matching response has arrived to the sender. 28 bits.
-Request code
+  be reused once a matching response has arrived to the sender.
+Request code (16 bits)
   The code of the operation to be performed. They're defined in the server
-  source code. 32 bits.
-Payload
-  The payload is specific to the request code. Some requests can carry no
+  source code.
+Flags (16 bits)
+  Flags that affect the request code.
+Payload (variable, can be absent)
+  The payload is specific to the request code. Some requests carry no
   associated payload.
 
 
@@ -51,38 +60,45 @@ completeness.
 ============== ======
      Name       Code
 ============== ======
-REQ_CACHE_GET  0x101
-REQ_CACHE_SET  0x102
-REQ_CACHE_DEL  0x103
-REQ_GET        0x104
-REQ_SET_SYNC   0x105
-REQ_DEL_SYNC   0x106
-REQ_SET_ASYNC  0x107
-REQ_DEL_ASYNC  0x108
-REQ_CACHE_CAS  0x109
-REQ_CAS        0x110
-REQ_CACHE_INCR 0x111
-REQ_INCR       0x112
+REQ_GET        0x101
+REQ_SET        0x102
+REQ_DEL        0x103
+REQ_CAS        0x104
+REQ_INCR       0x105
 ============== ======
+
+
+Flags
+-----
+
+Note that not all requests accept all the flags. Flags that are not relevant
+for a given request will be ignored.
+
+================= ====== =============================================
+      Name         Code                   Relevant to
+================= ====== =============================================
+FLAGS_CACHE_ONLY      1  REQ_GET, REQ_SET, REQ_DEL, REQ_CAS, REQ_INCR
+FLAGS_SYNC            2  REQ_SET, REQ_DEL
+================= ====== =============================================
 
 
 Request payload formats
 -----------------------
 
-REQ_GET and REQ_CACHE_GET
+REQ_GET
   These requests have the same payload format, and only differ on the code.
   First the key size (32 bits), and then the key.
-REQ_SET_* and REQ_CACHE_SET
+REQ_SET
   Like the previous requests, they share the payload format. First the key
   size (32 bits), then the value size (32 bits), then the key, and then the
   value.
-REQ_DEL_* and REQ_CACHE_DEL
+REQ_DEL
   You guessed it, they share the payload format too: first the key size (32
   bits), and then the key.
-REQ_CAS and REQ_CACHE_CAS
+REQ_CAS
   First the key size, then the old value size, then the new value size, and
   then the key, the old value and the new value.
-REQ_INCR and REQ_CACHE_INCR
+REQ_INCR
   First the key size (32 bits), then the key, and then the increment as a
   signed network byte order 64 bit integer.
 

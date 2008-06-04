@@ -51,6 +51,14 @@ typedef struct nmdb_t {
 	struct nmdb_srv *servers;
 } nmdb_t;
 
+
+/* Possible flags, notice it may make no sense to mix them, consult the
+ * documentation before doing weird things. Values should be kept in sync with
+ * the internal net-const.h */
+#define NMDB_CACHE_ONLY 1
+#define NMDB_SYNC 2
+
+
 nmdb_t *nmdb_init();
 int nmdb_add_tipc_server(nmdb_t *db, int port);
 int nmdb_add_tcp_server(nmdb_t *db, const char *addr, int port);

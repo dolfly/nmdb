@@ -244,7 +244,8 @@ static struct nmdb_srv *select_srv(nmdb_t *db,
 
 /* Creates a new buffer for packets */
 static unsigned char *new_packet(struct nmdb_srv *srv, unsigned int request,
-		size_t *bufsize, size_t *payload_offset, ssize_t payload_size)
+		unsigned short flags, size_t *bufsize, size_t *payload_offset,
+		ssize_t payload_size)
 {
 	unsigned char *buf, *p;
 	unsigned int moff = srv_get_msg_offset(srv);
@@ -264,7 +265,8 @@ static unsigned char *new_packet(struct nmdb_srv *srv, unsigned int request,
 	p = buf + moff;
 
 	* (uint32_t *) p = htonl( (PROTO_VER << 28) | ID_CODE );
-	* ((uint32_t *) p + 1) = htonl(request);
+	* ((uint16_t *) p + 2) = htons(request);
+	* ((uint16_t *) p + 3) = htons(flags);
 
 	if (payload_offset != NULL)
 		*payload_offset = moff + 8;
@@ -311,22 +313,18 @@ static size_t append_3v(unsigned char *buf,
 
 static ssize_t do_get(nmdb_t *db,
 		const unsigned char *key, size_t ksize,
-		unsigned char *val, size_t vsize, int impact_db)
+		unsigned char *val, size_t vsize, unsigned short flags)
 {
 	ssize_t rv, t;
 	unsigned char *buf, *p;
 	size_t bufsize, reqsize, payload_offset, psize = 0;
-	uint32_t request, reply;
+	uint32_t reply;
 	struct nmdb_srv *srv;
 
-	if (impact_db) {
-		request = REQ_GET;
-	} else {
-		request = REQ_CACHE_GET;
-	}
+	flags = flags & NMDB_CACHE_ONLY;
 
 	srv = select_srv(db, key, ksize);
-	buf = new_packet(srv, request, &bufsize, &payload_offset, -1);
+	buf = new_packet(srv, REQ_GET, flags, &bufsize, &payload_offset, -1);
 	if (buf == NULL)
 		return -1;
 	reqsize = payload_offset;
@@ -371,39 +369,32 @@ exit:
 ssize_t nmdb_get(nmdb_t *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize)
 {
-	return do_get(db, key, ksize, val, vsize, 1);
+	return do_get(db, key, ksize, val, vsize, 0);
 }
 
 ssize_t nmdb_cache_get(nmdb_t *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize)
 {
-	return do_get(db, key, ksize, val, vsize, 0);
+	return do_get(db, key, ksize, val, vsize, NMDB_CACHE_ONLY);
 }
 
 
 
 static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize,
-		int impact_db, int async)
+		unsigned short flags)
 {
 	ssize_t rv, t;
 	unsigned char *buf;
 	size_t bufsize, payload_offset, reqsize;
-	uint32_t request, reply;
+	uint32_t reply;
 	struct nmdb_srv *srv;
 
-	if (impact_db) {
-		if (async)
-			request = REQ_SET_ASYNC;
-		else
-			request = REQ_SET_SYNC;
-	} else {
-		request = REQ_CACHE_SET;
-	}
+	flags = flags & (NMDB_CACHE_ONLY | NMDB_SYNC);
 
 	srv = select_srv(db, key, ksize);
 
-	buf = new_packet(srv, request, &bufsize, &payload_offset,
+	buf = new_packet(srv, REQ_SET, flags, &bufsize, &payload_offset,
 			4 * 2 + ksize + vsize);
 	if (buf == NULL)
 		return -1;
@@ -435,44 +426,38 @@ exit:
 int nmdb_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	return do_set(db, key, ksize, val, vsize, 1, 1);
+	return do_set(db, key, ksize, val, vsize, 0);
 }
 
 int nmdb_set_sync(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	return do_set(db, key, ksize, val, vsize, 1, 0);
+	return do_set(db, key, ksize, val, vsize, NMDB_SYNC);
 }
 
 int nmdb_cache_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	return do_set(db, key, ksize, val, vsize, 0, 0);
+	return do_set(db, key, ksize, val, vsize, NMDB_CACHE_ONLY);
 }
 
 
 
 static int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
-		int impact_db, int async)
+		unsigned short flags)
 {
 	ssize_t rv, t;
 	unsigned char *buf;
 	size_t bufsize, payload_offset, reqsize;
-	uint32_t request, reply;
+	uint32_t reply;
 	struct nmdb_srv *srv;
 
-	if (impact_db) {
-		if (async)
-			request = REQ_DEL_ASYNC;
-		else
-			request = REQ_DEL_SYNC;
-	} else {
-		request = REQ_CACHE_DEL;
-	}
+	flags = flags & (NMDB_CACHE_ONLY | NMDB_SYNC);
 
 	srv = select_srv(db, key, ksize);
 
-	buf = new_packet(srv, request, &bufsize, &payload_offset, 4 + ksize);
+	buf = new_packet(srv, REQ_DEL, flags, &bufsize, &payload_offset,
+			4 + ksize);
 	if (buf == NULL)
 		return -1;
 	reqsize = payload_offset;
@@ -505,38 +490,36 @@ exit:
 
 int nmdb_del(nmdb_t *db, const unsigned char *key, size_t ksize)
 {
-	return do_del(db, key, ksize, 1, 1);
+	return do_del(db, key, ksize, 0);
 }
 
 int nmdb_del_sync(nmdb_t *db, const unsigned char *key, size_t ksize)
 {
-	return do_del(db, key, ksize, 1, 0);
+	return do_del(db, key, ksize, NMDB_SYNC);
 }
 
 int nmdb_cache_del(nmdb_t *db, const unsigned char *key, size_t ksize)
 {
-	return do_del(db, key, ksize, 0, 0);
+	return do_del(db, key, ksize, NMDB_CACHE_ONLY);
 }
 
 
 static int do_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize,
-		int impact_db)
+		unsigned short flags)
 {
 	ssize_t rv, t;
 	unsigned char *buf;
 	size_t bufsize, payload_offset, reqsize;
-	uint32_t request, reply;
+	uint32_t reply;
 	struct nmdb_srv *srv;
 
-	request = REQ_CACHE_CAS;
-	if (impact_db)
-		request = REQ_CAS;
+	flags = flags & NMDB_CACHE_ONLY;
 
 	srv = select_srv(db, key, ksize);
 
-	buf = new_packet(srv, request, &bufsize, &payload_offset,
+	buf = new_packet(srv, REQ_CAS, flags, &bufsize, &payload_offset,
 			4 * 3 + ksize + ovsize + nvsize);
 	if (buf == NULL)
 		return -1;
@@ -576,14 +559,15 @@ int nmdb_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize)
 {
-	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize, 1);
+	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize, 0);
 }
 
 int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize)
 {
-	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize, 0);
+	return do_cas(db, key, ksize, oldval, ovsize, newval, nvsize,
+			NMDB_CACHE_ONLY);
 }
 
 
@@ -616,24 +600,21 @@ static uint64_t htonll(uint64_t x)
 
 
 static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
-		int64_t increment, int impact_db)
+		int64_t increment, unsigned short flags)
 {
 	ssize_t rv, t;
 	unsigned char *buf;
 	size_t bufsize, payload_offset, reqsize;
-	uint32_t request, reply;
+	uint32_t reply;
 	struct nmdb_srv *srv;
 
-	if (impact_db)
-		request = REQ_INCR;
-	else
-		request = REQ_CACHE_INCR;
+	flags = flags & NMDB_CACHE_ONLY;
 
 	srv = select_srv(db, key, ksize);
 
 	increment = htonll(increment);
 
-	buf = new_packet(srv, request, &bufsize, &payload_offset,
+	buf = new_packet(srv, REQ_INCR, flags, &bufsize, &payload_offset,
 			4 + ksize + sizeof(int64_t));
 	if (buf == NULL)
 		return -1;
@@ -674,13 +655,13 @@ exit:
 int nmdb_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int64_t increment)
 {
-	return do_incr(db, key, ksize, increment, 1);
+	return do_incr(db, key, ksize, increment, 0);
 }
 
 int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int64_t increment)
 {
-	return do_incr(db, key, ksize, increment, 0);
+	return do_incr(db, key, ksize, increment, NMDB_CACHE_ONLY);
 }
 
 
@@ -706,7 +687,7 @@ int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
 
 	for (i = 0; i < db->nservers; i++) {
 		srv = db->servers + i;
-		request = new_packet(srv, REQ_STATS, &reqsize, NULL, 0);
+		request = new_packet(srv, REQ_STATS, 0, &reqsize, NULL, 0);
 
 		t = srv_send(srv, request, reqsize);
 		free(request);

@@ -27,19 +27,16 @@
 #define PROTO_VER 1
 
 /* Network requests */
-#define REQ_CACHE_GET		0x101
-#define REQ_CACHE_SET		0x102
-#define REQ_CACHE_DEL		0x103
-#define REQ_GET			0x104
-#define REQ_SET_SYNC		0x105
-#define REQ_DEL_SYNC		0x106
-#define REQ_SET_ASYNC		0x107
-#define REQ_DEL_ASYNC		0x108
-#define REQ_CACHE_CAS		0x109
-#define REQ_CAS			0x110
-#define REQ_CACHE_INCR		0x111
-#define REQ_INCR		0x112
-#define REQ_STATS		0x113
+#define REQ_GET			0x101
+#define REQ_SET			0x102
+#define REQ_DEL			0x103
+#define REQ_CAS			0x104
+#define REQ_INCR		0x105
+#define REQ_STATS		0x106
+
+/* Possible request flags (which can be applied to the documented requests) */
+#define FLAGS_CACHE_ONLY	1	/* get, set, del, cas, incr */
+#define FLAGS_SYNC		2	/* set, del */
 
 /* Network replies (different namespace from requests) */
 #define REP_ERR			0x800

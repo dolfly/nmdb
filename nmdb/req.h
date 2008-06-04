@@ -25,6 +25,7 @@ struct req_info {
 	/* operation information */
 	uint32_t id;
 	uint32_t cmd;
+	uint16_t flags;
 	const unsigned char *payload;
 	size_t psize;
 

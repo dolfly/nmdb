@@ -100,16 +100,16 @@ static void *db_loop(void *arg)
 static void process_op(db_t *db, struct queue_entry *e)
 {
 	int rv;
-	if (e->operation == REQ_SET_SYNC) {
+	if (e->operation == REQ_SET) {
 		rv = db_set(db, e->key, e->ksize, e->val, e->vsize);
+		if (!(e->req->flags & FLAGS_SYNC))
+			return;
+
 		if (!rv) {
 			e->req->reply_err(e->req, ERR_DB);
 			return;
 		}
 		e->req->reply_mini(e->req, REP_OK);
-
-	} else if (e->operation == REQ_SET_ASYNC) {
-		db_set(db, e->key, e->ksize, e->val, e->vsize);
 
 	} else if (e->operation == REQ_GET) {
 		unsigned char *val;
@@ -129,16 +129,16 @@ static void process_op(db_t *db, struct queue_entry *e)
 		e->req->reply_long(e->req, REP_OK, val, vsize);
 		free(val);
 
-	} else if (e->operation == REQ_DEL_SYNC) {
+	} else if (e->operation == REQ_DEL) {
 		rv = db_del(db, e->key, e->ksize);
+		if (!(e->req->flags & FLAGS_SYNC))
+			return;
+
 		if (rv == 0) {
 			e->req->reply_mini(e->req, REP_NOTIN);
 			return;
 		}
 		e->req->reply_mini(e->req, REP_OK);
-
-	} else if (e->operation == REQ_DEL_ASYNC) {
-		db_del(db, e->key, e->ksize);
 
 	} else if (e->operation == REQ_CAS) {
 		unsigned char *dbval;
