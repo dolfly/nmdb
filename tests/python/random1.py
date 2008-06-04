@@ -27,7 +27,10 @@ def checked(f):
 		try:
 			return f(k, *args, **kwargs)
 		except:
-			print history[k]
+			if k in history:
+				print history[k]
+			else:
+				print 'No history for key', k
 			raise
 	newf.__name__ = f.__name__
 	return newf
