@@ -10,7 +10,7 @@
  * 	... [code] ...
  * 	elapsed = timer_stop();
  * 	...
- * 	printf("Time elapsed: %ul", elapsed);
+ * 	printf("Time elapsed: %lu", elapsed);
  *
  * Nested timers are not supported. The result is in usecs.
  *
