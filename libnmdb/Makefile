@@ -24,7 +24,7 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = libnmdb.o tcp.o tipc.o udp.o sctp.o
+OBJS = libnmdb.o netutils.o tcp.o tipc.o udp.o sctp.o
 
 
 ifneq ($(V), 1)
