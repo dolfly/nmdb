@@ -14,7 +14,9 @@ module Nmdb (
 	nmdbIncr, nmdbCacheIncr,
 ) where
 
+import Foreign
 import Foreign.Ptr
+import Foreign.Storable
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Marshal.Alloc
@@ -158,15 +160,22 @@ nmdbCacheCAS = nmdbGenericCAS llNmdbCacheCAS
 
 -- Incr functions
 foreign import ccall "nmdb.h nmdb_incr" llNmdbIncr ::
-	NmdbPtr -> CString -> Int -> Int -> IO Int
+	NmdbPtr -> CString -> Int -> Int64 -> Ptr Int64 -> IO Int
 foreign import ccall "nmdb.h nmdb_cache_incr" llNmdbCacheIncr ::
-	NmdbPtr -> CString -> Int -> Int -> IO Int
+	NmdbPtr -> CString -> Int -> Int64 -> Ptr Int64 -> IO Int
 
 nmdbGenericIncr llfunc db key increment = do
 	kl <- newCStringLen key
-	r <- llfunc db (fst kl) (snd kl) increment
+	newval <- malloc
+	r <- llfunc db (fst kl) (snd kl) increment newval
+	v <- (peek newval)
 	free (fst kl)
-	return r
+	free newval
+	if r == 2
+	  then do
+		return $ Just v
+	  else
+		return Nothing
 
 nmdbIncr = nmdbGenericIncr llNmdbIncr
 nmdbCacheIncr = nmdbGenericIncr llNmdbCacheIncr

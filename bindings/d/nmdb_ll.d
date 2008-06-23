@@ -65,7 +65,7 @@ extern (C) int nmdb_cache_cas(nmdb_t *db, ubyte *key, size_t ksize,
 		ubyte *oldval, size_t ovsize, ubyte *newval, size_t nvsize);
 
 extern (C) int nmdb_incr(nmdb_t *db, ubyte *key, size_t ksize,
-		long increment);
+		long increment, long *newval);
 extern (C) int nmdb_cache_incr(nmdb_t *db, ubyte *key, size_t ksize,
-		long increment);
+		long increment, long *newval);
 

@@ -13,6 +13,7 @@
 #include "net-const.h"
 #include "req.h"
 #include "log.h"
+#include "netutils.h"
 
 
 static void *db_loop(void *arg);
@@ -216,7 +217,9 @@ static void process_op(db_t *db, struct queue_entry *e)
 			return;
 		}
 
-		e->req->reply_mini(e->req, REP_OK);
+		intval = htonll(intval);
+		e->req->reply_long(e->req, REP_OK,
+				(unsigned char *) &intval, sizeof(intval));
 
 		free(dbval);
 

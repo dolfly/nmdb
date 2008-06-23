@@ -157,7 +157,9 @@ REP_CACHE_HIT
 REP_OK
   Depending on the request, this reply does or doesn't have an associated
   value. For *REQ_SET**, *REQ_DEL** and *REQ_CAS** there is no payload. But
-  for *REQ_GET* the first 32 bits are the value size, and then the value.
+  for *REQ_GET* the first 32 bits are the value size, and then the value; and
+  for *REQ_INCR* the first 32 bits are the payload size, and then the
+  post-increment value as a signed 64-bit integer in network byte order.
 
 
 Reply error codes

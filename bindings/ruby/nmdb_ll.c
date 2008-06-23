@@ -202,23 +202,24 @@ static VALUE m_cache_cas(VALUE self, VALUE key, VALUE oldval, VALUE newval) {
 }
 
 
-/* Del functions */
+/* Increment functions */
 typedef int (*incrf_t) (nmdb_t *db, const unsigned char *k, size_t ks,
-		int64_t increment);
+		int64_t increment, int64_t *newval);
 VALUE generic_incr(VALUE self, VALUE key, VALUE increment, incrf_t incr_func)
 {
 	ssize_t rv;
 	unsigned char *k;
 	size_t ksize;
-	int64_t cincr;
+	int64_t cincr, newval;
 	nmdb_t *db;
 	Data_Get_Struct(self, nmdb_t, db);
 
 	k = rb_str2cstr(key, &ksize);
 	cincr = rb_num2ll(increment);
 
-	rv = incr_func(db, k, ksize, cincr);
-	return INT2NUM(rv);
+	rv = incr_func(db, k, ksize, cincr, &newval);
+
+	return rb_ary_new3(2, INT2NUM(rv), rb_ll2inum(newval));
 }
 
 VALUE m_incr(VALUE self, VALUE key, VALUE increment) {

@@ -142,8 +142,11 @@
 
 ; *-incr functions
 (define (priv-incr func key increment)
-  (letn ( (keylen (length key)) )
-    (func NMDB key keylen increment) ) )
+  (letn ( (keylen (length key))
+	  (newval 0)
+	)
+    (set 'ret (func NMDB key keylen increment (address newval)) )
+    (list ret newval) ) )
 
 (define (db-incr key increment) (priv-incr nmdb_incr key increment))
 (define (cache-incr key increment) (priv-incr nmdb_cache_incr key increment))

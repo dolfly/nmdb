@@ -6,6 +6,7 @@
 	;; C functions
 	(extern
 	  (type _nmdb_t (pointer void) "void *")
+	  (type long* (pointer long) "int64_t *")
 
 	  (macro _nmdb_init::_nmdb_t () "nmdb_init")
 	  (macro _nmdb_free::int (::_nmdb_t) "nmdb_free")
@@ -54,10 +55,10 @@
 		 "nmdb_cache_cas")
 
 	  (macro _nmdb_incr::int
-		 (::_nmdb_t ::string ::uint ::long)
+		 (::_nmdb_t ::string ::uint ::long ::long*)
 		 "nmdb_incr")
 	  (macro _nmdb_cache_incr::int
-		 (::_nmdb_t ::string ::uint ::long)
+		 (::_nmdb_t ::string ::uint ::long ::long*)
 		 "nmdb_cache_incr")
 
 	  )
@@ -147,7 +148,9 @@
 
 ;; incr functions
 (define (nmdb-generic-incr func db key increment)
-  (func db key (string-length key) increment ) )
+  (define newval (make-long* 1))
+  (define res (func db key (string-length key) increment newval) )
+  (list res (long*-ref newval 0) ) )
 (define (nmdb-incr db key increment)
   (nmdb-generic-incr _nmdb_incr db key increment))
 (define (nmdb-cache-incr db key increment)

@@ -189,6 +189,7 @@ static PyObject *db_cache_incr(nmdbobject *db, PyObject *args)
 	int ksize;
 	int rv;
 	long long int increment;
+	int64_t newval;
 
 	if (!PyArg_ParseTuple(args, "s#L:cache_incr", &key, &ksize,
 				&increment)) {
@@ -196,10 +197,10 @@ static PyObject *db_cache_incr(nmdbobject *db, PyObject *args)
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	rv = nmdb_cache_incr(db->db, key, ksize, increment);
+	rv = nmdb_cache_incr(db->db, key, ksize, increment, &newval);
 	Py_END_ALLOW_THREADS
 
-	return PyLong_FromLong(rv);
+	return Py_BuildValue("LL", rv, newval);
 }
 
 
@@ -303,16 +304,17 @@ static PyObject *db_incr(nmdbobject *db, PyObject *args)
 	int ksize;
 	int rv;
 	long long int increment;
+	int64_t newval;
 
 	if (!PyArg_ParseTuple(args, "s#L:incr", &key, &ksize, &increment)) {
 		return NULL;
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	rv = nmdb_incr(db->db, key, ksize, increment);
+	rv = nmdb_incr(db->db, key, ksize, increment, &newval);
 	Py_END_ALLOW_THREADS
 
-	return PyLong_FromLong(rv);
+	return Py_BuildValue("LL", rv, newval);
 }
 
 

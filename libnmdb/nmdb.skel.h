@@ -90,9 +90,9 @@ int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *newval, size_t nvsize);
 
 int nmdb_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
-		                int64_t increment);
+		int64_t increment, int64_t *newval);
 int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
-		                int64_t increment);
+                int64_t increment, int64_t *newval);
 
 int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
 		unsigned int *nservers, unsigned int *nstats);

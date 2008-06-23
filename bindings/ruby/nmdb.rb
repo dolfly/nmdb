@@ -142,14 +142,14 @@ class GenericDB
 		if @automarshal then
 			key = Marshal.dump(key)
 		end
-		r = gfunc.call(key, increment)
+		r, v = gfunc.call(key, increment)
 		if r == 0 then
 			# key not in the database
 			return nil
 		elsif r == 1 or r < 0 then
 			raise NetworkException
 		else
-			return r
+			return v
 		end
 	end
 

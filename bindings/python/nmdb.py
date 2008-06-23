@@ -172,10 +172,10 @@ class GenericDB (object):
 		key by the given increment."""
 		if self.autopickle:
 			key = str(hash(key))
-		r = incrf(key, increment)
+		r, v = incrf(key, increment)
 		if r == 2:
 			# success
-			return 2
+			return v
 		elif r == 1:
 			# no match, because the value didn't have the right
 			# format

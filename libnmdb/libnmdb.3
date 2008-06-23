@@ -47,10 +47,10 @@ libnmdb - Library for interacting with a nmdb server
 .sp
 .BI "int nmdb_incr(nmdb_t *" db ","
 .BI "             const unsigned char *" key " , size_t " ksize ","
-.BI "             int64_t " increment ");"
+.BI "             int64_t " increment ", int64_t *" newval ");"
 .BI "int nmdb_cache_incr(nmdb_t *" db ","
 .BI "             const unsigned char *" key " , size_t " ksize ","
-.BI "             int64_t " increment ");"
+.BI "             int64_t " increment ", int64_t *" newval ");"
 .fi
 .SH DESCRIPTION
 
@@ -157,7 +157,10 @@ bit number to add to the value (it can be negative), and returns 2 if the
 increment was performed, 1 if the value was not in the appropriate format, 0
 if the key was not in the database/cache, or < 0 on failure.
 The value MUST be a NULL-terminated string with only a number in base 10 in it
-(i.e. it must be parseable by strtoll(3)).
+(i.e. it must be parseable by strtoll(3)). If the number was incremented
+correctly and the
+.I newval
+parameter is not NULL, it will be set to the resulted value.
 
 .SH SEE ALSO
 

@@ -363,12 +363,15 @@ exit:
  *   -1 if the value was not in the cache.
  *   -2 if the value was not null terminated.
  *   -3 if there was a memory error.
+ *
+ * The new value will be set in the newval parameter if the increment was
+ * successful.
  */
 int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
-		int64_t increment)
+		int64_t increment, int64_t *newval)
 {
 	uint32_t h = 0;
-	unsigned char *val, *newval;
+	unsigned char *val;
 	int64_t intval;
 	size_t vsize;
 	struct cache_chain *c;
@@ -397,15 +400,16 @@ int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
 	 * and strlen('18446744073709551615') = 20, so if the value is smaller
 	 * than 24 (just in case) we create a new buffer. */
 	if (vsize < 24) {
-		newval = malloc(24);
-		if (newval == NULL)
+		unsigned char *nv = malloc(24);
+		if (nv == NULL)
 			return -3;
 		free(val);
-		e->val = val = newval;
+		e->val = val = nv;
 		e->vsize = vsize = 24;
 	}
 
 	snprintf((char *) val, vsize, "%23lld", (long long int) intval);
+	*newval = intval;
 
 	return 1;
 }

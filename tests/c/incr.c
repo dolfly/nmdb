@@ -18,6 +18,7 @@ int main(int argc, char **argv)
 	char *initval = "0";
 	size_t ksize;
 	long long int increment;
+	int64_t newval;
 	nmdb_t *db;
 
 	if (argc != 3) {
@@ -49,16 +50,17 @@ int main(int argc, char **argv)
 
 	timer_start();
 	for (i = 0; i < times; i++) {
-		r = NINCR(db, (unsigned char *) key, ksize, increment);
+		r = NINCR(db, (unsigned char *) key, ksize, increment,
+				&newval);
 		if (r != 2) {
-			printf("result: %d\n", r);
+			printf("result: %d %lld\n", r, (long long) newval);
 			perror("Incr");
 			return 1;
 		}
 	}
 	s_elapsed = timer_stop();
 
-	printf("%lu\n", s_elapsed);
+	printf("%lu %lld\n", s_elapsed, (long long) newval);
 
 	nmdb_free(db);
 

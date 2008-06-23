@@ -455,7 +455,7 @@ static void parse_incr(struct req_info *req)
 	int cres, cache_only;
 	const unsigned char *key;
 	uint32_t ksize;
-	int64_t increment;
+	int64_t increment, newval;
 	const int max = 65536;
 
 	/* Request format:
@@ -481,7 +481,7 @@ static void parse_incr(struct req_info *req)
 	key = req->payload + sizeof(uint32_t);
 	increment = ntohll( * (int64_t *) (key + ksize) );
 
-	cres = cache_incr(cache_table, key, ksize, increment);
+	cres = cache_incr(cache_table, key, ksize, increment, &newval);
 	if (cres == -3) {
 		req->reply_err(req, ERR_MEM);
 		return;
@@ -510,10 +510,14 @@ static void parse_incr(struct req_info *req)
 
 		queue_signal(op_queue);
 	} else {
-		if (cres == -1)
+		if (cres == -1) {
 			req->reply_mini(req, REP_NOTIN);
-		else
-			req->reply_mini(req, REP_OK);
+		} else {
+			newval = htonll(newval);
+			req->reply_long(req, REP_OK,
+					(unsigned char *) &newval,
+					sizeof(newval));
+		}
 	}
 
 	return;

@@ -573,11 +573,11 @@ int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 
 
 static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
-		int64_t increment, unsigned short flags)
+		int64_t increment, int64_t *newval, unsigned short flags)
 {
 	ssize_t rv, t;
-	unsigned char *buf;
-	size_t bufsize, payload_offset, reqsize;
+	unsigned char *buf, *payload;
+	size_t bufsize, payload_offset, reqsize, psize;
 	uint32_t reply;
 	struct nmdb_srv *srv;
 
@@ -602,11 +602,17 @@ static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		goto exit;
 	}
 
-	reply = get_rep(srv, buf, bufsize, NULL, NULL);
+	psize = sizeof(int64_t);
+	reply = get_rep(srv, buf, bufsize, &payload, &psize);
 
 	switch (reply) {
 		case REP_OK:
 			rv = 2;
+			if (newval != NULL && psize == sizeof(int64_t) + 4) {
+				/* skip the 4 bytes of length */
+				*newval = *((int64_t *) (payload + 4));
+				*newval = ntohll(*newval);
+			}
 			break;
 		case REP_NOMATCH:
 			rv = 1;
@@ -626,15 +632,15 @@ exit:
 }
 
 int nmdb_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
-		int64_t increment)
+		int64_t increment, int64_t *newval)
 {
-	return do_incr(db, key, ksize, increment, 0);
+	return do_incr(db, key, ksize, increment, newval, 0);
 }
 
 int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
-		int64_t increment)
+		int64_t increment, int64_t *newval)
 {
-	return do_incr(db, key, ksize, increment, NMDB_CACHE_ONLY);
+	return do_incr(db, key, ksize, increment, newval, NMDB_CACHE_ONLY);
 }
 
 
