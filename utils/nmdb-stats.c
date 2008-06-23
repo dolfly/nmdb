@@ -41,7 +41,7 @@ static uint64_t ntohll(uint64_t x)
 
 #define MAX_STATS_SIZE 64
 
-void help(void)
+static void help(void)
 {
 	printf("Use: nmdb-stats [ tipc port | [tcp|udp|sctp] host port ]\n");
 }
