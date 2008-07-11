@@ -112,27 +112,19 @@ static uint32_t hash(const unsigned char *key, const size_t ksize)
 static struct cache_entry *find_in_chain(struct cache_chain *c,
 		const unsigned char *key, size_t ksize)
 {
-	int found = 0;
 	struct cache_entry *e;
 
-	e = c->first;
-	while (e != NULL) {
+	for (e = c->first; e != NULL; e = e->next) {
 		if (ksize != e->ksize) {
-			e = e->next;
 			continue;
 		}
 		if (memcmp(key, e->key, ksize) == 0) {
-			found = 1;
 			break;
 		}
-
-		e = e->next;
 	}
 
-	if (found)
-		return e;
-	return NULL;
-
+	/* e will be either the found chain or NULL */
+	return e;
 }
 
 /* Gets the matching value for the given key.  Returns 0 if no match was
