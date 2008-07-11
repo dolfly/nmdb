@@ -1,6 +1,6 @@
 
 nmdb - A multiprotocol network database manager
-Alberto Bertogli (albertito@gmail.com)
+Alberto Bertogli (albertito@blitiri.com.ar)
 ---------------------------------------------------
 
 nmdb is a network database that can use different protocols to communicate
@@ -26,13 +26,13 @@ directory. It is recommended that you read the User Guide (doc/guide.rst, or
 the online version) to learn how to setup and use nmdb.
 
 For additional documentation and resources, go to the project's website at
-http://auriga.wearlab.de/~alb/nmdb.
+http://blitiri.com.ar/p/nmdb.
 
 
 Where to report bugs
 --------------------
 
 If you want to report bugs, or have any questions or comments, just let me
-know at albertito@gmail.com.
+know at albertito@blitiri.com.ar.
 
 

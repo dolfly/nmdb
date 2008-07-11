@@ -3,7 +3,7 @@ Version: 0.1
 License: PublicDomain
 License-file: LICENSE
 Author: Alberto Bertogli
-Homepage: http://auriga.wearlab.de/~alb/nmdb/
+Homepage: http://blitiri.com.ar/p/nmdb/
 Category: Database
 Build-Depends: base
 Exposed-modules: Nmdb

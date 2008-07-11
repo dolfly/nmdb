@@ -1,6 +1,6 @@
 
 -- Haskell bindings for the nmdb C library
--- Alberto Bertogli (albertito@gmail.com)
+-- Alberto Bertogli (albertito@blitiri.com.ar)
 
 module Nmdb (
 	NmdbStruct,

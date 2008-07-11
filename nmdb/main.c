@@ -42,7 +42,7 @@ static void help(void) {
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -h		show this help\n"
 	  "\n"
-	  "Please report bugs to Alberto Bertogli (albertito@gmail.com)\n"
+	  "Please report bugs to Alberto Bertogli (albertito@blitiri.com.ar)\n"
 	  "\n";
 	printf("%s", h);
 }

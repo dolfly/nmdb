@@ -2,7 +2,7 @@
 ================
 nmdb User Guide
 ================
-:Author: Alberto Bertogli (albertito@gmail.com)
+:Author: Alberto Bertogli (albertito@blitiri.com.ar)
 
 
 Introduction
@@ -408,10 +408,10 @@ If you are in doubt about something, you can consult the manpages or the
 documentation inside the *doc/* directory.
 
 If you want to report bugs, or have any questions or comments, just let me
-know at albertito@gmail.com.
+know at albertito@blitiri.com.ar.
 
 
-.. _nmdb: http://auriga.wearlab.de/~alb/nmdb/
+.. _nmdb: http://blitiri.com.ar/p/nmdb/
 .. _libevent: http://www.monkey.org/~provos/libevent/
 .. _TIPC: http://tipc.sf.net
 .. _memcached: http://www.danga.com/memcached/

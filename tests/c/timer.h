@@ -1,7 +1,7 @@
 
 /*
  * A simple timer for measuring delays.
- * Alberto Bertogli (albertito@gmail.com) - September/2006
+ * Alberto Bertogli (albertito@blitiri.com.ar) - September/2006
  *
  * Use it like this:
  * 	unsigned long elapsed;

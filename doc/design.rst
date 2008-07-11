@@ -2,7 +2,7 @@
 =================================================
 nmdb - A multiprotocol network database manager
 =================================================
-:Author: Alberto Bertogli (albertito@gmail.com)
+:Author: Alberto Bertogli (albertito@blitiri.com.ar)
 
 
 Introduction
@@ -198,7 +198,7 @@ Nonetheless, it's advisable to use a large cache size, specially if the usage
 pattern involves handling lots of different keys.
 
 
-.. _nmdb: http://auriga.wearlab.de/~alb/nmdb/
+.. _nmdb: http://blitiri.com.ar/p/nmdb/
 .. _libevent: http://www.monkey.org/~provos/libevent/
 .. _TIPC: http://tipc.sf.net
 .. _memcached: http://www.danga.com/memcached/

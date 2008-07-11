@@ -2,7 +2,7 @@
 ======================
 nmdb_ Network Protocol
 ======================
-:Author: Alberto Bertogli (albertito@gmail.com)
+:Author: Alberto Bertogli (albertito@blitiri.com.ar)
 
 **NOTE:** All integers are in network byte order.
 
@@ -177,5 +177,5 @@ ERR_DB       0x106  Database error
 ============ ====== =========================
 
 
-.. _nmdb: http://auriga.wearlab.de/~alb/nmdb/
+.. _nmdb: http://blitiri.com.ar/p/nmdb/
 

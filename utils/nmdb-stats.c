@@ -1,7 +1,7 @@
 
 /* nmdb-stats.c
  * Queries the stats of a nmdb server.
- * Alberto Bertogli (albertito@gmail.com)
+ * Alberto Bertogli (albertito@blitiri.com.ar)
  */
 
 #include <stdio.h>		/* printf() */

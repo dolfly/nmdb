@@ -9,8 +9,8 @@ setup(
 	name = 'nmdb',
 	description = "libnmdb bindings",
 	author = "Alberto Bertogli",
-	author_email = "albertito@gmail.com",
-	url = "http://auriga.wearlab.de/~alb/nmdb",
+	author_email = "albertito@blitiri.com.ar",
+	url = "http://blitiri.com.ar/p/nmdb",
 	py_modules = ['nmdb'],
 	ext_modules = [nmdb_ll]
 )

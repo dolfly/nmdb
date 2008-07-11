@@ -1,7 +1,7 @@
 
 /*
  * Python bindings for libnmdb
- * Alberto Bertogli (albertito@gmail.com)
+ * Alberto Bertogli (albertito@blitiri.com.ar)
  *
  * This is the low-level module, used by the python one to construct
  * friendlier objects.
