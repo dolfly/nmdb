@@ -10,10 +10,13 @@
 # *~
 /nmdb/nmdb
 /utils/nmdb-stats
-tests/c/*-*-cache
-tests/c/*-*-normal
-tests/c/*-*-sync
+/tests/c/*-*-cache
+/tests/c/*-*-normal
+/tests/c/*-*-sync
 /libnmdb/nmdb.h
 /libnmdb/libnmdb.pc
 /tags
 /bindings/python/build
+/tests/perf/out
+/tests/perf/ag-data
+/tests/perf/graph
