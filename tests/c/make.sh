@@ -43,7 +43,10 @@ for p in TIPC TCP UDP SCTP MULT; do
 			if [ "$CLEAN" == 1 ]; then
 				rm -f $t-$OP
 			else
-				cc -lnmdb $ALLCF $TF -o $t-$OP $t.c
+				# build only if src is newer than the binary
+				if [ "$t.c" -nt "$t-$OP" ]; then
+					cc -lnmdb $ALLCF $TF -o $t-$OP $t.c
+				fi
 			fi
 		done
 	done
