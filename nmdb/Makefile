@@ -20,7 +20,11 @@ ALL_CFLAGS += -g
 endif
 
 ifdef PROFILE
-ALL_CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
+ALL_CFLAGS += -g -pg -ftest-coverage -fprofile-generate
+endif
+
+ifdef PROFILE_USE
+ALL_CFLAGS += -fprofile-use
 endif
 
 
@@ -102,10 +106,15 @@ install-man:
 
 install: install-bin install-man
 
-clean:
+clean: clean-build clean-prof
+
+clean-build:
 	rm -f $(OBJS) nmdb
+
+clean-prof:
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
 
-.PHONY: default all clean install-bin install-man install
-
+.PHONY: default all \
+	install-bin install-man install \
+	clean-build clean-prof clean
 
