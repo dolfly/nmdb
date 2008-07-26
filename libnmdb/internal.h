@@ -10,7 +10,7 @@
 #define SCTP_CONN 4
 
 /* The ID code for requests is hardcoded for now, until asynchronous requests
- *  * are implemented. */
+ * are implemented. */
 #define ID_CODE 1
 
 /* For a given buffer, how much into it should the generic library code write

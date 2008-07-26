@@ -17,7 +17,7 @@
 #include "netutils.h"
 
 
-/* Compare two servers by their connection identifiers. It is used internally
+/* Compares two servers by their connection identifiers. It is used internally
  * to keep the server array sorted with qsort(). */
 int compare_servers(const void *s1, const void *s2)
 {
@@ -73,8 +73,8 @@ int compare_servers(const void *s1, const void *s2)
 }
 
 
-/* Like recv() but either fails, or returns a complete read; if we return less
- * than count is because EOF was reached */
+/* Like recv(), but either fails, or returns a complete read; if we return
+ * less than count is because EOF was reached. */
 ssize_t srecv(int fd, unsigned char *buf, size_t count, int flags)
 {
 	ssize_t rv, c;
@@ -96,7 +96,7 @@ ssize_t srecv(int fd, unsigned char *buf, size_t count, int flags)
 	return count;
 }
 
-/* Like srecv() but for send() */
+/* Like srecv(), but for send(). */
 ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags)
 {
 	ssize_t rv, c;
@@ -118,8 +118,7 @@ ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags)
 	return count;
 }
 
-/* Create a nmdb_t and set the first server to port. If port is < 0, the
- * standard port is used. */
+/* Creates a nmdb_t. */
 nmdb_t *nmdb_init(void)
 {
 	nmdb_t *db;
@@ -148,8 +147,7 @@ int nmdb_free(nmdb_t *db)
 	return 1;
 }
 
-/* Used internally to send a buffer to the given server. Calls the appropriate
- * sender according to the server protocol. */
+/* Sends a buffer to the given server. */
 static int srv_send(struct nmdb_srv *srv,
 		unsigned char *buf, size_t bsize)
 {
@@ -170,6 +168,7 @@ static int srv_send(struct nmdb_srv *srv,
 	}
 }
 
+/* Gets a reply from the given server. */
 static uint32_t get_rep(struct nmdb_srv *srv,
 		unsigned char *buf, size_t bsize,
 		unsigned char **payload, size_t *psize)
@@ -191,6 +190,9 @@ static uint32_t get_rep(struct nmdb_srv *srv,
 	}
 }
 
+/* When a packet arrives, the message it contains begins on a
+ * protocol-dependant offset. This functions returns the offset to use when
+ * sending/receiving messages for the given server. */
 static int srv_get_msg_offset(struct nmdb_srv *srv)
 {
 	if (srv == NULL)
@@ -230,7 +232,7 @@ static uint32_t checksum(const unsigned char *buf, size_t bsize)
 	return ~sum;
 }
 
-/* Used internally to select which server to use for the given key. */
+/* Selects which server to use for the given key. */
 static struct nmdb_srv *select_srv(nmdb_t *db,
 		const unsigned char *key, size_t ksize)
 {
@@ -243,7 +245,7 @@ static struct nmdb_srv *select_srv(nmdb_t *db,
 	return &(db->servers[n]);
 }
 
-/* Creates a new buffer for packets */
+/* Creates a new buffer for packets. */
 static unsigned char *new_packet(struct nmdb_srv *srv, unsigned int request,
 		unsigned short flags, size_t *bufsize, size_t *payload_offset,
 		ssize_t payload_size)
@@ -257,6 +259,7 @@ static unsigned char *new_packet(struct nmdb_srv *srv, unsigned int request,
 		 * over the max packet (64kb) */
 		*bufsize = 68 * 1024;
 	} else {
+		/* 8 is the size of the common header */
 		*bufsize = moff + 8 + payload_size;
 	}
 	buf = malloc(*bufsize);
@@ -277,7 +280,7 @@ static unsigned char *new_packet(struct nmdb_srv *srv, unsigned int request,
 
 /* Functions to append different numbers of (value, len) to the given buffer;
  * it's not worth the trouble of making this generic because we never go past
- * three and they're quite trivial */
+ * three and they're quite trivial. */
 static size_t append_1v(unsigned char *buf,
 		const unsigned char *datum, size_t dsize)
 {
@@ -312,6 +315,7 @@ static size_t append_3v(unsigned char *buf,
 }
 
 
+/* Functions to perform a get. */
 static ssize_t do_get(nmdb_t *db,
 		const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize, unsigned short flags)
@@ -380,7 +384,7 @@ ssize_t nmdb_cache_get(nmdb_t *db, const unsigned char *key, size_t ksize,
 }
 
 
-
+/* Functions to perform a set. */
 static int do_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize,
 		unsigned short flags)
@@ -443,7 +447,7 @@ int nmdb_cache_set(nmdb_t *db, const unsigned char *key, size_t ksize,
 }
 
 
-
+/* Functions to perform a del. */
 static int do_del(nmdb_t *db, const unsigned char *key, size_t ksize,
 		unsigned short flags)
 {
@@ -505,6 +509,7 @@ int nmdb_cache_del(nmdb_t *db, const unsigned char *key, size_t ksize)
 }
 
 
+/* Functions to perform a CAS. */
 static int do_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize,
@@ -572,6 +577,7 @@ int nmdb_cache_cas(nmdb_t *db, const unsigned char *key, size_t ksize,
 }
 
 
+/* Functions to perform an atomic increment. */
 static int do_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 		int64_t increment, int64_t *newval, unsigned short flags)
 {
@@ -644,6 +650,21 @@ int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 }
 
 
+/* Request servers' statistics, return the aggregated results in buf, with the
+ * number of servers in nservers and the number of stats per server in nstats.
+ * Used in the "nmdb-stats" utility, matches the server version.
+ *
+ * Return:
+ *   1 if success
+ *  -1 if there was an error in the server
+ *  -2 if there was a network error
+ *  -3 if the buffer was too small
+ *  -4 if the server replies were of different size (indicates different
+ *     server versions, not supported at the time)
+ *
+ * TODO: The API could be improved by having nstats be provided by the caller,
+ * and making sure its used by all servers. Also buf should be an uint64_t
+ * *buf to make the typing more explicit. */
 int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
 		unsigned int *nservers, unsigned int *nstats)
 {
