@@ -27,7 +27,8 @@ struct queue *op_queue;
 static void help(void) {
 	char h[] = \
 	  "nmdb [options]\n"
-	  "  -d dbpath	database path ('database', must be created with dpmgr)\n"
+	  "\n"
+	  "  -d dbpath	database path ('database' by default)\n"
 	  "  -l lower	TIPC lower port number (10)\n"
 	  "  -L upper	TIPC upper port number (= lower)\n"
 	  "  -t port	TCP listening port (26010)\n"
@@ -37,7 +38,7 @@ static void help(void) {
 	  "  -s port	SCTP listening port (26010)\n"
 	  "  -S addr	SCTP listening address (all local addresses)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
-	  "  -o fname	log to the given file (defaults to stdout).\n"
+	  "  -o fname	log to the given file (stdout).\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -h		show this help\n"

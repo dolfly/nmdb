@@ -6,7 +6,7 @@ nmdb [-d dbpath] [-l lower] [-L upper]
   [-t tcpport] [-T tcpaddr]
   [-u udpport] [-U udpaddr]
   [-s sctpport] [-S sctpaddr]
-  [-c nobj] [-f] [-p] [-h]
+  [-c nobj] [-o fname] [-f] [-p] [-h]
 
 .SH DESCRIPTION
 
@@ -63,6 +63,10 @@ Sets the maximum number of objects the cache will held, in thousands. Note
 that the size of the memory used by the cache layer depends on the size of the
 object exclusively. It defaults to 128, so the default cache size has space to
 hold 128 thousand objects.
+.TP
+.B "-o fname"
+Enable logging into the given file name. By default, output the debugging
+information to stdout.
 .TP
 .B "-f"
 Stay in the foreground, don't fork. Useful for debugging. The default is to

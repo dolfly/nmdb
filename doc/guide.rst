@@ -42,10 +42,12 @@ Compiling and installing
 ------------------------
 
 There are three components of the nmdb tarball: the server in the *nmdb/*
-directory, the C library in *libnmdb/*, and the Python module in *python/*.
+directory, the C library in *libnmdb/*, and the Python module in
+*bindings/python/*.
 
 To install the server and the C library, run ``make install; ldconfig``. To
-install the Python module, run ``make python_install``.
+install the Python module, run ``make python_install`` after installing the C
+library.
 
 If you want to disable support for some protocol (i.e. TIPC), you can do so by
 running ``make ENABLE_TIPC=0 install``.
@@ -71,7 +73,7 @@ simple way to test it is to use the python module, like this::
   >>> db['x'] = 1               # store some data
   >>> db[(1, 2)] = (2, 6)
   >>> print db['x'], db[(1, 2)] # retreive the values
-  1 (3, 5)
+  1 (2, 6)
   >>> del db['x']               # delete from the database
 
 Everything should have worked as shown, and you are now ready to use some
