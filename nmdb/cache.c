@@ -106,9 +106,8 @@ static uint32_t hash(const unsigned char *key, const size_t ksize)
 }
 
 
-/* Looks given key up in the chain. Returns NULL if not found, or a pointer to
- * the cache entry if it's found. The chain can be empty. Used in cache_get()
- * and cache_set(). */
+/* Looks up the given key in the chain. Returns NULL if not found, or a
+ * pointer to the cache entry if it is. The chain can be empty. */
 static struct cache_entry *find_in_chain(struct cache_chain *c,
 		const unsigned char *key, size_t ksize)
 {
@@ -127,19 +126,31 @@ static struct cache_entry *find_in_chain(struct cache_chain *c,
 	return e;
 }
 
+
+/* Looks up the given key in the cache. Returns NULL if not found, or a
+ * pointer to the cache entry if it is. Useful to avoid doing the calculation
+ * in the open when the cache chain will not be needed. */
+static struct cache_entry *find_in_cache(struct cache *cd,
+		const unsigned char *key, size_t ksize)
+{
+	uint32_t h;
+	struct cache_chain *c;
+
+	h = hash(key, ksize) % cd->hashlen;
+	c = cd->table + h;
+
+	return find_in_chain(c, key, ksize);
+}
+
+
 /* Gets the matching value for the given key.  Returns 0 if no match was
  * found, or 1 otherwise. */
 int cache_get(struct cache *cd, const unsigned char *key, size_t ksize,
 		unsigned char **val, size_t *vsize)
 {
-	uint32_t h = 0;
-	struct cache_chain *c;
 	struct cache_entry *e;
 
-	h = hash(key, ksize) % cd->hashlen;
-	c = cd->table + h;
-
-	e = find_in_chain(c, key, ksize);
+	e = find_in_cache(cd, key, ksize);
 
 	if (e == NULL) {
 		*val = NULL;
@@ -306,15 +317,10 @@ int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 		const unsigned char *newval, size_t nvsize)
 {
 	int rv = 1;
-	uint32_t h = 0;
-	struct cache_chain *c;
 	struct cache_entry *e;
 	unsigned char *buf;
 
-	h = hash(key, ksize) % cd->hashlen;
-	c = cd->table + h;
-
-	e = find_in_chain(c, key, ksize);
+	e = find_in_cache(cd, key, ksize);
 
 	if (e == NULL) {
 		rv = -1;
@@ -362,17 +368,12 @@ exit:
 int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
 		int64_t increment, int64_t *newval)
 {
-	uint32_t h = 0;
 	unsigned char *val;
 	int64_t intval;
 	size_t vsize;
-	struct cache_chain *c;
 	struct cache_entry *e;
 
-	h = hash(key, ksize) % cd->hashlen;
-	c = cd->table + h;
-
-	e = find_in_chain(c, key, ksize);
+	e = find_in_cache(cd, key, ksize);
 
 	if (e == NULL)
 		return -1;
