@@ -11,3 +11,10 @@ upgrading.
    bindings have been upgraded, so you only need to worry if you used the C
    library.
 
+0.21 -> 0.22
+ * The protocol has been changed in an incompatible way. Do not use the
+   0.21 library with the new server.
+ * nmdb_incr() and nmdb_cache_incr() now have a new "newval" parameter. If the
+   increment was successful, newval will be set to the resulted value.
+   All bindings have been upgraded to reflect this change.
+
