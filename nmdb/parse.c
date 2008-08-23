@@ -102,13 +102,46 @@ static struct queue_entry *make_queue_long_entry(struct req_info *req,
 	return e;
 }
 
-/* Like make_queue_long_entry() but with few parameters because most actions
- * do not need newval. */
-static struct queue_entry *make_queue_entry(struct req_info *req,
-		uint32_t operation, const unsigned char *key, size_t ksize,
+
+/* Creates a new queue entry and puts it into the queue. Returns 1 if success,
+ * 0 if memory error. */
+static int put_in_queue_long(struct req_info *req,
+		uint32_t operation, int sync,
+		const unsigned char *key, size_t ksize,
+		const unsigned char *val, size_t vsize,
+		const unsigned char *newval, size_t nvsize)
+{
+	struct queue_entry *e;
+
+	e = make_queue_long_entry(req, operation, key, ksize, val, vsize,
+			newval, nvsize);
+	if (e == NULL) {
+		return 0;
+	}
+	queue_lock(op_queue);
+	queue_put(op_queue, e);
+	queue_unlock(op_queue);
+
+	if (sync) {
+		/* Signal the DB thread it has work only if it's a
+		 * synchronous operation, asynchronous don't mind
+		 * waiting. It does have a measurable impact on
+		 * performance (2083847usec vs 2804973usec for sets on
+		 * "test2d 100000 10 10"). */
+		queue_signal(op_queue);
+	}
+
+	return 1;
+}
+
+/* Like put_in_queue_long() but with few parameters because most actions do
+ * not need newval. */
+static int put_in_queue(struct req_info *req,
+		uint32_t operation, int sync,
+		const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	return make_queue_long_entry(req, operation, key, ksize, val, vsize,
+	return put_in_queue_long(req, operation, sync, key, ksize, val, vsize,
 			NULL, 0);
 }
 
@@ -201,7 +234,7 @@ int parse_message(struct req_info *req,
 
 static void parse_get(struct req_info *req)
 {
-	int hit, cache_only;
+	int hit, cache_only, rv;
 	const unsigned char *key;
 	uint32_t ksize;
 	unsigned char *val = NULL;
@@ -226,16 +259,11 @@ static void parse_get(struct req_info *req)
 		req->reply_mini(req, REP_CACHE_MISS);
 		return;
 	} else if (!cache_only && !hit) {
-		struct queue_entry *e;
-		e = make_queue_entry(req, REQ_GET, key, ksize, NULL, 0);
-		if (e == NULL) {
+		rv = put_in_queue(req, REQ_GET, 1, key, ksize, NULL, 0);
+		if (!rv) {
 			req->reply_err(req, ERR_MEM);
 			return;
 		}
-		queue_lock(op_queue);
-		queue_put(op_queue, e);
-		queue_unlock(op_queue);
-		queue_signal(op_queue);
 		return;
 	} else {
 		stats.cache_hits++;
@@ -288,25 +316,13 @@ static void parse_set(struct req_info *req)
 	}
 
 	if (!cache_only) {
-		struct queue_entry *e;
-
-		e = make_queue_entry(req, REQ_SET, key, ksize, val, vsize);
-		if (e == NULL) {
+		rv = put_in_queue(req, REQ_SET, sync, key, ksize, val, vsize);
+		if (!rv) {
 			req->reply_err(req, ERR_MEM);
 			return;
 		}
-		queue_lock(op_queue);
-		queue_put(op_queue, e);
-		queue_unlock(op_queue);
 
-		if (sync) {
-			/* Signal the DB thread it has work only if it's a
-			 * synchronous operation, asynchronous don't mind
-			 * waiting. It does have a measurable impact on
-			 * performance (2083847usec vs 2804973usec for sets on
-			 * "test2d 100000 10 10"). */
-			queue_signal(op_queue);
-		} else {
+		if (!sync) {
 			req->reply_mini(req, REP_OK);
 		}
 
@@ -321,7 +337,7 @@ static void parse_set(struct req_info *req)
 
 static void parse_del(struct req_info *req)
 {
-	int hit, cache_only, sync;
+	int hit, cache_only, sync, rv;
 	const unsigned char *key;
 	uint32_t ksize;
 
@@ -345,21 +361,13 @@ static void parse_del(struct req_info *req)
 	} else if (cache_only && !hit) {
 		req->reply_mini(req, REP_NOTIN);
 	} else if (!cache_only) {
-		struct queue_entry *e;
-
-		e = make_queue_entry(req, REQ_DEL, key, ksize, NULL, 0);
-		if (e == NULL) {
+		rv = put_in_queue(req, REQ_DEL, sync, key, ksize, NULL, 0);
+		if (!rv) {
 			req->reply_err(req, ERR_MEM);
 			return;
 		}
-		queue_lock(op_queue);
-		queue_put(op_queue, e);
-		queue_unlock(op_queue);
 
-		if (sync) {
-			/* See comment on parse_set(). */
-			queue_signal(op_queue);
-		} else {
+		if (!sync) {
 			req->reply_mini(req, REP_OK);
 		}
 
@@ -433,26 +441,19 @@ static void parse_cas(struct req_info *req)
 		/* !cache_only and the key is either not in the cache, or
 		 * cache_cas() was successful. We now need to queue the CAS in
 		 * the database. */
-		struct queue_entry *e;
-
-		e = make_queue_long_entry(req, REQ_CAS, key, ksize,
+		rv = put_in_queue_long(req, REQ_CAS, 1, key, ksize,
 				oldval, ovsize, newval, nvsize);
-		if (e == NULL) {
+		if (!rv) {
 			req->reply_err(req, ERR_MEM);
 			return;
 		}
-
-		queue_lock(op_queue);
-		queue_put(op_queue, e);
-		queue_unlock(op_queue);
-		queue_signal(op_queue);
 	}
 	return;
 }
 
 static void parse_incr(struct req_info *req)
 {
-	int cres, cache_only;
+	int cres, cache_only, rv;
 	const unsigned char *key;
 	uint32_t ksize;
 	int64_t increment, newval;
@@ -492,23 +493,15 @@ static void parse_incr(struct req_info *req)
 	}
 
 	if (!cache_only) {
-		struct queue_entry *e;
-
 		/* at this point, the cache_incr() was either successful or a
 		 * miss, but we don't really care */
-
-		e = make_queue_entry(req, REQ_INCR, key, ksize,
+		rv = put_in_queue(req, REQ_INCR, 1, key, ksize,
 				(unsigned char *) &increment,
 				sizeof(increment));
-		if (e == NULL) {
+		if (!rv) {
 			req->reply_err(req, ERR_MEM);
 			return;
 		}
-		queue_lock(op_queue);
-		queue_put(op_queue, e);
-		queue_unlock(op_queue);
-
-		queue_signal(op_queue);
 	} else {
 		if (cres == -1) {
 			req->reply_mini(req, REP_NOTIN);
