@@ -30,9 +30,9 @@ struct req_info {
 	size_t psize;
 
 	/* operations */
-	void (*reply_mini)(struct req_info *req, uint32_t reply);
-	void (*reply_err)(struct req_info *req, uint32_t reply);
-	void (*reply_long)(struct req_info *req, uint32_t reply,
+	void (*reply_mini)(const struct req_info *req, uint32_t reply);
+	void (*reply_err)(const struct req_info *req, uint32_t reply);
+	void (*reply_long)(const struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize);
 };
 

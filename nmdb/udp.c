@@ -63,7 +63,7 @@ static int rep_send(const struct req_info *req, const unsigned char *buf,
 
 
 /* Send small replies, consisting in only a value. */
-static void udp_reply_mini(struct req_info *req, uint32_t reply)
+static void udp_reply_mini(const struct req_info *req, uint32_t reply)
 {
 	/* We use a mini buffer to speedup the small replies, to avoid the
 	 * malloc() overhead. */
@@ -83,12 +83,12 @@ static void udp_reply_mini(struct req_info *req, uint32_t reply)
 /* The udp_reply_* functions are used by the db code to send the network
  * replies. */
 
-static void udp_reply_err(struct req_info *req, uint32_t reply)
+static void udp_reply_err(const struct req_info *req, uint32_t reply)
 {
 	rep_send_error(req, reply);
 }
 
-static void udp_reply_long(struct req_info *req, uint32_t reply,
+static void udp_reply_long(const struct req_info *req, uint32_t reply,
 			unsigned char *val, size_t vsize)
 {
 	if (val == NULL) {

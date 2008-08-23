@@ -12,7 +12,7 @@
 #include "netutils.h"
 
 
-static void parse_get(struct req_info *req);
+static void parse_get(const struct req_info *req);
 static void parse_set(struct req_info *req);
 static void parse_del(struct req_info *req);
 static void parse_cas(struct req_info *req);
@@ -23,7 +23,7 @@ static void parse_stats(struct req_info *req);
 /* Create a queue entry structure based on the parameters passed. Memory
  * allocated here will be free()'d in queue_entry_free(). It's not the
  * cleanest way, but the alternatives are even messier. */
-static struct queue_entry *make_queue_long_entry(struct req_info *req,
+static struct queue_entry *make_queue_long_entry(const struct req_info *req,
 		uint32_t operation, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize,
 		const unsigned char *newval, size_t nvsize)
@@ -105,7 +105,7 @@ static struct queue_entry *make_queue_long_entry(struct req_info *req,
 
 /* Creates a new queue entry and puts it into the queue. Returns 1 if success,
  * 0 if memory error. */
-static int put_in_queue_long(struct req_info *req,
+static int put_in_queue_long(const struct req_info *req,
 		uint32_t operation, int sync,
 		const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize,
@@ -136,7 +136,7 @@ static int put_in_queue_long(struct req_info *req,
 
 /* Like put_in_queue_long() but with few parameters because most actions do
  * not need newval. */
-static int put_in_queue(struct req_info *req,
+static int put_in_queue(const struct req_info *req,
 		uint32_t operation, int sync,
 		const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
@@ -232,7 +232,7 @@ int parse_message(struct req_info *req,
 	} while(0)
 
 
-static void parse_get(struct req_info *req)
+static void parse_get(const struct req_info *req)
 {
 	int hit, cache_only, rv;
 	const unsigned char *key;
