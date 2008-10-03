@@ -31,7 +31,7 @@ Prerequisites
 Before you install nmdb, you will need the following software:
 
 - libevent_, a library for fast event handling.
-- QDBM_, for the database backend.
+- Either QDBM_, BDB_ or tokyocabinet_ for the database backend.
 
 And, if you're going to use TIPC_:
 
@@ -417,8 +417,10 @@ know at albertito@blitiri.com.ar.
 .. _libevent: http://www.monkey.org/~provos/libevent/
 .. _TIPC: http://tipc.sf.net
 .. _memcached: http://www.danga.com/memcached/
-.. _QDBM: http://qdbm.sf.net
 .. _`Linux kernel`: http://kernel.org
 .. _tetrations: http://en.wikipedia.org/wiki/Tetration
+.. _QDBM: http://qdbm.sf.net
+.. _BDB: http://www.oracle.com/technology/products/berkeley-db/db/
+.. _tokyocabinet: http://tokyocabinet.sf.net/index.html
 
 

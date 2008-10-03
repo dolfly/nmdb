@@ -123,8 +123,8 @@ operation. A specific solution could have been used, and the database backend
 code is isolated enough to allow this to happen in the future if necessity
 arises.
 
-Several backends are supported (at the moment QDBM_, BDB_, and a null
-backend); the selection is done at build time.
+Several backends are supported (at the moment QDBM_, BDB_, tokyocabinet_ and a
+null backend); the selection is done at build time.
 
 The processing is performed by taking requests from the aforementioned queue,
 and acting upon the database accordingly, which involves calling the backend's
@@ -204,4 +204,5 @@ pattern involves handling lots of different keys.
 .. _memcached: http://www.danga.com/memcached/
 .. _QDBM: http://qdbm.sf.net
 .. _BDB: http://www.oracle.com/technology/products/berkeley-db/db/
+.. _tokyocabinet: http://tokyocabinet.sf.net/index.html
 
