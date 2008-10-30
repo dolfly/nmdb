@@ -7,6 +7,6 @@ Name: libnmdb
 Description: Library for interacting with a nmdb server
 URL: http://blitiri.com.ar/p/nmdb/
 Version: 0.22
-Libs: -L${libdir} -lqdbm
+Libs: -L${libdir} -lnmdb
 Cflags: -I${includedir}
 
