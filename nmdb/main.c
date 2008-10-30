@@ -69,7 +69,7 @@ static int load_settings(int argc, char **argv)
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
 
-	while ((c = getopt(argc, argv, "d:l:L:t:T:u:U:c:o:fph?")) != -1) {
+	while ((c = getopt(argc, argv, "d:l:L:t:T:u:U:s:S:c:o:fph?")) != -1) {
 		switch(c) {
 		case 'd':
 			free(settings.dbname);
