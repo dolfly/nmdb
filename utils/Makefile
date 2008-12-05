@@ -27,10 +27,11 @@ default: all
 all: nmdb-stats
 
 nmdb-stats: nmdb-stats.o
-	$(NICE_CC) $(ALL_CFLAGS) -lnmdb nmdb-stats.o -o nmdb-stats
+	$(NICE_CC) $(ALL_CFLAGS) -L../libnmdb -lnmdb nmdb-stats.o \
+		-o nmdb-stats
 
 .c.o:
-	$(NICE_CC) $(ALL_CFLAGS) -c $< -o $@
+	$(NICE_CC) $(ALL_CFLAGS) -I../libnmdb -c $< -o $@
 
 install-bin: nmdb-stats
 	install -d $(PREFIX)/bin
