@@ -136,7 +136,7 @@ static PyObject *db_cache_get(nmdbobject *db, PyObject *args)
 		/* Miss, handled in the high-level module. */
 		r = PyLong_FromLong(-1);
 	} else {
-		r = PyString_FromStringAndSize(val, rv);
+		r = PyString_FromStringAndSize((char *) val, rv);
 	}
 
 	free(val);
@@ -252,7 +252,7 @@ static PyObject *db_get(nmdbobject *db, PyObject *args)
 		/* Miss, handled in the high-level module. */
 		r = PyLong_FromLong(-1);
 	} else {
-		r = PyString_FromStringAndSize(val, rv);
+		r = PyString_FromStringAndSize((char *) val, rv);
 	}
 
 	free(val);
