@@ -78,7 +78,7 @@ class GenericDB (object):
 	def generic_get(self, getf, key):
 		"d[k]   Returns the value associated with the key k."
 		if self.autopickle:
-			key = str(hash(key))
+			key = cPickle.dumps(key, protocol = -1)
 		try:
 			r = getf(key)
 		except:
@@ -101,7 +101,7 @@ class GenericDB (object):
 	def generic_set(self, setf, key, val):
 		"d[k] = v   Associates the value v to the key k."
 		if self.autopickle:
-			key = str(hash(key))
+			key = cPickle.dumps(key, protocol = -1)
 			val = cPickle.dumps(val, protocol = -1)
 		r = setf(key, val)
 		if r <= 0:
@@ -121,7 +121,7 @@ class GenericDB (object):
 	def generic_delete(self, delf, key):
 		"del d[k]   Deletes the key k."
 		if self.autopickle:
-			key = str(hash(key))
+			key = cPickle.dumps(key, protocol = -1)
 		r = delf(key)
 		if r < 0:
 			raise NetworkError
@@ -142,7 +142,7 @@ class GenericDB (object):
 	def generic_cas(self, casf, key, oldval, newval):
 		"Perform a compare-and-swap."
 		if self.autopickle:
-			key = str(hash(key))
+			key = cPickle.dumps(key, protocol = -1)
 			oldval = cPickle.dumps(oldval, protocol = -1)
 			newval = cPickle.dumps(newval, protocol = -1)
 		r = casf(key, oldval, newval)
@@ -171,7 +171,7 @@ class GenericDB (object):
 		"""Atomically increment the value associated with the given
 		key by the given increment."""
 		if self.autopickle:
-			key = str(hash(key))
+			key = cPickle.dumps(key, protocol = -1)
 		r, v = incrf(key, increment)
 		if r == 2:
 			# success
