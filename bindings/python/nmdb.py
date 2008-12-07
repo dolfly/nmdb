@@ -40,7 +40,11 @@ Traceback (most recent call last):
 KeyError
 """
 
-import cPickle
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
+
 import nmdb_ll
 
 
@@ -78,7 +82,7 @@ class GenericDB (object):
 	def generic_get(self, getf, key):
 		"d[k]   Returns the value associated with the key k."
 		if self.autopickle:
-			key = cPickle.dumps(key, protocol = -1)
+			key = pickle.dumps(key, protocol = -1)
 		try:
 			r = getf(key)
 		except:
@@ -88,7 +92,7 @@ class GenericDB (object):
 			# so we know it's a miss.
 			raise KeyError
 		if self.autopickle:
-			r = cPickle.loads(r)
+			r = pickle.loads(r)
 		return r
 
 	def cache_get(self, key):
@@ -101,8 +105,8 @@ class GenericDB (object):
 	def generic_set(self, setf, key, val):
 		"d[k] = v   Associates the value v to the key k."
 		if self.autopickle:
-			key = cPickle.dumps(key, protocol = -1)
-			val = cPickle.dumps(val, protocol = -1)
+			key = pickle.dumps(key, protocol = -1)
+			val = pickle.dumps(val, protocol = -1)
 		r = setf(key, val)
 		if r <= 0:
 			raise NetworkError
@@ -121,7 +125,7 @@ class GenericDB (object):
 	def generic_delete(self, delf, key):
 		"del d[k]   Deletes the key k."
 		if self.autopickle:
-			key = cPickle.dumps(key, protocol = -1)
+			key = pickle.dumps(key, protocol = -1)
 		r = delf(key)
 		if r < 0:
 			raise NetworkError
@@ -142,9 +146,9 @@ class GenericDB (object):
 	def generic_cas(self, casf, key, oldval, newval):
 		"Perform a compare-and-swap."
 		if self.autopickle:
-			key = cPickle.dumps(key, protocol = -1)
-			oldval = cPickle.dumps(oldval, protocol = -1)
-			newval = cPickle.dumps(newval, protocol = -1)
+			key = pickle.dumps(key, protocol = -1)
+			oldval = pickle.dumps(oldval, protocol = -1)
+			newval = pickle.dumps(newval, protocol = -1)
 		r = casf(key, oldval, newval)
 		if r == 2:
 			# success
@@ -171,7 +175,7 @@ class GenericDB (object):
 		"""Atomically increment the value associated with the given
 		key by the given increment."""
 		if self.autopickle:
-			key = cPickle.dumps(key, protocol = -1)
+			key = pickle.dumps(key, protocol = -1)
 		r, v = incrf(key, increment)
 		if r == 2:
 			# success
