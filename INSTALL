@@ -60,7 +60,8 @@ Bindings
 
 To compile the Python bindings, you need to have the library already
 installed. Use "make python_install" at the top level directory to build and
-install the modules. The module will be named "nmdb".
+install the modules. The module will be named "nmdb". The same goes for Python
+3, use "make python3_install".
 
 The other bindings do not have a properly defined install procedure, and
 you'll need knowledge of the language to install them.
