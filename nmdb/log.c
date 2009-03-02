@@ -7,6 +7,7 @@
 #include <unistd.h> 		/* write() */
 #include <string.h>		/* strcmp(), strerror() */
 #include <errno.h>		/* errno */
+#include <time.h>		/* time() and friends */
 
 #include "log.h"
 #include "common.h"
