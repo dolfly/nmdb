@@ -7,6 +7,11 @@ TIMES=5000	# Times parameter used for the tests
 
 set -e
 
+if [ "$1" == "" ]; then
+	COMPARE="*"
+else
+	COMPARE="$@"
+fi
 
 # aggregate the results prepending the version, but we need a table because
 # gnuplot doesn't like strings as values
@@ -18,7 +23,7 @@ rm -f ../ag-data/*
 declare -a COMMITS
 N=0
 
-for i in *; do
+for i in $COMPARE; do
 	COMMITS[$N]=$i
 	for f in 2-tipc-cache.out 3-tipc-cache.out; do
 		while read L; do
