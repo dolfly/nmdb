@@ -1,7 +1,7 @@
 .TH libnmdb 3 "11/Sep/2006"
 .SH NAME
 libnmdb - Library for interacting with a nmdb server
-.SH SYNOPSYS
+.SH SYNOPSIS
 .nf
 .B #include <nmdb.h>
 .sp
@@ -141,8 +141,8 @@ variant is used), or -2 on failure.
 
 .BR nmdb_del ()
 is used to remove a given key (and it's associated value). The normal variant
-returns 1 if it was queued successfuly, or < 0 on failure. The cache and
-synchronous variant return 1 if the key was removed successfuly, 0 if the key
+returns 1 if it was queued successfully, or < 0 on failure. The cache and
+synchronous variant return 1 if the key was removed successfully, 0 if the key
 was not in the database/cache, or < 0 on failure.
 
 .BR nmdb_cas ()
