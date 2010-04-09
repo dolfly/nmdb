@@ -215,7 +215,7 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 			c->first = new;
 			c->last = new;
 			c->len = 1;
-		} else if (c->len <= cd->chainlen) {
+		} else if (c->len < cd->chainlen) {
 			/* slots are still available, put the entry first */
 			new->next = c->first;
 			c->first->prev = new;
