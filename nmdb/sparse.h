@@ -5,11 +5,14 @@
 #define _SPARSE_H
 
 #ifdef __CHECKER__
-# define __acquires(x) __attribute__((exact_context(x,0,1)))
-# define __releases(x) __attribute__((exact_context(x,1,0)))
-# define __with_lock_acquired(x) __attribute__((exact_context(x,1,1)))
-# define __acquire(x) __context__(x,1,0)
-# define __release(x) __context__(x,-1,1)
+# define __acquires(x) __attribute__((context(x,0,1)))
+# define __releases(x) __attribute__((context(x,1,0)))
+# define __acquire(x) __context__(x,1)
+# define __release(x) __context__(x,-1)
+/* __with_lock_acquired() is at the moment just documentation, but we keep it
+ * in case sparse gets the ability to match exact contexts again */
+//# define __with_lock_acquired(x) __attribute__((exact_context(x,1,1)))
+# define __with_lock_acquired(x)
 #else
 # define __acquires(x)
 # define __releases(x)
