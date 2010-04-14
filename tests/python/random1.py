@@ -1,31 +1,37 @@
 #!/usr/bin/env python
 
+"""
+This is a stress test for the nmdb server, library, and Python (2 and 3)
+bindings.
+
+It creates a number of keys, and then operates randomly on them, verifying
+that everything is working as expected.
+
+It can operate with the database or only with the cache.
+
+You can run it with both Python 2 and 3.
+"""
+
 import sys
 import nmdb
 from random import randint, choice
 
 
 class Mismatch (Exception):
+	"Mismatch between local and remote database"
 	pass
 
 
-# network db
-ndb = nmdb.DB()
-ndb.add_tipc_server()
-ndb.add_tcp_server('localhost')
-ndb.add_udp_server('localhost')
 
-# local db
-ldb = {}
-
-# history of each key
+# History of each key, global because we use it from several places for
+# debugging purposes
 history = {}
 
-# check decorator
 def checked(f):
-	def newf(k, *args, **kwargs):
+	"Prints the history of the key when an operation fails"
+	def newf(self, k, *args, **kwargs):
 		try:
-			return f(k, *args, **kwargs)
+			return f(self, k, *args, **kwargs)
 		except:
 			if k in history:
 				print(history[k])
@@ -36,63 +42,135 @@ def checked(f):
 	return newf
 
 
-# operations
-@checked
-def set(k, v):
-	ndb[k] = v
-	ldb[k] = v
-	if k not in history:
-		history[k] = []
-	history[k].append((set, k, v))
+class Tester:
+	"Common code for tester classes"
+	def __init__(self):
+		# nmdb connection
+		self.ndb = self.connect()
+		self.ndb.add_tipc_server()
+		self.ndb.add_tcp_server('localhost')
+		self.ndb.add_udp_server('localhost')
 
-@checked
-def get(k):
-	n = ndb[k]
-	l = ldb[k]
-	if l != n:
-		raise Mismatch((n, l))
-	history[k].append((get, k))
-	return n
+		# local database
+		self.ldb = {}
 
-@checked
-def delete(k):
-	del ndb[k]
-	del ldb[k]
-	history[k].append((delete, k))
+	def connect(self):
+		"Connects to an nmdb instance"
+		raise NotImplementedError
 
-@checked
-def cas(k, ov, nv):
-	prel = ldb[k]
-	pren = ndb[k]
-	n = ndb.cas(k, ov, nv)
-	if k not in ldb:
-		l = 0
-	elif ldb[k] == ov:
-		ldb[k] = nv
-		l = 2
-	else:
-		l = 1
-	if n != l:
-		print(k, ldb[k], ndb[k])
-		print(prel, pren)
-		print(history[k])
-		raise Mismatch((n, l))
-	history[k].append((cas, k, ov, nv))
-	return n
+	@checked
+	def set(self, k, v):
+		self.ndb[k] = v
+		self.ldb[k] = v
+		if k not in history:
+			history[k] = []
+		history[k].append((self.set, k, v))
+
+	def check(self):
+		"Checks all entries in ldb match the ones in ndb"
+		n = l = None
+		for k in self.ldb.keys():
+			# get() verifies they match so we do not need to care
+			# about that
+			self.get(k)
+
+	def get(self, k):
+		raise NotImplementedError
+
+	def delete(self, k):
+		raise NotImplementedError
+
+	def cas(self, k, ov, nv):
+		raise NotImplementedError
+
+	def find_missing(self):
+		raise NotImplementedError
 
 
-def check():
-	for k in ldb.keys():
+class DBTester (Tester):
+	"Tester for db mode"
+
+	def connect(self):
+		return nmdb.DB()
+
+	@checked
+	def get(self, k):
+		n = self.ndb[k]
+		l = self.ldb[k]
+		if l != n:
+			raise Mismatch((n, l))
+		history[k].append((self.get, k))
+		return n
+
+	@checked
+	def delete(self, k):
+		del self.ndb[k]
+		del self.ldb[k]
+		history[k].append((self.delete, k))
+
+	@checked
+	def cas(self, k, ov, nv):
+		prel = self.ldb[k]
+		pren = self.ndb[k]
+		n = self.ndb.cas(k, ov, nv)
+		if k not in self.ldb:
+			l = 0
+		elif self.ldb[k] == ov:
+			self.ldb[k] = nv
+			l = 2
+		else:
+			l = 1
+		if n != l:
+			print(k, self.ldb[k], self.ndb[k])
+			print(prel, pren)
+			print(history[k])
+			raise Mismatch((n, l))
+		history[k].append((self.cas, k, ov, nv))
+		return n
+
+	def find_missing(self):
+		# we just check we can get them all
+		for k in self.ldb.keys():
+			self.get(k)
+		return 0
+
+
+class CacheTester (Tester):
+	"Tester for cache mode"
+
+	def connect(self):
+		return nmdb.Cache()
+
+	@checked
+	def get(self, k):
 		try:
-			n = ndb[k]
-			l = ldb[k]
-		except:
-			print(history[k])
-			raise Mismatch((n, l))
+			n = self.ndb[k]
+		except KeyError:
+			del self.ldb[k]
+			del history[k]
+			return False
 
-		if n != n:
-			print(history[k])
+		l = self.ldb[k]
+		if l != n:
 			raise Mismatch((n, l))
+		history[k].append((self.get, k))
+		return True
+
+	@checked
+	def delete(self, k):
+		del self.ldb[k]
+		try:
+			del self.ndb[k]
+		except KeyError:
+			pass
+		history[k].append((self.delete, k))
+
+	def find_missing(self):
+		misses = 0
+		for k in list(self.ldb.keys()):
+			if not self.get(k):
+				misses += 1
+		return misses
 
 
 # Use integers because the normal random() generates floating point numbers,
@@ -101,7 +179,7 @@ def getrand():
 	return randint(0, 1000000000000000000)
 
 
-if __name__ == '__main__':
+def main():
 	# We want to always use a generator range(), which has different names
 	# in Python 2 and 3, so isolate the code from this hack
 	if sys.version_info[0] == 2:
@@ -109,49 +187,73 @@ if __name__ == '__main__':
 	else:
 		gen_range = range
 
-	if len(sys.argv) < 2:
-		print('Use: random1.py number_of_keys [key_prefix]')
+	if len(sys.argv) < 3:
+		print('Use: random1.py db|cache number_of_keys [key_prefix]')
 		sys.exit(1)
 
-	nkeys = int(sys.argv[1])
-	if len(sys.argv) > 2:
-		key_prefix = sys.argv[2]
+	mode = sys.argv[1]
+	if mode not in ('db', 'cache'):
+		print('Error: mode must be either db or cache')
+		sys.exit(1)
+
+	nkeys = int(sys.argv[2])
+	if len(sys.argv) >= 4:
+		key_prefix = sys.argv[3]
 	else:
 		key_prefix = ''
+
+	if mode == 'db':
+		tester = DBTester()
+	else:
+		tester = CacheTester()
 
 	# fill all the keys
 	print('populate')
 	for i in gen_range(nkeys):
-		set(key_prefix + str(getrand()), getrand())
+		tester.set(key_prefix + str(getrand()), getrand())
 
-	lkeys = list(ldb.keys())
+	print('missing', tester.find_missing())
+
+	lkeys = list(tester.ldb.keys())
 
 	# operate on them a bit
 	print('random operations')
-	operations = ('set', 'delete', 'cas0', 'cas1')
-	for i in gen_range(nkeys // 2):
+
+	if mode == 'db':
+		operations = ('set', 'delete', 'cas0', 'cas1')
+	else:
+		operations = ('set', 'get', 'delete')
+
+	for i in gen_range(min(len(lkeys), nkeys // 2)):
 		op = choice(operations)
 		k = choice(lkeys)
 		if op == 'set':
-			set(k, getrand())
+			tester.set(k, getrand())
+		elif op == 'get':
+			tester.get(k)
 		elif op == 'delete':
-			delete(k)
+			tester.delete(k)
 			lkeys.remove(k)
 		elif op == 'cas0':
 			# unsucessful cas
-			cas(k, -1, -1)
+			tester.cas(k, -1, -1)
 		elif op == 'cas1':
 			# successful cas
-			cas(k, ldb[k], getrand())
+			tester.cas(k, tester.ldb[k], getrand())
+
+	print('missing', tester.find_missing())
 
 	print('check')
-	check()
+	tester.check()
 
 	print('delete')
 	for k in lkeys:
-		delete(k)
+		tester.delete(k)
 
 	print('check')
-	check()
+	tester.check()
 
+
+if __name__ == '__main__':
+	main()
 
