@@ -164,6 +164,98 @@ int cache_get(struct cache *cd, const unsigned char *key, size_t ksize,
 	return 1;
 }
 
+/* Creates a new cache entry, with the given key and value */
+static struct cache_entry *new_entry(const unsigned char *key, size_t ksize,
+		const unsigned char *val, size_t vsize)
+{
+	struct cache_entry *new;
+
+	new = malloc(sizeof(struct cache_entry));
+	if (new == NULL) {
+		return NULL;
+	}
+
+	new->ksize = ksize;
+	new->vsize = vsize;
+
+	new->key = malloc(ksize);
+	if (new->key == NULL) {
+		free(new);
+		return NULL;
+	}
+	memcpy(new->key, key, ksize);
+
+	new->val = malloc(vsize);
+	if (new->val == NULL) {
+		free(new->key);
+		free(new);
+		return NULL;
+	}
+	memcpy(new->val, val, vsize);
+	new->prev = NULL;
+	new->next = NULL;
+
+	return new;
+}
+
+static int insert_in_full_chain(struct cache_chain *c,
+		const unsigned char *key, size_t ksize,
+		const unsigned char *val, size_t vsize)
+{
+	/* To insert in a full chain, we evict the last entry and place the
+	 * new one at the beginning.
+	 *
+	 * As an optimization, we avoid re-allocating the entry by reusing the
+	 * last one, and when possible we reuse its key and value as well. */
+	struct cache_entry *e = c->last;
+
+	if (ksize == e->ksize) {
+		memcpy(e->key, key, ksize);
+	} else {
+		free(e->key);
+		e->key = malloc(ksize);
+		if (e->key == NULL) {
+			goto error;
+		}
+		e->ksize = ksize;
+		memcpy(e->key, key, ksize);
+	}
+
+	if (vsize == e->vsize) {
+		memcpy(e->val, val, vsize);
+	} else {
+		free(e->val);
+		e->val = malloc(vsize);
+		if (e->val == NULL) {
+			goto error;
+		}
+		e->vsize = vsize;
+		memcpy(e->val, val, vsize);
+	}
+
+	/* move the entry from the last to the first position */
+	c->last = e->prev;
+	c->last->next = NULL;
+
+	e->prev = NULL;
+	e->next = c->first;
+
+	c->first->prev = e;
+	c->first = e;
+
+	return 0;
+
+error:
+	/* on errors, remove the entry just in case */
+	c->last = e->prev;
+	c->last->next = NULL;
+	free(e->key);
+	free(e->val);
+	free(e);
+
+	return -1;
+}
+
 
 int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
@@ -180,71 +272,46 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 	e = find_in_chain(c, key, ksize);
 
 	if (e == NULL) {
-		/* not found, create a new cache entry */
-		new = malloc(sizeof(struct cache_entry));
-		if (new == NULL) {
-			rv = 0;
-			goto exit;
-		}
-
-		new->ksize = ksize;
-		new->vsize = vsize;
-
-		new->key = malloc(ksize);
-		if (new->key == NULL) {
-			free(new);
-			rv = 0;
-			goto exit;
-		}
-		memcpy(new->key, key, ksize);
-
-		new->val = malloc(vsize);
-		if (new->val == NULL) {
-			free(new->key);
-			free(new);
-			rv = 0;
-			goto exit;
-		}
-		memcpy(new->val, val, vsize);
-		new->prev = NULL;
-		new->next = NULL;
-
-		/* and put it in */
-		if (c->len == 0) {
-			/* line is empty, just put it there */
-			c->first = new;
-			c->last = new;
-			c->len = 1;
-		} else if (c->len < cd->chainlen) {
-			/* slots are still available, put the entry first */
-			new->next = c->first;
-			c->first->prev = new;
-			c->first = new;
-			c->len += 1;
+		if (c->len == cd->chainlen) {
+			/* chain is full */
+			if (insert_in_full_chain(c, key, ksize,
+					val, vsize) != 0)
+				return -1;
 		} else {
-			/* chain is full, we need to evict the last one */
-			e = c->last;
-			c->last = e->prev;
-			c->last->next = NULL;
-			free(e->key);
-			free(e->val);
-			free(e);
+			new = new_entry(key, ksize, val, vsize);
+			if (new == NULL) {
+				rv = 0;
+				goto exit;
+			}
 
-			new->next = c->first;
-			c->first->prev = new;
-			c->first = new;
+			if (c->len == 0) {
+				/* line is empty, just put it there */
+				c->first = new;
+				c->last = new;
+				c->len = 1;
+			} else if (c->len < cd->chainlen) {
+				/* slots are still available, put the entry first */
+				new->next = c->first;
+				c->first->prev = new;
+				c->first = new;
+				c->len += 1;
+			}
 		}
 	} else {
 		/* we've got a match, just replace the value in place */
-		v = malloc(vsize);
-		if (v == NULL) {
-			rv = 0;
-			goto exit;
+		if (vsize == e->vsize) {
+			memcpy(e->val, val, vsize);
+		} else {
+			v = malloc(vsize);
+			if (v == NULL) {
+				rv = 0;
+				goto exit;
+			}
+			free(e->val);
+			e->val = v;
+			e->vsize = vsize;
+			memcpy(e->val, val, vsize);
 		}
-		free(e->val);
-		e->val = v;
-		e->vsize = vsize;
-		memcpy(e->val, val, vsize);
 
 		/* promote the entry to the top of the list if necessary */
 		if (c->first != e) {
@@ -337,16 +404,22 @@ int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 		goto exit;
 	}
 
-	buf = malloc(nvsize);
-	if (buf == NULL) {
-		rv = -2;
-		goto exit;
-	}
+	if (ovsize == nvsize) {
+		/* since they have the same size, avoid the malloc() and just
+		 * copy the new value */
+		memcpy(e->val, newval, nvsize);
+	} else {
+		buf = malloc(nvsize);
+		if (buf == NULL) {
+			rv = -2;
+			goto exit;
+		}
 
-	memcpy(buf, newval, nvsize);
-	free(e->val);
-	e->val = buf;
-	e->vsize = nvsize;
+		memcpy(buf, newval, nvsize);
+		free(e->val);
+		e->val = buf;
+		e->vsize = nvsize;
+	}
 
 exit:
 	return rv;
