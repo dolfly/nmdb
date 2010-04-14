@@ -260,7 +260,6 @@ error:
 int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
-	int rv = 1;
 	uint32_t h = 0;
 	struct cache_chain *c;
 	struct cache_entry *e, *new;
@@ -279,10 +278,8 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 				return -1;
 		} else {
 			new = new_entry(key, ksize, val, vsize);
-			if (new == NULL) {
-				rv = 0;
-				goto exit;
-			}
+			if (new == NULL)
+				return -1;
 
 			if (c->len == 0) {
 				/* line is empty, just put it there */
@@ -303,10 +300,9 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 			memcpy(e->val, val, vsize);
 		} else {
 			v = malloc(vsize);
-			if (v == NULL) {
-				rv = 0;
-				goto exit;
-			}
+			if (v == NULL)
+				return -1;
+
 			free(e->val);
 			e->val = v;
 			e->vsize = vsize;
@@ -328,8 +324,7 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 		}
 	}
 
-exit:
-	return rv;
+	return 0;
 }
 
 
@@ -377,32 +372,25 @@ exit:
 
 
 /* Performs a cache compare-and-swap.
- * Returns -2 if there was an error, -1 if the key is not in the cache, 0 if
- * the old value does not match, and 1 if the CAS was successful. */
+ * Returns -3 if there was an error, -2 if the key is not in the cache, -1 if
+ * the old value does not match, and 0 if the CAS was successful. */
 int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 		const unsigned char *oldval, size_t ovsize,
 		const unsigned char *newval, size_t nvsize)
 {
-	int rv = 1;
 	struct cache_entry *e;
 	unsigned char *buf;
 
 	e = find_in_cache(cd, key, ksize);
 
-	if (e == NULL) {
-		rv = -1;
-		goto exit;
-	}
+	if (e == NULL)
+		return -2;
 
-	if (e->vsize != ovsize) {
-		rv = 0;
-		goto exit;
-	}
+	if (e->vsize != ovsize)
+		return -1;
 
-	if (memcmp(e->val, oldval, ovsize) != 0) {
-		rv = 0;
-		goto exit;
-	}
+	if (memcmp(e->val, oldval, ovsize) != 0)
+		return -1;
 
 	if (ovsize == nvsize) {
 		/* since they have the same size, avoid the malloc() and just
@@ -410,10 +398,8 @@ int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 		memcpy(e->val, newval, nvsize);
 	} else {
 		buf = malloc(nvsize);
-		if (buf == NULL) {
-			rv = -2;
-			goto exit;
-		}
+		if (buf == NULL)
+			return -3;
 
 		memcpy(buf, newval, nvsize);
 		free(e->val);
@@ -421,8 +407,7 @@ int cache_cas(struct cache *cd, const unsigned char *key, size_t ksize,
 		e->vsize = nvsize;
 	}
 
-exit:
-	return rv;
+	return 0;
 }
 
 
@@ -430,7 +415,7 @@ exit:
  * The increment is a signed 64 bit value, and the value size must be >= 8
  * bytes.
  * Returns:
- *    1 if the increment succeeded.
+ *    0 if the increment succeeded.
  *   -1 if the value was not in the cache.
  *   -2 if the value was not null terminated.
  *   -3 if there was a memory error.
@@ -477,7 +462,7 @@ int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
 	snprintf((char *) val, vsize, "%23lld", (long long int) intval);
 	*newval = intval;
 
-	return 1;
+	return 0;
 }
 
 

@@ -310,7 +310,7 @@ static void parse_set(struct req_info *req)
 	val = key + ksize;
 
 	rv = cache_set(cache_table, key, ksize, val, vsize);
-	if (!rv) {
+	if (rv != 0) {
 		req->reply_err(req, ERR_MEM);
 		return;
 	}
@@ -422,19 +422,24 @@ static void parse_cas(struct req_info *req)
 
 	rv = cache_cas(cache_table, key, ksize, oldval, ovsize,
 			newval, nvsize);
-	if (rv == 0) {
+	if (rv == -1) {
 		/* If the cache doesn't match, there is no need to bother the
 		 * DB even if we were asked to impact. */
 		req->reply_mini(req, REP_NOMATCH);
 		return;
+	} else if (rv == -3) {
+		/* If there was an error, don't bother either */
+		req->reply_err(req, ERR_MEM);
+		return;
 	}
 
 	if (cache_only) {
-		if (rv == -1) {
-			req->reply_mini(req, REP_NOTIN);
+		if (rv == 0) {
+			req->reply_mini(req, REP_OK);
 			return;
 		} else {
-			req->reply_mini(req, REP_OK);
+			/* rv == -2, key not in the cache */
+			req->reply_mini(req, REP_NOTIN);
 			return;
 		}
 	} else {
