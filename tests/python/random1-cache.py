@@ -105,7 +105,7 @@ if __name__ == '__main__':
 	# operate on them a bit
 	print 'random operations'
 	operations = ('set', 'get', 'delete')
-	for i in xrange(nkeys / 2):
+	for i in xrange(min(len(lkeys), nkeys / 2)):
 		op = choice(operations)
 		k = choice(lkeys)
 		if op == 'set':
