@@ -28,9 +28,9 @@ def checked(f):
 			return f(k, *args, **kwargs)
 		except:
 			if k in history:
-				print history[k]
+				print(history[k])
 			else:
-				print 'No history for key', k
+				print('No history for key', k)
 			raise
 	newf.__name__ = f.__name__
 	return newf
@@ -56,7 +56,7 @@ def get(k):
 
 	l = ldb[k]
 	if l != n:
-		raise Mismatch, (n, l)
+		raise Mismatch((n, l))
 	history[k].append((get, k))
 	return True
 
@@ -71,7 +71,7 @@ def delete(k):
 
 def find_missing():
 	misses = 0
-	for k in ldb.keys():
+	for k in list(ldb.keys()):
 		if not get(k):
 			misses += 1
 	return misses
@@ -83,8 +83,15 @@ def getrand():
 
 
 if __name__ == '__main__':
+	# We want to always use a generator range(), which has different names
+	# in Python 2 and 3, so isolate the code from this hack
+	if sys.version_info[0] == 2:
+		gen_range = xrange
+	else:
+		gen_range = range
+
 	if len(sys.argv) < 2:
-		print 'Use: random1-cache.py number_of_keys [key_prefix]'
+		print('Use: random1-cache.py number_of_keys [key_prefix]')
 		sys.exit(1)
 
 	nkeys = int(sys.argv[1])
@@ -94,18 +101,18 @@ if __name__ == '__main__':
 		key_prefix = ''
 
 	# fill all the keys
-	print 'populate'
-	for i in xrange(nkeys):
+	print('populate')
+	for i in gen_range(nkeys):
 		set(key_prefix + str(getrand()), getrand())
 
-	print 'missing', find_missing()
+	print('missing', find_missing())
 
-	lkeys = ldb.keys()
+	lkeys = list(ldb.keys())
 
 	# operate on them a bit
-	print 'random operations'
+	print('random operations')
 	operations = ('set', 'get', 'delete')
-	for i in xrange(min(len(lkeys), nkeys / 2)):
+	for i in gen_range(min(len(lkeys), nkeys // 2)):
 		op = choice(operations)
 		k = choice(lkeys)
 		if op == 'set':
@@ -116,14 +123,12 @@ if __name__ == '__main__':
 			delete(k)
 			lkeys.remove(k)
 
-	print 'missing', find_missing()
+	print('missing', find_missing())
 
-	print 'delete'
+	print('delete')
 	for k in lkeys:
 		delete(k)
 
-	print 'missing', find_missing()
-
-	sys.exit(0)
+	print('missing', find_missing())
 
 

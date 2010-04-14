@@ -28,9 +28,9 @@ def checked(f):
 			return f(k, *args, **kwargs)
 		except:
 			if k in history:
-				print history[k]
+				print(history[k])
 			else:
-				print 'No history for key', k
+				print('No history for key', k)
 			raise
 	newf.__name__ = f.__name__
 	return newf
@@ -50,7 +50,7 @@ def get(k):
 	n = ndb[k]
 	l = ldb[k]
 	if l != n:
-		raise Mismatch, (n, l)
+		raise Mismatch((n, l))
 	history[k].append((get, k))
 	return n
 
@@ -65,7 +65,7 @@ def cas(k, ov, nv):
 	prel = ldb[k]
 	pren = ndb[k]
 	n = ndb.cas(k, ov, nv)
-	if not ldb.has_key(k):
+	if k not in ldb:
 		l = 0
 	elif ldb[k] == ov:
 		ldb[k] = nv
@@ -73,10 +73,10 @@ def cas(k, ov, nv):
 	else:
 		l = 1
 	if n != l:
-		print k, ldb[k], ndb[k]
-		print prel, pren
-		print history[k]
-		raise Mismatch, (n, l)
+		print(k, ldb[k], ndb[k])
+		print(prel, pren)
+		print(history[k])
+		raise Mismatch((n, l))
 	history[k].append((cas, k, ov, nv))
 	return n
 
@@ -87,12 +87,12 @@ def check():
 			n = ndb[k]
 			l = ldb[k]
 		except:
-			print history[k]
-			raise Mismatch, (n, l)
+			print(history[k])
+			raise Mismatch((n, l))
 
 		if n != n:
-			print history[k]
-			raise Mismatch, (n, l)
+			print(history[k])
+			raise Mismatch((n, l))
 
 
 # Use integers because the normal random() generates floating point numbers,
@@ -102,8 +102,15 @@ def getrand():
 
 
 if __name__ == '__main__':
+	# We want to always use a generator range(), which has different names
+	# in Python 2 and 3, so isolate the code from this hack
+	if sys.version_info[0] == 2:
+		gen_range = xrange
+	else:
+		gen_range = range
+
 	if len(sys.argv) < 2:
-		print 'Use: random1.py number_of_keys [key_prefix]'
+		print('Use: random1.py number_of_keys [key_prefix]')
 		sys.exit(1)
 
 	nkeys = int(sys.argv[1])
@@ -113,16 +120,16 @@ if __name__ == '__main__':
 		key_prefix = ''
 
 	# fill all the keys
-	print 'populate'
-	for i in xrange(nkeys):
+	print('populate')
+	for i in gen_range(nkeys):
 		set(key_prefix + str(getrand()), getrand())
 
-	lkeys = ldb.keys()
+	lkeys = list(ldb.keys())
 
 	# operate on them a bit
-	print 'random operations'
+	print('random operations')
 	operations = ('set', 'delete', 'cas0', 'cas1')
-	for i in xrange(nkeys / 2):
+	for i in gen_range(nkeys // 2):
 		op = choice(operations)
 		k = choice(lkeys)
 		if op == 'set':
@@ -137,18 +144,14 @@ if __name__ == '__main__':
 			# successful cas
 			cas(k, ldb[k], getrand())
 
-	print 'check'
+	print('check')
 	check()
 
-	print 'delete'
+	print('delete')
 	for k in lkeys:
 		delete(k)
 
-	print 'check'
+	print('check')
 	check()
-
-	sys.exit(0)
-
-
 
 

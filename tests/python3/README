@@ -1,4 +1,0 @@
-
-These tests are identical to the ones in tests/python, except they've been
-modified to work under Python 3 (and obviously use the Python 3 bindings).
-

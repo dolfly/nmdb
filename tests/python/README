@@ -1,0 +1,4 @@
+
+The tests in this directory are written to be compatible with both Python 2
+and 3. When making a change, please make sure they continue to be.
+
