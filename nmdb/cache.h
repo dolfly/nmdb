@@ -8,6 +8,8 @@
 #include <stdint.h>		/* for int64_t */
 
 
+#define CHAINLEN 4
+
 struct cache {
 	/* set directly by initialization */
 	size_t numobjs;
@@ -15,16 +17,9 @@ struct cache {
 
 	/* calculated */
 	size_t hashlen;
-	size_t chainlen;
 
 	/* the cache data itself */
 	struct cache_chain *table;
-};
-
-struct cache_chain {
-	size_t len;
-	struct cache_entry *first;
-	struct cache_entry *last;
 };
 
 struct cache_entry {
@@ -35,6 +30,18 @@ struct cache_entry {
 
 	struct cache_entry *prev;
 	struct cache_entry *next;
+};
+
+struct cache_chain {
+	size_t len;
+
+	/* the entries live inside the chain, to avoid allocation costs and
+	 * make it more cache-friendly */
+	struct cache_entry entries[CHAINLEN];
+
+	/* these point to elements of the entries array */
+	struct cache_entry *first;
+	struct cache_entry *last;
 };
 
 

@@ -15,7 +15,7 @@
 
 struct cache *cache_create(size_t numobjs, unsigned int flags)
 {
-	size_t i;
+	size_t i, j;
 	struct cache *cd;
 	struct cache_chain *c;
 
@@ -28,9 +28,8 @@ struct cache *cache_create(size_t numobjs, unsigned int flags)
 	/* We calculate the hash size so we have 4 objects per bucket; 4 being
 	 * an arbitrary number. It's long enough to make LRU useful, and small
 	 * enough to make lookups fast. */
-	cd->chainlen = 4;
 	cd->numobjs = numobjs;
-	cd->hashlen = numobjs / cd->chainlen;
+	cd->hashlen = numobjs / CHAINLEN;
 
 	cd->table = (struct cache_chain *)
 			malloc(sizeof(struct cache_chain) * cd->hashlen);
@@ -44,11 +43,18 @@ struct cache *cache_create(size_t numobjs, unsigned int flags)
 		c->len = 0;
 		c->first = NULL;
 		c->last = NULL;
+		for (j = 0; j < CHAINLEN; j++) {
+			memset(&(c->entries[j]), 0,
+				sizeof(struct cache_entry));
+
+			/* mark them as unused */
+			c->entries[j].ksize = -1;
+			c->entries[j].vsize = -1;
+		}
 	}
 
 	return cd;
 }
-
 
 int cache_free(struct cache *cd)
 {
@@ -66,7 +72,6 @@ int cache_free(struct cache *cd)
 			n = e->next;
 			free(e->key);
 			free(e->val);
-			free(e);
 			e = n;
 		}
 	}
@@ -76,6 +81,25 @@ int cache_free(struct cache *cd)
 	return 1;
 }
 
+static struct cache_entry *alloc_entry(struct cache_chain *c)
+{
+	int i;
+
+	for (i = 0; i < CHAINLEN; i++) {
+		if (c->entries[i].ksize == -1)
+			return &(c->entries[i]);
+	}
+
+	return NULL;
+}
+
+static void free_entry(struct cache_entry *e)
+{
+	e->key = NULL;
+	e->ksize = -1;
+	e->val = NULL;
+	e->vsize = -1;
+}
 
 /*
  * The hash function used is the "One at a time" function, which seems simple,
@@ -165,12 +189,13 @@ int cache_get(struct cache *cd, const unsigned char *key, size_t ksize,
 }
 
 /* Creates a new cache entry, with the given key and value */
-static struct cache_entry *new_entry(const unsigned char *key, size_t ksize,
+static struct cache_entry *new_entry(struct cache_chain *c,
+		const unsigned char *key, size_t ksize,
 		const unsigned char *val, size_t vsize)
 {
 	struct cache_entry *new;
 
-	new = malloc(sizeof(struct cache_entry));
+	new = alloc_entry(c);
 	if (new == NULL) {
 		return NULL;
 	}
@@ -188,7 +213,7 @@ static struct cache_entry *new_entry(const unsigned char *key, size_t ksize,
 	new->val = malloc(vsize);
 	if (new->val == NULL) {
 		free(new->key);
-		free(new);
+		free_entry(new);
 		return NULL;
 	}
 	memcpy(new->val, val, vsize);
@@ -251,7 +276,7 @@ error:
 	c->last->next = NULL;
 	free(e->key);
 	free(e->val);
-	free(e);
+	free_entry(e);
 
 	return -1;
 }
@@ -271,13 +296,13 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 	e = find_in_chain(c, key, ksize);
 
 	if (e == NULL) {
-		if (c->len == cd->chainlen) {
+		if (c->len == CHAINLEN) {
 			/* chain is full */
 			if (insert_in_full_chain(c, key, ksize,
 					val, vsize) != 0)
 				return -1;
 		} else {
-			new = new_entry(key, ksize, val, vsize);
+			new = new_entry(c, key, ksize, val, vsize);
 			if (new == NULL)
 				return -1;
 
@@ -286,8 +311,9 @@ int cache_set(struct cache *cd, const unsigned char *key, size_t ksize,
 				c->first = new;
 				c->last = new;
 				c->len = 1;
-			} else if (c->len < cd->chainlen) {
-				/* slots are still available, put the entry first */
+			} else if (c->len < CHAINLEN) {
+				/* slots are still available, put the entry
+				 * first */
 				new->next = c->first;
 				c->first->prev = new;
 				c->first = new;
@@ -362,7 +388,7 @@ int cache_del(struct cache *cd, const unsigned char *key, size_t ksize)
 
 	free(e->key);
 	free(e->val);
-	free(e);
+	free_entry(e);
 
 	c->len -= 1;
 
