@@ -10,6 +10,7 @@
 #include <stdlib.h>		/* for malloc() */
 #include <string.h>		/* for memcpy()/memcmp() */
 #include <stdio.h>		/* snprintf() */
+#include "hash.h"		/* hash() */
 #include "cache.h"
 
 
@@ -99,34 +100,6 @@ static void free_entry(struct cache_entry *e)
 	e->ksize = -1;
 	e->val = NULL;
 	e->vsize = -1;
-}
-
-/*
- * The hash function used is the "One at a time" function, which seems simple,
- * fast and popular. Others for future consideration if speed becomes an issue
- * include:
- *  * FNV Hash (http://www.isthe.com/chongo/tech/comp/fnv/)
- *  * SuperFastHash (http://www.azillionmonkeys.com/qed/hash.html)
- *  * Judy dynamic arrays (http://judy.sf.net)
- *
- * A good comparison can be found at
- * http://eternallyconfuzzled.com/tuts/hashing.html#existing
- */
-
-static uint32_t hash(const unsigned char *key, const size_t ksize)
-{
-	uint32_t h = 0;
-	size_t i;
-
-	for (i = 0; i < ksize; i++) {
-		h += key[i];
-		h += (h << 10);
-		h ^= (h >> 6);
-	}
-	h += (h << 3);
-	h ^= (h >> 11);
-	h += (h << 15);
-	return h;
 }
 
 
