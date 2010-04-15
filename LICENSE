@@ -3,17 +3,19 @@ Each sub-project in nmdb source tree has an independant license, and can be
 treated as independant projects from a licensing point of view.
 
 Licenses are always in a file named "LICENSE" in the top directory of each
-sub-project, and apply to ALL the source code files in that directory tree (it
-includes subdirectories).
+sub-project, and apply to ALL the source code files in that directory tree
+(that is, including subdirectories).
 
 As a brief resume, here's how each sub-project is licensed:
- * nmdb: OSL 3.0
+
+ * nmdb: BOLA (Public domain)
  * libnmdb: BOLA (Public domain)
  * bindings/bigloo: BOLA (Public domain)
  * bindings/d: BOLA (Public domain)
  * bindings/haskell: BOLA (Public domain)
  * bindings/newlisp: BOLA (Public domain)
  * bindings/python: BOLA (Public domain)
+ * bindings/python3: BOLA (Public domain)
  * bindings/ruby: BOLA (Public domain)
 
 
