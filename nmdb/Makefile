@@ -5,7 +5,7 @@ ENABLE_TCP = 1
 ENABLE_UDP = 1
 ENABLE_SCTP = 1
 
-# Backend to use, can be qdbm, bdb, tc, or null
+# Backend to use, can be qdbm, bdb, tc, tdb, or null
 BACKEND = qdbm
 
 CFLAGS += -std=c99 -pedantic -Wall -O3
@@ -77,6 +77,11 @@ ifeq ($(BACKEND), tc)
 	OBJS += be-tc.o
 	ALL_CFLAGS += `pkg-config tokyocabinet --cflags` -DBACKEND_TC
 	LIBS += `pkg-config tokyocabinet --libs`
+endif
+ifeq ($(BACKEND), tdb)
+	OBJS += be-tdb.o
+	ALL_CFLAGS += `pkg-config tdb --cflags` -DBACKEND_TDB
+	LIBS += `pkg-config tdb --libs`
 endif
 ifeq ($(BACKEND), null)
 	OBJS += be-null.o

@@ -19,6 +19,10 @@
   #include <tchdb.h>
   typedef TCHDB db_t;
 
+#elif defined BACKEND_TDB
+  #include <tdb.h>
+  typedef TDB_CONTEXT db_t;
+
 #elif defined BACKEND_NULL
   typedef int db_t;
 

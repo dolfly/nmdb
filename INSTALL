@@ -32,14 +32,16 @@ The backends, on the other hand, are mutually exclusive and only one can be
 selected:
  * qdbm (http://qdbm.sf.net/).
  * bdb (http://www.oracle.com/database/berkeley-db/).
- * null backend, if you don't need a real one.
+ * Tokyo Cabinet (http://1978th.net/tokyocabinet/)
+ * tdb (http://tdb.samba.org/)
+ * A null backend, if you don't need a real one.
 
 By default, all network protocols are enabled, and the qdbm backend is
 selected.
 
 You can change the defaults by passing parameters to make, like this:
 
- $ make BACKEND=[qbdm|bdb|null] ENABLE_$PROTO=[1|0]
+ $ make BACKEND=[qbdm|bdb|tc|tdb|null] ENABLE_$PROTO=[1|0]
 
 Where $PROTO can be TCP, UDP, TIPC or SCTP.
 
