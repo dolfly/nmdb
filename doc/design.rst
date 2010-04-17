@@ -123,8 +123,8 @@ operation. A specific solution could have been used, and the database backend
 code is isolated enough to allow this to happen in the future if necessity
 arises.
 
-Several backends are supported (at the moment QDBM_, BDB_, tokyocabinet_ and a
-null backend); the selection is done at build time.
+Several backends are supported (at the moment QDBM_, BDB_, tokyocabinet_, tdb_
+and a null backend); the selection is done at build time.
 
 The processing is performed by taking requests from the aforementioned queue,
 and acting upon the database accordingly, which involves calling the backend's
@@ -163,13 +163,13 @@ The cache layer is implemented by a modified hash table, to make eviction
 efficient and cheap.
 
 The hash table is quite normal: several buckets (the size is decided at
-initialization time), and each bucket containing a linked list with the
-objects assigned to it.
+initialization time), and each bucket containing a list with the objects
+assigned to it.
 
 There a some tricks, though:
 
 - In order to keep a bound on the number of objects in the cache, the number
-  of elements in each linked list is limited to 4.
+  of elements in each list is limited to 4.
 - Whenever a lookup is made, the entry that matched is promoted to the head of
   the list containing it.
 - When inserting a new element in the cache, it's always inserted to the top
@@ -204,5 +204,6 @@ pattern involves handling lots of different keys.
 .. _memcached: http://www.danga.com/memcached/
 .. _QDBM: http://qdbm.sf.net
 .. _BDB: http://www.oracle.com/technology/products/berkeley-db/db/
-.. _tokyocabinet: http://tokyocabinet.sf.net/index.html
+.. _tokyocabinet: http://1978th.net/tokyocabinet/
+.. _tdb: http://tdb.samba.org
 

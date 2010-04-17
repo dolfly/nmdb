@@ -31,11 +31,9 @@ Prerequisites
 Before you install nmdb, you will need the following software:
 
 - libevent_, a library for fast event handling.
-- Either QDBM_, BDB_ or tokyocabinet_ for the database backend.
-
-And, if you're going to use TIPC_:
-
-- `Linux kernel`_ 2.6.16 or newer, compiled with TIPC_ support.
+- One or more of QDBM_, BDB_, tokyocabinet_ or tdb_ for the database backend.
+- If you want TIPC_ support, `Linux kernel`_ 2.6.16 or newer.
+- If you want SCTP_ support, libsctp-dev (or equivalent package).
 
 
 Compiling and installing
@@ -49,8 +47,9 @@ To install the server and the C library, run ``make install; ldconfig``. To
 install the Python module, run ``make python_install`` after installing the C
 library.
 
-If you want to disable support for some protocol (i.e. TIPC), you can do so by
-running ``make ENABLE_TIPC=0 install``.
+The build system autodetects the available backends and protocols, but if you
+want to manually override it, you can you can do so by running, for example,
+``make ENABLE_TIPC=0 BE_ENABLE_BDB=1 install`` to disable TIPC and enable BDB.
 
 
 Quick start
@@ -141,8 +140,8 @@ Cache size
   in it, and not by byte size.
 
 Backend database
-  The backend database engine can be selected at build time; QDBM_ is the
-  default.
+  The backend database engine can be selected at run time via a command-line
+  option.
 
   If for some reason (hardware failure, for instance) the database becomes
   corrupt, you should use your database utilities to fix it. It shouldn't
@@ -259,7 +258,7 @@ the default port.
 
 
 The Python module
-------------------
+-----------------
 
 The Python module it's quite easy to use, because its interface is very
 similar to a dictionary. It has similar limitations regarding the key (it must
@@ -416,11 +415,13 @@ know at albertito@blitiri.com.ar.
 .. _nmdb: http://blitiri.com.ar/p/nmdb/
 .. _libevent: http://www.monkey.org/~provos/libevent/
 .. _TIPC: http://tipc.sf.net
+.. _SCTP: http://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol
 .. _memcached: http://www.danga.com/memcached/
 .. _`Linux kernel`: http://kernel.org
 .. _tetrations: http://en.wikipedia.org/wiki/Tetration
 .. _QDBM: http://qdbm.sf.net
 .. _BDB: http://www.oracle.com/technology/products/berkeley-db/db/
-.. _tokyocabinet: http://tokyocabinet.sf.net/index.html
+.. _tokyocabinet: http://1978th.net/tokyocabinet/
+.. _tdb: http://tdb.samba.org
 
 

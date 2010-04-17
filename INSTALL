@@ -51,13 +51,6 @@ For instance, to build with bdb backend and without TIPC support, use:
  $ make BE_ENABLE_BDB=1 ENABLE_TIPC=0
 
 
-Tests
------
-
-To run some tests, start the server and then go to the "tests/c/" directory.
-Run "make.sh build" and then run any of the generated tests.
-
-
 Bindings
 --------
 
@@ -69,4 +62,13 @@ install the modules. The module will be named "nmdb". The same goes for Python
 The other bindings do not have a properly defined install procedure, and
 you'll need knowledge of the language to install them.
 
+
+Tests
+-----
+
+Tests are available in the "tests/" directory. Some are written in C
+("tests/c/"), some in Python ("tests/python/").
+
+Python tests are useful for stress and coverage tests, while the C ones are
+useful for performance measurements.
 
