@@ -4,9 +4,9 @@ Quick guide for the patience-impaired
 
 At the top level directory, run:
 
- $ make ENABLE_TIPC=0 ENABLE_SCTP=0 install
+ $ make install
 
-to build and install the server without TIPC and SCTP support.
+to build and install the server, library and utilities.
 
 
 How to compile and install
@@ -36,8 +36,8 @@ The backend databases:
  * tdb (http://tdb.samba.org/)
  * A null backend (to use when you don't need a real one)
 
-By default, all network protocols are enabled, and backends are automatically
-detected according to the available libraries.
+By default, network protocols and backends are automatically detected
+according to the available libraries.
 
 You can change the defaults by passing parameters to make, like this:
 
@@ -46,7 +46,7 @@ You can change the defaults by passing parameters to make, like this:
 Where $PROTO can be TCP, UDP, TIPC or SCTP, and $BACKEND can be QDBM, BDB, TC,
 TDB or NULL.
 
-For instance, to build with bdb backend and without TIPC and UDP support, use:
+For instance, to build with bdb backend and without TIPC support, use:
 
  $ make BE_ENABLE_BDB=1 ENABLE_TIPC=0
 

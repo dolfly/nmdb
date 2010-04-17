@@ -1,9 +1,11 @@
 
 # Protocols to enable
-ENABLE_TIPC = 1
 ENABLE_TCP = 1
 ENABLE_UDP = 1
-ENABLE_SCTP = 1
+ENABLE_TIPC := $(shell if echo "\#include <linux/tipc.h>" | \
+		$(CPP) - > /dev/null 2>&1; then echo 1; else echo 0; fi)
+ENABLE_SCTP := $(shell if echo "\#include <netinet/sctp.h>" | \
+		$(CPP) - > /dev/null 2>&1; then echo 1; else echo 0; fi)
 
 # Backends to enable
 BE_ENABLE_QDBM := $(shell if `pkg-config --exists qdbm`; \
