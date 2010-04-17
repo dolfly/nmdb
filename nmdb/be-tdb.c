@@ -1,28 +1,63 @@
 
+#if BE_ENABLE_TDB
+
 #include <string.h>	/* memcpy() */
+#include <stdlib.h>	/* malloc() and friends */
 
 /* tdb.h needs mode_t defined externally, and it is defined in one of these
 (which are the ones required for open() */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <tdb.h>
 
 #include "be.h"
 
+/* Local operations names are prepended with an 'x' so they don't collide with
+ * tdb real functions */
 
-db_t *db_open(const char *name, int flags)
+int xtdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
+		unsigned char *val, size_t vsize);
+int xtdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
+		unsigned char *val, size_t *vsize);
+int xtdb_del(struct db_conn *db, const unsigned char *key, size_t ksize);
+int xtdb_close(struct db_conn *db);
+
+
+struct db_conn *xtdb_open(const char *name, int flags)
 {
-	return tdb_open(name, 0, 0, O_CREAT | O_RDWR, 0640);
+	struct db_conn *db;
+	TDB_CONTEXT *tdb_db;
+
+	tdb_db = tdb_open(name, 0, 0, O_CREAT | O_RDWR, 0640);
+	if (tdb_db == NULL)
+		return NULL;
+
+	db = malloc(sizeof(struct db_conn));
+	if (db == NULL) {
+		tdb_close(tdb_db);
+		return NULL;
+	}
+
+	db->conn = tdb_db;
+	db->set = xtdb_set;
+	db->get = xtdb_get;
+	db->del = xtdb_del;
+	db->close = xtdb_close;
+
+	return db;
 }
 
-
-int db_close(db_t *db)
+int xtdb_close(struct db_conn *db)
 {
-	return tdb_close(db) == 0;
+	int rv;
+
+	rv = tdb_close(db->conn);
+	free(db);
+	return rv == 0;
 }
 
-
-int db_set(db_t *db, const unsigned char *key, size_t ksize,
+int xtdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize)
 {
 	TDB_DATA k, v;
@@ -34,11 +69,11 @@ int db_set(db_t *db, const unsigned char *key, size_t ksize,
 	v.dptr = val;
 	v.dsize = vsize;
 
-	return tdb_store(db, k, v, TDB_REPLACE) == 0;
+	return tdb_store(db->conn, k, v, TDB_REPLACE) == 0;
 }
 
 
-int db_get(db_t *db, const unsigned char *key, size_t ksize,
+int xtdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t *vsize)
 {
 	TDB_DATA k, v;
@@ -46,7 +81,7 @@ int db_get(db_t *db, const unsigned char *key, size_t ksize,
 	k.dptr = key;
 	k.dsize = ksize;
 
-	v = tdb_fetch(db, k);
+	v = tdb_fetch(db->conn, k);
 	if (v.dptr == NULL)
 		return 0;
 
@@ -59,13 +94,24 @@ int db_get(db_t *db, const unsigned char *key, size_t ksize,
 	return 1;
 }
 
-int db_del(db_t *db, const unsigned char *key, size_t ksize)
+int xtdb_del(struct db_conn *db, const unsigned char *key, size_t ksize)
 {
 	TDB_DATA k;
 
 	k.dptr = key;
 	k.dsize = ksize;
 
-	return tdb_delete(db, k) == 0;
+	return tdb_delete(db->conn, k) == 0;
 }
+
+#else
+
+#include <stddef.h>	/* NULL */
+
+struct db_conn *xtdb_open(const char *name, int flags)
+{
+	return NULL;
+}
+
+#endif
 

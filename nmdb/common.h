@@ -13,6 +13,7 @@ extern struct cache *cache_table;
 extern struct queue *op_queue;
 
 /* Settings */
+#include "be.h"
 struct settings {
 	int tipc_lower;
 	int tipc_upper;
@@ -27,6 +28,7 @@ struct settings {
 	int passive;
 	char *dbname;
 	char *logfname;
+	enum backend_type backend;
 };
 extern struct settings settings;
 

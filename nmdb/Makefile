@@ -5,15 +5,29 @@ ENABLE_TCP = 1
 ENABLE_UDP = 1
 ENABLE_SCTP = 1
 
-# Backend to use, can be qdbm, bdb, tc, tdb, or null
-BACKEND = qdbm
+# Backends to enable
+BE_ENABLE_QDBM := $(shell if `pkg-config --exists qdbm`; \
+	then echo 1; else echo 0; fi)
+BE_ENABLE_BDB := 0
+BE_ENABLE_TC := $(shell if `pkg-config --exists tokyocabinet`; \
+	then echo 1; else echo 0; fi)
+BE_ENABLE_TDB := $(shell if `pkg-config --exists tdb`; \
+	then echo 1; else echo 0; fi)
+BE_ENABLE_NULL := 1
+
 
 CFLAGS += -std=c99 -pedantic -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=600 $(CFLAGS)
 ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
 		-DENABLE_TCP=$(ENABLE_TCP) \
 		-DENABLE_UDP=$(ENABLE_UDP) \
-		-DENABLE_SCTP=$(ENABLE_SCTP)
+		-DENABLE_SCTP=$(ENABLE_SCTP) \
+		-DBE_ENABLE_QDBM=$(BE_ENABLE_QDBM) \
+		-DBE_ENABLE_BDB=$(BE_ENABLE_BDB) \
+		-DBE_ENABLE_TC=$(BE_ENABLE_TC) \
+		-DBE_ENABLE_TDB=$(BE_ENABLE_TDB) \
+		-DBE_ENABLE_NULL=$(BE_ENABLE_NULL) \
+
 
 ifdef DEBUG
 ALL_CFLAGS += -g
@@ -32,7 +46,8 @@ endif
 PREFIX=/usr/local
 
 
-OBJS = cache.o dbloop.o queue.o log.o net.o netutils.o parse.o stats.o main.o
+OBJS = cache.o dbloop.o queue.o log.o net.o netutils.o parse.o stats.o main.o \
+       be.o be-bdb.o be-null.o be-qdbm.o be-tc.o be-tdb.o
 LIBS = -levent -lpthread -lrt
 
 
@@ -60,32 +75,23 @@ else
 	OBJS += sctp-stub.o
 endif
 
-# Use series of ifeq-endif instead of else-ifeq because otherwise the nesting
-# is a mess. Using "else ifeq ..." in the same line is only supported from
-# gmake 3.81, which is too new.
-ifeq ($(BACKEND), qdbm)
-	OBJS += be-qdbm.o
-	ALL_CFLAGS += `pkg-config qdbm --cflags` -DBACKEND_QDBM
+
+ifeq ($(BE_ENABLE_QDBM), 1)
+	ALL_CFLAGS += `pkg-config qdbm --cflags`
 	LIBS += `pkg-config qdbm --libs-only-L` -lqdbm
 endif
-ifeq ($(BACKEND), bdb)
-	OBJS += be-bdb.o
-	ALL_CFLAGS += -DBACKEND_BDB
+ifeq ($(BE_ENABLE_BDB), 1)
 	LIBS += -ldb
 endif
-ifeq ($(BACKEND), tc)
-	OBJS += be-tc.o
-	ALL_CFLAGS += `pkg-config tokyocabinet --cflags` -DBACKEND_TC
+ifeq ($(BE_ENABLE_TC), 1)
+	ALL_CFLAGS += `pkg-config tokyocabinet --cflags`
 	LIBS += `pkg-config tokyocabinet --libs`
 endif
-ifeq ($(BACKEND), tdb)
-	OBJS += be-tdb.o
-	ALL_CFLAGS += `pkg-config tdb --cflags` -DBACKEND_TDB
+ifeq ($(BE_ENABLE_TDB), 1)
+	ALL_CFLAGS += `pkg-config tdb --cflags`
 	LIBS += `pkg-config tdb --libs`
 endif
-ifeq ($(BACKEND), null)
-	OBJS += be-null.o
-	ALL_CFLAGS += -DBACKEND_NULL
+ifeq ($(BE_ENABLE_NULL), 1)
 endif
 
 

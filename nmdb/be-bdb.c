@@ -1,43 +1,76 @@
 
+#if BE_ENABLE_BDB
+
 #include <string.h>	/* memset() */
+#include <stddef.h>	/* NULL */
+
+/* typedefs to work around db.h include bug */
+typedef unsigned int u_int;
+typedef unsigned long u_long;
+#include <db.h>
+
 #include "be.h"
 
 
-db_t *db_open(const char *name, int flags)
+int bdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
+		unsigned char *val, size_t vsize);
+int bdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
+		unsigned char *val, size_t *vsize);
+int bdb_del(struct db_conn *db, const unsigned char *key, size_t ksize);
+int bdb_close(struct db_conn *db);
+
+
+struct db_conn *bdb_open(const char *name, int flags)
 {
 	int rv;
-	db_t *db;
+	struct db_conn *db;
+	DB *bdb_db;
 
-	rv = db_create(&db, NULL, 0);
+	rv = db_create(&bdb_db, NULL, 0);
 	if (rv != 0)
 		return NULL;
 
-	rv = db->open(db, NULL, name, NULL, DB_HASH, DB_CREATE, 0);
+	rv = bdb_db->open(bdb_db, NULL, name, NULL, DB_HASH, DB_CREATE, 0);
 	if (rv != 0) {
-		db->close(db, 0);
+		bdb_db->close(bdb_db, 0);
 		return NULL;
 	}
+
+	db = malloc(sizeof(struct db_conn));
+	if (db == NULL) {
+		bdb_db->close(bdb_db, 0);
+		return NULL;
+
+	db->conn = bdb_db;
+	db->set = bdb_set;
+	db->get = bdb_get;
+	db->del = bdb_del;
+	db->close = bdb_close;
 
 	return db;
 }
 
 
-int db_close(db_t *db)
+int bdb_close(struct db_conn *db)
 {
 	int rv;
+	DB *bdb_db = (DB *) db->conn;
 
-	rv = db->close(db, 0);
+	rv = bdb_db->close(bdb_db, 0);
 	if (rv != 0)
 		return 0;
+
+	free(db);
 	return 1;
 }
 
 
-int db_set(db_t *db, const unsigned char *key, size_t ksize,
+int bdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t vsize)
 {
 	int rv;
 	DBT k, v;
+	DB *bdb_db = (DB *) db->conn;
 
 	memset(&k, 0, sizeof(DBT));
 	memset(&v, 0, sizeof(DBT));
@@ -49,18 +82,19 @@ int db_set(db_t *db, const unsigned char *key, size_t ksize,
 	v.data = val;
 	v.size = vsize;
 
-	rv = db->put(db, NULL, &k, &v, 0);
+	rv = bdb_db->put(bdb_db, NULL, &k, &v, 0);
 	if (rv != 0)
 		return 0;
 	return 1;
 }
 
 
-int db_get(db_t *db, const unsigned char *key, size_t ksize,
+int bdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t *vsize)
 {
 	int rv;
 	DBT k, v;
+	DB *bdb_db = (DB *) db->conn;
 
 	memset(&k, 0, sizeof(DBT));
 	memset(&v, 0, sizeof(DBT));
@@ -71,7 +105,7 @@ int db_get(db_t *db, const unsigned char *key, size_t ksize,
 	v.ulen = *vsize;
 	v.flags = DB_DBT_USERMEM;	/* we supplied the memory */
 
-	rv = db->get(db, NULL, &k, &v, 0);
+	rv = bdb_db->get(bdb_db, NULL, &k, &v, 0);
 	if (rv != 0) {
 		return 0;
 	} else {
@@ -80,10 +114,11 @@ int db_get(db_t *db, const unsigned char *key, size_t ksize,
 	}
 }
 
-int db_del(db_t *db, const unsigned char *key, size_t ksize)
+int bdb_del(struct db_conn *db, const unsigned char *key, size_t ksize)
 {
 	int rv;
 	DBT k, v;
+	DB *bdb_db = (DB *) db->conn;
 
 	memset(&k, 0, sizeof(DBT));
 	memset(&v, 0, sizeof(DBT));
@@ -91,9 +126,20 @@ int db_del(db_t *db, const unsigned char *key, size_t ksize)
 	k.data = key;
 	k.size = ksize;
 
-	rv = db->del(db, NULL, &k, 0);
+	rv = bdb_db->del(bdb_db, NULL, &k, 0);
 	if (rv != 0)
 		return 0;
 	return 1;
 }
+
+#else
+
+#include <stddef.h>	/* NULL */
+
+struct db_conn *bdb_open(const char *name, int flags)
+{
+	return NULL;
+}
+
+#endif
 

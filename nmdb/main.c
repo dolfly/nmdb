@@ -13,6 +13,7 @@
 #include "net-const.h"
 #include "log.h"
 #include "stats.h"
+#include "be.h"
 
 #define DEFDBNAME "database"
 
@@ -28,6 +29,7 @@ static void help(void) {
 	char h[] = \
 	  "nmdb [options]\n"
 	  "\n"
+	  "  -b backend	backend to use (" DEFAULT_BE_NAME ")\n"
 	  "  -d dbpath	database path ('database' by default)\n"
 	  "  -l lower	TIPC lower port number (10)\n"
 	  "  -L upper	TIPC upper port number (= lower)\n"
@@ -42,6 +44,8 @@ static void help(void) {
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -h		show this help\n"
+	  "\n"
+	  "Available backends: " SUPPORTED_BE "\n"
 	  "\n"
 	  "Please report bugs to Alberto Bertogli (albertito@blitiri.com.ar)\n"
 	  "\n";
@@ -65,12 +69,17 @@ static int load_settings(int argc, char **argv)
 	settings.foreground = 0;
 	settings.passive = 0;
 	settings.logfname = "-";
+	settings.backend = DEFAULT_BE;
 
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
 
-	while ((c = getopt(argc, argv, "d:l:L:t:T:u:U:s:S:c:o:fph?")) != -1) {
+	while ((c = getopt(argc, argv,
+				"b:d:l:L:t:T:u:U:s:S:c:o:fph?")) != -1) {
 		switch(c) {
+		case 'b':
+			settings.backend = be_type_from_str(optarg);
+			break;
 		case 'd':
 			free(settings.dbname);
 			settings.dbname = malloc(strlen(optarg) + 1);
@@ -150,6 +159,14 @@ static int load_settings(int argc, char **argv)
 	if (settings.numobjs == -1)
 		settings.numobjs = 128 * 1024;
 
+	if (settings.backend == BE_UNKNOWN) {
+		printf("Error: unknown backend\n");
+		return 0;
+	} else if (settings.backend == BE_UNSUPPORTED) {
+		printf("Error: unsupported backend\n");
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -158,7 +175,7 @@ int main(int argc, char **argv)
 {
 	struct cache *cd;
 	struct queue *q;
-	db_t *db;
+	struct db_conn *db;
 	pid_t pid;
 	pthread_t *dbthread;
 
@@ -186,7 +203,7 @@ int main(int argc, char **argv)
 	}
 	op_queue = q;
 
-	db = db_open(settings.dbname, 0);
+	db = db_open(settings.backend, settings.dbname, 0);
 	if (db == NULL) {
 		errlog("Error opening DB");
 		return 1;
@@ -214,7 +231,7 @@ int main(int argc, char **argv)
 
 	db_loop_stop(dbthread);
 
-	db_close(db);
+	db->close(db);
 
 	queue_free(q);
 

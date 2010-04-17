@@ -4,10 +4,9 @@ Quick guide for the patience-impaired
 
 At the top level directory, run:
 
- $ make BACKEND=qdbm ENABLE_TIPC=0 ENABLE_SCTP=0 install
+ $ make ENABLE_TIPC=0 ENABLE_SCTP=0 install
 
-to build and install the server without TIPC and SCTP support, and to use the
-qdbm backend.
+to build and install the server without TIPC and SCTP support.
 
 
 How to compile and install
@@ -19,35 +18,37 @@ The only mandatory requisite to build nmdb is libevent
 There are several build-time options, in two groups: supported network
 protocols, and backend databases.
 
-The network protocols can all be enabled at the same time:
+The network protocols:
+
  * TCP and UDP, the well-known network protocols.
  * TIPC (http://tipc.sf.net/), a cluster-oriented network protocol. You will
 	need a Linux kernel >= 2.6.16 with TIPC support (most distributions
 	enable it by default).
  * SCTP, a network protocol similar to UDP and TCP, offering reliable message
- 	passing over IP, among other very useful things. You will need the
-	lksctp-tools package.
+	passing over IP, among other very useful things. You will need the
+	libsctp-dev (or equivalent) package.
 
-The backends, on the other hand, are mutually exclusive and only one can be
-selected:
- * qdbm (http://qdbm.sf.net/).
- * bdb (http://www.oracle.com/database/berkeley-db/).
+The backend databases:
+
+ * qdbm (http://qdbm.sf.net/)
+ * bdb (http://www.oracle.com/database/berkeley-db/)
  * Tokyo Cabinet (http://1978th.net/tokyocabinet/)
  * tdb (http://tdb.samba.org/)
- * A null backend, if you don't need a real one.
+ * A null backend (to use when you don't need a real one)
 
-By default, all network protocols are enabled, and the qdbm backend is
-selected.
+By default, all network protocols are enabled, and backends are automatically
+detected according to the available libraries.
 
 You can change the defaults by passing parameters to make, like this:
 
- $ make BACKEND=[qbdm|bdb|tc|tdb|null] ENABLE_$PROTO=[1|0]
+ $ make BE_ENABLE_$BACKEND=[1|0] ENABLE_$PROTO=[1|0]
 
-Where $PROTO can be TCP, UDP, TIPC or SCTP.
+Where $PROTO can be TCP, UDP, TIPC or SCTP, and $BACKEND can be QDBM, BDB, TC,
+TDB or NULL.
 
 For instance, to build with bdb backend and without TIPC and UDP support, use:
 
- $ make BACKEND=bdb ENABLE_TIPC=0
+ $ make BE_ENABLE_BDB=1 ENABLE_TIPC=0
 
 
 Tests

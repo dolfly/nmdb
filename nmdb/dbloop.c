@@ -18,7 +18,7 @@
 
 
 static void *db_loop(void *arg);
-static void process_op(db_t *db, struct queue_entry *e);
+static void process_op(struct db_conn *db, struct queue_entry *e);
 
 
 /* Used to signal the loop that it should exit when the queue becomes empty.
@@ -26,7 +26,7 @@ static void process_op(db_t *db, struct queue_entry *e);
 static int loop_should_stop = 0;
 
 
-pthread_t *db_loop_start(db_t *db)
+pthread_t *db_loop_start(struct db_conn *db)
 {
 	pthread_t *thread;
 
@@ -53,9 +53,9 @@ static void *db_loop(void *arg)
 	int rv;
 	struct timespec ts;
 	struct queue_entry *e;
-	db_t *db;
+	struct db_conn *db;
 
-	db = (db_t *) arg;
+	db = (struct db_conn *) arg;
 
 	for (;;) {
 		/* Condition waits are specified with absolute timeouts, see
@@ -102,11 +102,11 @@ static void *db_loop(void *arg)
 	return NULL;
 }
 
-static void process_op(db_t *db, struct queue_entry *e)
+static void process_op(struct db_conn *db, struct queue_entry *e)
 {
 	int rv;
 	if (e->operation == REQ_SET) {
-		rv = db_set(db, e->key, e->ksize, e->val, e->vsize);
+		rv = db->set(db, e->key, e->ksize, e->val, e->vsize);
 		if (!(e->req->flags & FLAGS_SYNC))
 			return;
 
@@ -125,7 +125,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 			e->req->reply_err(e->req, ERR_MEM);
 			return;
 		}
-		rv = db_get(db, e->key, e->ksize, val, &vsize);
+		rv = db->get(db, e->key, e->ksize, val, &vsize);
 		if (rv == 0) {
 			e->req->reply_mini(e->req, REP_NOTIN);
 			free(val);
@@ -135,7 +135,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 		free(val);
 
 	} else if (e->operation == REQ_DEL) {
-		rv = db_del(db, e->key, e->ksize);
+		rv = db->del(db, e->key, e->ksize);
 		if (!(e->req->flags & FLAGS_SYNC))
 			return;
 
@@ -155,7 +155,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 			e->req->reply_err(e->req, ERR_MEM);
 			return;
 		}
-		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
+		rv = db->get(db, e->key, e->ksize, dbval, &dbvsize);
 		if (rv == 0) {
 			e->req->reply_mini(e->req, REP_NOTIN);
 			free(dbval);
@@ -165,7 +165,8 @@ static void process_op(db_t *db, struct queue_entry *e)
 		if (e->vsize == dbvsize &&
 				memcmp(e->val, dbval, dbvsize) == 0) {
 			/* Swap */
-			rv = db_set(db, e->key, e->ksize, e->newval, e->nvsize);
+			rv = db->set(db, e->key, e->ksize,
+					e->newval, e->nvsize);
 			if (!rv) {
 				e->req->reply_err(e->req, ERR_DB);
 				return;
@@ -189,7 +190,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 			e->req->reply_err(e->req, ERR_MEM);
 			return;
 		}
-		rv = db_get(db, e->key, e->ksize, dbval, &dbvsize);
+		rv = db->get(db, e->key, e->ksize, dbval, &dbvsize);
 		if (rv == 0) {
 			e->req->reply_mini(e->req, REP_NOTIN);
 			free(dbval);
@@ -215,7 +216,7 @@ static void process_op(db_t *db, struct queue_entry *e)
 		snprintf((char *) dbval, dbvsize, "%23lld",
 				(long long int) intval);
 
-		rv = db_set(db, e->key, e->ksize, dbval, dbvsize);
+		rv = db->set(db, e->key, e->ksize, dbval, dbvsize);
 		if (!rv) {
 			e->req->reply_err(e->req, ERR_DB);
 			return;
