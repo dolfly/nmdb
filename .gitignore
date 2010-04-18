@@ -13,8 +13,10 @@
 /tests/c/*-*-cache
 /tests/c/*-*-normal
 /tests/c/*-*-sync
-/libnmdb/nmdb.h
+/libnmdb/internal.h
 /libnmdb/libnmdb.pc
+/libnmdb/doxygen/doc.internal
+/libnmdb/doxygen/Doxyfile.base
 /tags
 /bindings/python/build
 /bindings/python3/build

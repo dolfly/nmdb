@@ -8,13 +8,20 @@
 #include <unistd.h>		/* close() */
 
 #include "nmdb.h"
+#include "internal.h"
 #include "net-const.h"
 #include "tipc.h"
 #include "tcp.h"
 #include "udp.h"
 #include "sctp.h"
-#include "internal.h"
 #include "netutils.h"
+
+
+/* Possible flags, notice it may make no sense to mix them, consult the
+ * documentation before doing weird things. Values should be kept in sync with
+ * the internal net-const.h */
+#define NMDB_CACHE_ONLY 1
+#define NMDB_SYNC 2
 
 
 /* Compares two servers by their connection identifiers. It is used internally

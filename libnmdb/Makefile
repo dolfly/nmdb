@@ -40,14 +40,14 @@ default: all
 
 all: libs libnmdb.pc
 
-nmdb.h: nmdb.skel.h
-	@echo "generating nmdb.h"
-	@cat nmdb.skel.h | \
+internal.h: internal.h.in
+	@echo "generating internal.h"
+	@cat internal.h.in | \
 		sed 's/++CONFIG_ENABLE_TIPC++/$(ENABLE_TIPC)/g' | \
 		sed 's/++CONFIG_ENABLE_TCP++/$(ENABLE_TCP)/g' | \
 		sed 's/++CONFIG_ENABLE_UDP++/$(ENABLE_UDP)/g' | \
 		sed 's/++CONFIG_ENABLE_SCTP++/$(ENABLE_SCTP)/g' \
-		> nmdb.h
+		> internal.h
 
 libnmdb.pc: libnmdb.skel.pc
 	@echo "generating libnmdb.pc"
@@ -57,10 +57,10 @@ libnmdb.pc: libnmdb.skel.pc
 
 libs: libnmdb.so libnmdb.a
 
-libnmdb.so: nmdb.h $(OBJS)
+libnmdb.so: internal.h $(OBJS)
 	$(NICE_CC) $(ALL_CFLAGS) -shared -fPIC $(OBJS) -o libnmdb.so
 
-libnmdb.a: nmdb.h $(OBJS)
+libnmdb.a: internal.h $(OBJS)
 	$(AR) cr libnmdb.a $(OBJS)
 
 
@@ -82,14 +82,17 @@ install-man:
 
 install: install-lib install-man
 
+doxygen:
+	$(MAKE) -C doxygen/
 
 .c.o:
 	$(NICE_CC) $(ALL_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f nmdb.h libnmdb.pc $(OBJS) libnmdb.so libnmdb.a
+	rm -f internal.h libnmdb.pc $(OBJS) libnmdb.so libnmdb.a
 	rm -f *.bb *.bbg *.da *.gcov *.gcda *.gcno gmon.out
+	$(MAKE) -C doxygen $@
 
-.PHONY: default all libs install-lib install-man install clean
+.PHONY: default all libs install-lib install-man install doxygen clean
 
 
