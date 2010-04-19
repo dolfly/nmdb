@@ -88,6 +88,10 @@ tested (although it should work fine), and do
 start an active and a passive server in the same machine (it misbehaves under
 some circumstances, and doesn't make much sense anyway).
 .TP
+.B "-r"
+Read-only mode. The server will refuse any request that would alter the
+database and/or cache. Useful for redundancy and replication.
+.TP
 .B "-h"
 Show a brief help.
 

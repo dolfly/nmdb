@@ -43,6 +43,7 @@ static void help(void) {
 	  "  -o fname	log to the given file (stdout).\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
+	  "  -r		read-only mode\n"
 	  "  -h		show this help\n"
 	  "\n"
 	  "Available backends: " SUPPORTED_BE "\n"
@@ -68,6 +69,7 @@ static int load_settings(int argc, char **argv)
 	settings.numobjs = -1;
 	settings.foreground = 0;
 	settings.passive = 0;
+	settings.read_only = 0;
 	settings.logfname = "-";
 	settings.backend = DEFAULT_BE;
 
@@ -75,7 +77,7 @@ static int load_settings(int argc, char **argv)
 	strcpy(settings.dbname, DEFDBNAME);
 
 	while ((c = getopt(argc, argv,
-				"b:d:l:L:t:T:u:U:s:S:c:o:fph?")) != -1) {
+				"b:d:l:L:t:T:u:U:s:S:c:o:fprh?")) != -1) {
 		switch(c) {
 		case 'b':
 			settings.backend = be_type_from_str(optarg);
@@ -128,6 +130,9 @@ static int load_settings(int argc, char **argv)
 			break;
 		case 'p':
 			settings.passive = 1;
+			break;
+		case 'r':
+			settings.read_only = 1;
 			break;
 
 		case 'h':

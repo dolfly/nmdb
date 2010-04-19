@@ -26,6 +26,7 @@ struct settings {
 	int numobjs;
 	int foreground;
 	int passive;
+	int read_only;
 	char *dbname;
 	char *logfname;
 	enum backend_type backend;

@@ -303,6 +303,11 @@ static void parse_set(struct req_info *req)
 		return;
 	}
 
+	if (settings.read_only) {
+		req->reply_err(req, ERR_RO);
+		return;
+	}
+
 	FILL_CACHE_FLAG(set);
 	FILL_SYNC_FLAG();
 
@@ -346,6 +351,11 @@ static void parse_del(struct req_info *req)
 	if (req->psize < ksize) {
 		stats.net_broken_req++;
 		req->reply_err(req, ERR_BROKEN);
+		return;
+	}
+
+	if (settings.read_only) {
+		req->reply_err(req, ERR_RO);
 		return;
 	}
 
@@ -414,6 +424,11 @@ static void parse_cas(struct req_info *req)
 		return;
 	}
 
+	if (settings.read_only) {
+		req->reply_err(req, ERR_RO);
+		return;
+	}
+
 	FILL_CACHE_FLAG(cas);
 
 	key = req->payload + sizeof(uint32_t) * 3;
@@ -479,6 +494,11 @@ static void parse_incr(struct req_info *req)
 	if ( (req->psize < ksize + 8) || ((ksize + 8) > max)) {
 		stats.net_broken_req++;
 		req->reply_err(req, ERR_BROKEN);
+		return;
+	}
+
+	if (settings.read_only) {
+		req->reply_err(req, ERR_RO);
 		return;
 	}
 

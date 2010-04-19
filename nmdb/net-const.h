@@ -53,6 +53,7 @@
 #define ERR_UNKREQ		0x104	/* Unknown request */
 #define ERR_MEM			0x105	/* Memory allocation error */
 #define ERR_DB			0x106	/* Database error */
+#define ERR_RO			0x107	/* Server in read-only mode */
 
 
 #endif

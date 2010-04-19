@@ -174,6 +174,7 @@ ERR_BROKEN   0x103  Broken request
 ERR_UNKREQ   0x104  Unknown request
 ERR_MEM      0x105  Memory allocation error
 ERR_DB       0x106  Database error
+ERR_RO       0x107  Server in read-only mode
 ============ ====== =========================
 
 
