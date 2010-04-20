@@ -20,7 +20,7 @@ struct db_conn *tc_open(const char *name, int flags)
 	struct db_conn *db;
 	TCHDB *tc_db = tchdbnew();
 
-	if (!tchdbopen(qdbm_db, name, HDBOWRITER | HDBOCREAT))
+	if (!tchdbopen(tc_db, name, HDBOWRITER | HDBOCREAT))
 		return NULL;
 
 	db = malloc(sizeof(struct db_conn));

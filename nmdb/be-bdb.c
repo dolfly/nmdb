@@ -3,6 +3,7 @@
 
 #include <string.h>	/* memset() */
 #include <stddef.h>	/* NULL */
+#include <stdlib.h>	/* malloc() and friends */
 
 /* typedefs to work around db.h include bug */
 typedef unsigned int u_int;
@@ -40,6 +41,7 @@ struct db_conn *bdb_open(const char *name, int flags)
 	if (db == NULL) {
 		bdb_db->close(bdb_db, 0);
 		return NULL;
+	}
 
 	db->conn = bdb_db;
 	db->set = bdb_set;
