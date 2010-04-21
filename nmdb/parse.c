@@ -31,6 +31,8 @@ static struct queue_entry *make_queue_long_entry(const struct req_info *req,
 	struct queue_entry *e;
 	unsigned char *kcopy, *vcopy, *nvcopy;
 
+	kcopy = vcopy = nvcopy = NULL;
+
 	e = queue_entry_create();
 	if (e == NULL) {
 		return NULL;
@@ -39,36 +41,24 @@ static struct queue_entry *make_queue_long_entry(const struct req_info *req,
 	kcopy = NULL;
 	if (key != NULL) {
 		kcopy = malloc(ksize);
-		if (kcopy == NULL) {
-			queue_entry_free(e);
-			return NULL;
-		}
+		if (kcopy == NULL)
+			goto error;
 		memcpy(kcopy, key, ksize);
 	}
 
 	vcopy = NULL;
 	if (val != NULL) {
 		vcopy = malloc(vsize);
-		if (vcopy == NULL) {
-			queue_entry_free(e);
-			if (kcopy != NULL)
-				free(kcopy);
-			return NULL;
-		}
+		if (vcopy == NULL)
+			goto error;
 		memcpy(vcopy, val, vsize);
 	}
 
 	nvcopy = NULL;
 	if (newval != NULL) {
 		nvcopy = malloc(nvsize);
-		if (nvcopy == NULL) {
-			queue_entry_free(e);
-			if (kcopy != NULL)
-				free(kcopy);
-			if (vcopy != NULL)
-				free(vcopy);
-			return NULL;
-		}
+		if (nvcopy == NULL)
+			goto error;
 		memcpy(nvcopy, newval, nvsize);
 	}
 
@@ -100,6 +90,13 @@ static struct queue_entry *make_queue_long_entry(const struct req_info *req,
 	e->req->psize = 0;
 
 	return e;
+
+error:
+	queue_entry_free(e);
+	free(kcopy);
+	free(vcopy);
+	free(nvcopy);
+	return NULL;
 }
 
 
