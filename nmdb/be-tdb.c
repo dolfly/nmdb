@@ -63,22 +63,21 @@ int xtdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
 	TDB_DATA k, v;
 
 	/* we can't maintain "const"ness here because tdb's prototypes; the
-	 * same applies to get and del */
-	k.dptr = key;
+	 * same applies to get and del, so we just cast */
+	k.dptr = (unsigned char *) key;
 	k.dsize = ksize;
-	v.dptr = val;
+	v.dptr = (unsigned char *) val;
 	v.dsize = vsize;
 
 	return tdb_store(db->conn, k, v, TDB_REPLACE) == 0;
 }
-
 
 int xtdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t *vsize)
 {
 	TDB_DATA k, v;
 
-	k.dptr = key;
+	k.dptr = (unsigned char *) key;
 	k.dsize = ksize;
 
 	v = tdb_fetch(db->conn, k);
@@ -98,7 +97,7 @@ int xtdb_del(struct db_conn *db, const unsigned char *key, size_t ksize)
 {
 	TDB_DATA k;
 
-	k.dptr = key;
+	k.dptr = (unsigned char *) key;
 	k.dsize = ksize;
 
 	return tdb_delete(db->conn, k) == 0;

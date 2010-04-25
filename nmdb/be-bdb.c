@@ -78,10 +78,10 @@ int bdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
 	memset(&v, 0, sizeof(DBT));
 
 	/* we can't maintain "const"ness here because bdb's prototypes; the
-	 * same applies to get and del */
-	k.data = key;
+	 * same applies to get and del, so we just cast */
+	k.data = (unsigned char *) key;
 	k.size = ksize;
-	v.data = val;
+	v.data = (unsigned char *) val;
 	v.size = vsize;
 
 	rv = bdb_db->put(bdb_db, NULL, &k, &v, 0);
@@ -101,7 +101,7 @@ int bdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
 	memset(&k, 0, sizeof(DBT));
 	memset(&v, 0, sizeof(DBT));
 
-	k.data = key;
+	k.data = (unsigned char *) key;
 	k.size = ksize;
 	v.data = val;
 	v.ulen = *vsize;
@@ -125,7 +125,7 @@ int bdb_del(struct db_conn *db, const unsigned char *key, size_t ksize)
 	memset(&k, 0, sizeof(DBT));
 	memset(&v, 0, sizeof(DBT));
 
-	k.data = key;
+	k.data = (unsigned char *) key;
 	k.size = ksize;
 
 	rv = bdb_db->del(bdb_db, NULL, &k, 0);
