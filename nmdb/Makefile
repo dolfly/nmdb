@@ -10,7 +10,8 @@ ENABLE_SCTP := $(shell if echo "\#include <netinet/sctp.h>" | \
 # Backends to enable
 BE_ENABLE_QDBM := $(shell if `pkg-config --exists qdbm`; \
 	then echo 1; else echo 0; fi)
-BE_ENABLE_BDB := 0
+BE_ENABLE_BDB := $(shell if echo "\#include <db.h>" | \
+		$(CPP) - > /dev/null 2>&1; then echo 1; else echo 0; fi)
 BE_ENABLE_TC := $(shell if `pkg-config --exists tokyocabinet`; \
 	then echo 1; else echo 0; fi)
 BE_ENABLE_TDB := $(shell if `pkg-config --exists tdb`; \
