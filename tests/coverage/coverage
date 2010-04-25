@@ -1,0 +1,174 @@
+#!/bin/bash
+
+
+if [ ! -x ./nmdb/nmdb ]; then
+	# attempt go to the git root
+	CDUP=$(git rev-parse --show-cdup 2>/dev/null)
+	if [ "$CDUP" != "" ]; then
+		cd $CDUP
+	fi
+
+	if [ ! -x ./nmdb/nmdb ]; then
+		echo "Error: must be run from the project root"
+		exit 1
+	fi
+fi
+
+
+DB="/tmp/nmdb-lcov-db"
+LOG="/tmp/nmdb-lcov.log"
+rm -f $LOG
+
+function log() {
+	echo "$@" >> $LOG
+}
+
+function out() {
+	echo "$@"
+	log "$@"
+}
+
+function run() {
+	log "-- running" "$@"
+	$@ >> $LOG 2>> $LOG
+	log
+}
+
+function nmdb() {
+	log "-- nmdb starting:" "$@"
+	rm -f $DB
+	./nmdb/nmdb -f -d $DB "$@" >> $LOG 2>> $LOG &
+	sleep 0.2
+}
+
+function kill_nmdb() {
+	killall nmdb >> $LOG 2>> $LOG
+	wait `pidof nmdb`
+	log "-- nmdb stopped"
+}
+
+function nmdb_and_kill() {
+	log "-- nmdb_and_kill starting:" "$@"
+	rm -f $DB
+	./nmdb/nmdb -f -d $DB "$@" >> $LOG 2>> $LOG &
+	sleep 0.2
+	killall nmdb >> $LOG 2>> $LOG
+	wait `pidof nmdb`
+	log "-- nmdb_and_kill stopped"
+}
+
+
+out "+ help"
+
+# this one by hand so it also runs the "default database" path
+run ./nmdb/nmdb -h
+
+# this one by hand for fork mode
+out "+ fork mode"
+./nmdb/nmdb >> $LOG; sleep 0.3;
+killall nmdb >> $LOG 2>> $LOG; sleep 1.2; killall -9 nmdb >> $LOG 2>> $LOG
+
+out "+ command line"
+nmdb_and_kill
+nmdb_and_kill -p
+nmdb_and_kill -b blah		# supposed to fail
+
+nmdb_and_kill -l 20
+nmdb_and_kill -L 20
+nmdb_and_kill -t 26020
+nmdb_and_kill -u 26020
+nmdb_and_kill -s 26020
+nmdb_and_kill -T localhost	# supposed to fail
+nmdb_and_kill -U localhost	# supposed to fail
+nmdb_and_kill -S localhost	# supposed to fail
+nmdb_and_kill -T 127.0.0.1
+nmdb_and_kill -U 127.0.0.1
+nmdb_and_kill -S 127.0.0.1
+nmdb_and_kill -c 1
+nmdb_and_kill -o /dev/null
+nmdb_and_kill -Z		# supposed to fail
+nmdb_and_kill -o /root/nmdb-coverage-fail	# supposed to fail
+nmdb_and_kill -d /dev/null	# supposed to fail
+
+
+out "+ signals"
+nmdb
+run killall -USR1 nmdb
+run killall -USR2 nmdb
+run killall -TERM nmdb
+wait `pidof nmdb`
+
+
+for be in bdb tc qdbm tdb; do
+	out "+ backend $be"
+	run rm -f $DB
+	nmdb -b $be
+	if ! pidof nmdb > /dev/null; then
+		out "  unsupported"
+		continue
+	fi
+	kill_nmdb
+
+	out "  + random"
+	nmdb -b $be -c 5
+	run tests/python/random1.py db 5000
+	run tests/python/random1.py cache 5000
+	kill_nmdb
+
+	out "  + performance"
+	nmdb -b $be -c 1
+	pushd tests/c/ > /dev/null
+	for p in mult sctp tcp tipc udp; do
+		for t in cache normal sync; do
+			run ./1-$p-$t 1200 key val
+			run ./2-$p-$t 1200 8 8
+			run ./3-$p-$t 1200 8 8
+			run ./set-$p-$t 1200 8 8
+			run ./get-$p-$t 1210 8
+			run ./del-$p-$t 1210 8
+			run ./incr-$p-$t 1200 10
+		done
+	done
+
+	# stress long tcp requests
+	run ./2-tcp-normal 1200 30000 30000
+
+	popd > /dev/null
+	kill_nmdb
+done
+
+out "+ null backend"
+nmdb -b null -c 1
+pushd tests/c/ > /dev/null
+for p in mult sctp tcp tipc udp; do
+	for t in cache normal sync; do
+		run ./2-$p-$t 1200 8 8
+	done
+done
+popd > /dev/null
+kill_nmdb
+
+out "+ read-only"
+nmdb
+run tests/c/set-tipc-normal 1200 8 8
+kill_nmdb
+nmdb -c 1 -r
+pushd tests/c/ > /dev/null
+for p in mult sctp tcp tipc udp; do
+	run ./set-$p-normal 1200 8 8
+	run ./get-$p-normal 1210 8
+	run ./del-$p-normal 1210 8
+	run ./incr-$p-normal 1200 10
+done
+popd > /dev/null
+kill_nmdb
+
+
+out "+ stats"
+nmdb
+run utils/nmdb-stats tipc 10
+run utils/nmdb-stats tcp localhost 26010
+run utils/nmdb-stats udp localhost 26010
+run utils/nmdb-stats sctp localhost 26010
+kill_nmdb
+

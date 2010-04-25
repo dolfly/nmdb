@@ -1,0 +1,21 @@
+
+Here you will find two scripts that can be used to generate code coverage
+reports.
+
+
+"coverage" runs the server and all the other tests with different parameters,
+trying to maximize code coverage.
+
+As it does not test for correctness, it is mostly useful to see which code is
+not used by the other tests. The output is saved to /tmp/nmdb-lcov.log, to
+allow manual verification of the test results.
+
+It can be combined with gcov, lcov, or other code coverage tools, to generate
+friendly reports.
+
+
+"lcov-start" and "lcov-stop" can be used to generate coverage reports with the
+lcov tool (http://ltp.sourceforge.net/coverage/lcov.php). The reports are
+generated in the "lcov/" subdirectory.
+
+

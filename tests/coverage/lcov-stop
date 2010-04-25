@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ ! -x ./nmdb/nmdb ]; then
+	# attempt go to the git root
+	CDUP=$(git rev-parse --show-cdup 2>/dev/null)
+	if [ "$CDUP" != "" ]; then
+		cd $CDUP
+	fi
+
+	if [ ! -x ./nmdb/nmdb ]; then
+		echo "Error: must be run from the project root"
+		exit 1
+	fi
+fi
+
+set -e
+
+LCOV="lcov --directory nmdb/ --base-directory nmdb/"
+
+$LCOV -o tests/coverage/test_results.1 \
+	--capture -t "Coverage tests"
+$LCOV -o tests/coverage/test_results \
+	--remove tests/coverage/test_results.1 '/usr/include/*'
+rm tests/coverage/test_results.1
+mkdir -p tests/coverage/lcov
+genhtml --show-details -o tests/coverage/lcov/ tests/coverage/test_results
+rm tests/coverage/test_results
+

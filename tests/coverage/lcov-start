@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ ! -x ./nmdb/nmdb ]; then
+	# attempt go to the git root
+	CDUP=$(git rev-parse --show-cdup 2>/dev/null)
+	if [ "$CDUP" != "" ]; then
+		cd $CDUP
+	fi
+
+	if [ ! -x ./nmdb/nmdb ]; then
+		echo "Error: must be run from the project root"
+		exit 1
+	fi
+fi
+
+set -e
+
+LCOV="lcov --directory nmdb/ --base-directory nmdb/"
+$LCOV --zerocounters
+
+

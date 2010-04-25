@@ -7,6 +7,7 @@
 .*.swp
 *.gcno
 *.gcda
+gmon.out
 # *~
 /nmdb/nmdb
 /utils/nmdb-stats
@@ -23,3 +24,4 @@
 /tests/perf/out
 /tests/perf/ag-data
 /tests/perf/graph
+/tests/coverage/lcov
