@@ -20,7 +20,6 @@ gmon.out
 /libnmdb/doxygen/Doxyfile.base
 /tags
 /bindings/python/build
-/bindings/python3/build
 /tests/perf/out
 /tests/perf/ag-data
 /tests/perf/graph

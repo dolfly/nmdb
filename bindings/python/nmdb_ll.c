@@ -1,11 +1,13 @@
 
 /*
- * Python bindings for libnmdb
+ * Python 2 and 3 bindings for libnmdb
  * Alberto Bertogli (albertito@blitiri.com.ar)
  *
  * This is the low-level module, used by the python one to construct
  * friendlier objects.
  */
+
+#define PY_SSIZE_T_CLEAN 1
 
 #include <Python.h>
 #include <nmdb.h>
@@ -19,7 +21,6 @@ typedef struct {
 	PyObject_HEAD;
 	nmdb_t *db;
 } nmdbobject;
-static PyTypeObject nmdbType;
 
 /*
  * The nmdb object
@@ -92,7 +93,7 @@ static PyObject *db_add_udp_server(nmdbobject *db, PyObject *args)
 static PyObject *db_cache_set(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *val;
-	int ksize, vsize;
+	size_t ksize, vsize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#s#:cache_set", &key, &ksize,
@@ -111,8 +112,8 @@ static PyObject *db_cache_set(nmdbobject *db, PyObject *args)
 static PyObject *db_cache_get(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *val;
-	int ksize, vsize;
-	long rv;
+	size_t ksize, vsize;
+	ssize_t rv;
 	PyObject *r;
 
 	if (!PyArg_ParseTuple(args, "s#:cache_get", &key, &ksize)) {
@@ -136,7 +137,11 @@ static PyObject *db_cache_get(nmdbobject *db, PyObject *args)
 		/* Miss, handled in the high-level module. */
 		r = PyLong_FromLong(-1);
 	} else {
+#ifdef PYTHON3
+		r = PyBytes_FromStringAndSize((char *) val, rv);
+#elif PYTHON2
 		r = PyString_FromStringAndSize((char *) val, rv);
+#endif
 	}
 
 	free(val);
@@ -147,7 +152,7 @@ static PyObject *db_cache_get(nmdbobject *db, PyObject *args)
 static PyObject *db_cache_delete(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
-	int ksize;
+	size_t ksize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#:cache_delete", &key, &ksize)) {
@@ -165,7 +170,7 @@ static PyObject *db_cache_delete(nmdbobject *db, PyObject *args)
 static PyObject *db_cache_cas(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *oldval, *newval;
-	int ksize, ovsize, nvsize;
+	size_t ksize, ovsize, nvsize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#s#s#:cache_cas", &key, &ksize,
@@ -186,7 +191,7 @@ static PyObject *db_cache_cas(nmdbobject *db, PyObject *args)
 static PyObject *db_cache_incr(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
-	int ksize;
+	size_t ksize;
 	int rv;
 	long long int increment;
 	int64_t newval;
@@ -200,7 +205,7 @@ static PyObject *db_cache_incr(nmdbobject *db, PyObject *args)
 	rv = nmdb_cache_incr(db->db, key, ksize, increment, &newval);
 	Py_END_ALLOW_THREADS
 
-	return Py_BuildValue("LL", rv, newval);
+	return Py_BuildValue("iL", rv, newval);
 }
 
 
@@ -208,7 +213,7 @@ static PyObject *db_cache_incr(nmdbobject *db, PyObject *args)
 static PyObject *db_set(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *val;
-	int ksize, vsize;
+	size_t ksize, vsize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#s#:set", &key, &ksize,
@@ -227,8 +232,8 @@ static PyObject *db_set(nmdbobject *db, PyObject *args)
 static PyObject *db_get(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *val;
-	int ksize, vsize;
-	long rv;
+	size_t ksize, vsize;
+	ssize_t rv;
 	PyObject *r;
 
 	if (!PyArg_ParseTuple(args, "s#:get", &key, &ksize)) {
@@ -252,7 +257,11 @@ static PyObject *db_get(nmdbobject *db, PyObject *args)
 		/* Miss, handled in the high-level module. */
 		r = PyLong_FromLong(-1);
 	} else {
+#ifdef PYTHON3
+		r = PyBytes_FromStringAndSize((char *) val, rv);
+#elif PYTHON2
 		r = PyString_FromStringAndSize((char *) val, rv);
+#endif
 	}
 
 	free(val);
@@ -263,7 +272,7 @@ static PyObject *db_get(nmdbobject *db, PyObject *args)
 static PyObject *db_delete(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
-	int ksize;
+	size_t ksize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#:delete", &key, &ksize)) {
@@ -281,7 +290,7 @@ static PyObject *db_delete(nmdbobject *db, PyObject *args)
 static PyObject *db_cas(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *oldval, *newval;
-	int ksize, ovsize, nvsize;
+	size_t ksize, ovsize, nvsize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#s#s#:cas", &key, &ksize,
@@ -301,7 +310,7 @@ static PyObject *db_cas(nmdbobject *db, PyObject *args)
 static PyObject *db_incr(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
-	int ksize;
+	size_t ksize;
 	int rv;
 	long long int increment;
 	int64_t newval;
@@ -322,7 +331,7 @@ static PyObject *db_incr(nmdbobject *db, PyObject *args)
 static PyObject *db_set_sync(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *val;
-	int ksize, vsize;
+	size_t ksize, vsize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#s#:set_sync", &key, &ksize,
@@ -341,7 +350,7 @@ static PyObject *db_set_sync(nmdbobject *db, PyObject *args)
 static PyObject *db_delete_sync(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
-	int ksize;
+	size_t ksize;
 	int rv;
 
 	if (!PyArg_ParseTuple(args, "s#:delete_sync", &key, &ksize)) {
@@ -359,8 +368,8 @@ static PyObject *db_delete_sync(nmdbobject *db, PyObject *args)
 static PyObject *db_firstkey(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key;
-	int ksize;
-	long rv;
+	size_t ksize;
+	ssize_t rv;
 	PyObject *r;
 
 	if (!PyArg_ParseTuple(args, "")) {
@@ -385,7 +394,11 @@ static PyObject *db_firstkey(nmdbobject *db, PyObject *args)
 		 * module. */
 		r = PyLong_FromLong(-1);
 	} else {
+#ifdef PYTHON3
+		r = PyBytes_FromStringAndSize((char *) key, rv);
+#elif PYTHON2
 		r = PyString_FromStringAndSize((char *) key, rv);
+#endif
 	}
 
 	free(key);
@@ -396,8 +409,8 @@ static PyObject *db_firstkey(nmdbobject *db, PyObject *args)
 static PyObject *db_nextkey(nmdbobject *db, PyObject *args)
 {
 	unsigned char *key, *newkey;
-	int ksize, nksize;
-	long rv;
+	size_t ksize, nksize;
+	ssize_t rv;
 	PyObject *r;
 
 	if (!PyArg_ParseTuple(args, "s#:nextkey", &key, &ksize)) {
@@ -421,7 +434,11 @@ static PyObject *db_nextkey(nmdbobject *db, PyObject *args)
 		/* End, handled in the high-level module. */
 		r = PyLong_FromLong(-1);
 	} else {
+#ifdef PYTHON3
+		r = PyBytes_FromStringAndSize((char *) newkey, rv);
+#elif PYTHON2
 		r = PyString_FromStringAndSize((char *) newkey, rv);
+#endif
 	}
 
 	free(newkey);
@@ -456,21 +473,6 @@ static PyMethodDef nmdb_methods[] = {
 	{ NULL }
 };
 
-static PyObject *db_getattr(nmdbobject *db, char *name)
-{
-	return Py_FindMethod(nmdb_methods, (PyObject *)db, name);
-}
-
-static PyTypeObject nmdbType = {
-	PyObject_HEAD_INIT(NULL)
-	0,
-	"nmdb_ll.nmdb",
-	sizeof(nmdbobject),
-	0,
-	(destructor) db_dealloc,
-	0,
-	(getattrfunc) db_getattr,
-};
 
 
 /*
@@ -478,11 +480,16 @@ static PyTypeObject nmdbType = {
  */
 
 /* new, returns an nmdb object */
+static PyTypeObject nmdbType;
 static PyObject *db_new(PyObject *self, PyObject *args)
 {
 	nmdbobject *db;
 
+#ifdef PYTHON3
+	db = (nmdbobject *) nmdbType.tp_alloc(&nmdbType, 0);
+#elif PYTHON2
 	db = PyObject_New(nmdbobject, &nmdbType);
+#endif
 	if (db == NULL)
 		return NULL;
 
@@ -509,6 +516,53 @@ static PyMethodDef nmdb_functions[] = {
 	{ NULL }
 };
 
+
+#ifdef PYTHON3
+static PyTypeObject nmdbType = {
+	PyObject_HEAD_INIT(NULL)
+	.tp_name = "nmdb_ll.nmdb",
+	.tp_itemsize = sizeof(nmdbobject),
+	.tp_dealloc = (destructor) db_dealloc,
+	.tp_methods = nmdb_methods,
+};
+
+static PyModuleDef nmdb_module = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "nmdb_ll",
+	.m_doc = NULL,
+	.m_size = -1,
+	.m_methods = nmdb_functions,
+};
+
+PyMODINIT_FUNC PyInit_nmdb_ll(void)
+{
+	PyObject *m;
+
+	if (PyType_Ready(&nmdbType) < 0)
+		return NULL;
+
+	m = PyModule_Create(&nmdb_module);
+
+	return m;
+}
+
+#elif PYTHON2
+static PyObject *db_getattr(nmdbobject *db, char *name)
+{
+	return Py_FindMethod(nmdb_methods, (PyObject *)db, name);
+}
+
+static PyTypeObject nmdbType = {
+	PyObject_HEAD_INIT(NULL)
+	0,
+	"nmdb_ll.nmdb",
+	sizeof(nmdbobject),
+	0,
+	(destructor) db_dealloc,
+	0,
+	(getattrfunc) db_getattr,
+};
+
 PyMODINIT_FUNC initnmdb_ll(void)
 {
 	PyObject *m;
@@ -518,5 +572,6 @@ PyMODINIT_FUNC initnmdb_ll(void)
 	m = Py_InitModule("nmdb_ll", nmdb_functions);
 }
 
+#endif
 
 

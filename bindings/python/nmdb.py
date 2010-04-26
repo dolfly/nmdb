@@ -183,8 +183,8 @@ class GenericDB (object):
 		elif r == 1:
 			# no match, because the value didn't have the right
 			# format
-			raise TypeError, \
-				"The value must be a NULL-terminated string"
+			raise TypeError(
+				"The value must be a NULL-terminated string")
 		elif r == 0:
 			# not in
 			raise KeyError

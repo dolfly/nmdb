@@ -15,7 +15,6 @@ As a brief resume, here's how each sub-project is licensed:
  * bindings/haskell: BOLA (Public domain)
  * bindings/newlisp: BOLA (Public domain)
  * bindings/python: BOLA (Public domain)
- * bindings/python3: BOLA (Public domain)
  * bindings/ruby: BOLA (Public domain)
 
 

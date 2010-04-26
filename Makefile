@@ -33,13 +33,13 @@ python_clean:
 	cd bindings/python && rm -rf build/
 
 python3:
-	cd bindings/python3 && python3 setup.py build
+	cd bindings/python && python3 setup.py build
 
 python3_install:
-	cd bindings/python3 && python3 setup.py install
+	cd bindings/python && python3 setup.py install
 
 python3_clean:
-	cd bindings/python3 && rm -rf build/
+	cd bindings/python && rm -rf build/
 
 
 .PHONY: default all clean nmdb libnmdb utils \
