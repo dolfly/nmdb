@@ -115,6 +115,11 @@ for be in bdb tc qdbm tdb; do
 	run tests/python/random1.py cache 5000
 	kill_nmdb
 
+	out "  + walk"
+	nmdb -b $be -c 5
+	run tests/python/walk.py 5000
+	kill_nmdb
+
 	out "  + performance"
 	nmdb -b $be -c 1
 	pushd tests/c/ > /dev/null
