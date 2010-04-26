@@ -197,6 +197,31 @@ class GenericDB (object):
 	def normal_incr(self, key, increment = 1):
 		return self.generic_incr(self._db.incr, key, increment)
 
+	def firstkey(self):
+		try:
+			r = self._db.firstkey()
+		except:
+			raise NetworkError
+		if r == -1:
+			# No keys, or unsupported
+			raise KeyError
+		if self.autopickle:
+			r = pickle.loads(r)
+		return r
+
+	def nextkey(self, key):
+		if self.autopickle:
+			key = pickle.dumps(key, protocol = -1)
+		try:
+			r = self._db.nextkey(key)
+		except:
+			raise NetworkError
+		if r == -1:
+			# No next key, or unsupported
+			raise KeyError
+		if self.autopickle:
+			r = pickle.loads(r)
+		return r
 
 	# The following functions will assume the existance of self.set,
 	# self.get, and self.delete, which are supposed to be set by our
@@ -240,6 +265,8 @@ class DB (GenericDB):
 	delete = GenericDB.normal_delete
 	cas = GenericDB.normal_cas
 	incr = GenericDB.normal_incr
+	firstkey = GenericDB.firstkey
+	nextkey = GenericDB.nextkey
 
 class SyncDB (GenericDB):
 	get = GenericDB.normal_get
@@ -247,5 +274,7 @@ class SyncDB (GenericDB):
 	delete = GenericDB.delete_sync
 	cas = GenericDB.normal_cas
 	incr = GenericDB.normal_incr
+	firstkey = GenericDB.firstkey
+	nextkey = GenericDB.nextkey
 
 

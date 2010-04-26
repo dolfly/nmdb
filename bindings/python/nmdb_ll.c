@@ -355,6 +355,78 @@ static PyObject *db_delete_sync(nmdbobject *db, PyObject *args)
 	return PyLong_FromLong(rv);
 }
 
+/* firstkey */
+static PyObject *db_firstkey(nmdbobject *db, PyObject *args)
+{
+	unsigned char *key;
+	int ksize;
+	long rv;
+	PyObject *r;
+
+	if (!PyArg_ParseTuple(args, "")) {
+		return NULL;
+	}
+
+	/* ksize is enough to hold the any value */
+	ksize = 128 * 1024;
+	key = malloc(ksize);
+	if (key== NULL)
+		return PyErr_NoMemory();
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_firstkey(db->db, key, ksize);
+	Py_END_ALLOW_THREADS
+
+	if (rv <= -2) {
+		/* FIXME: define a better exception */
+		r = PyErr_SetFromErrno(PyExc_IOError);
+	} else if (rv == -1) {
+		/* No first key or unsupported, handled in the high-level
+		 * module. */
+		r = PyLong_FromLong(-1);
+	} else {
+		r = PyString_FromStringAndSize((char *) key, rv);
+	}
+
+	free(key);
+	return r;
+}
+
+/* nextkey */
+static PyObject *db_nextkey(nmdbobject *db, PyObject *args)
+{
+	unsigned char *key, *newkey;
+	int ksize, nksize;
+	long rv;
+	PyObject *r;
+
+	if (!PyArg_ParseTuple(args, "s#:nextkey", &key, &ksize)) {
+		return NULL;
+	}
+
+	/* nksize is enough to hold the any value */
+	nksize = 128 * 1024;
+	newkey = malloc(nksize);
+	if (newkey == NULL)
+		return PyErr_NoMemory();
+
+	Py_BEGIN_ALLOW_THREADS
+	rv = nmdb_nextkey(db->db, key, ksize, newkey, nksize);
+	Py_END_ALLOW_THREADS
+
+	if (rv <= -2) {
+		/* FIXME: define a better exception */
+		r = PyErr_SetFromErrno(PyExc_IOError);
+	} else if (rv == -1) {
+		/* End, handled in the high-level module. */
+		r = PyLong_FromLong(-1);
+	} else {
+		r = PyString_FromStringAndSize((char *) newkey, rv);
+	}
+
+	free(newkey);
+	return r;
+}
 
 
 /* nmdb method table */
@@ -378,6 +450,8 @@ static PyMethodDef nmdb_methods[] = {
 	{ "incr", (PyCFunction) db_incr, METH_VARARGS, NULL },
 	{ "set_sync", (PyCFunction) db_set_sync, METH_VARARGS, NULL },
 	{ "delete_sync", (PyCFunction) db_delete_sync, METH_VARARGS, NULL },
+	{ "firstkey", (PyCFunction) db_firstkey, METH_VARARGS, NULL },
+	{ "nextkey", (PyCFunction) db_nextkey, METH_VARARGS, NULL },
 
 	{ NULL }
 };

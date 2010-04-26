@@ -17,6 +17,8 @@ static void parse_set(struct req_info *req);
 static void parse_del(struct req_info *req);
 static void parse_cas(struct req_info *req);
 static void parse_incr(struct req_info *req);
+static void parse_firstkey(struct req_info *req);
+static void parse_nextkey(struct req_info *req);
 static void parse_stats(struct req_info *req);
 
 
@@ -204,6 +206,10 @@ int parse_message(struct req_info *req,
 		parse_cas(req);
 	} else if (cmd == REQ_INCR) {
 		parse_incr(req);
+	} else if (cmd == REQ_FIRSTKEY) {
+		parse_firstkey(req);
+	} else if (cmd == REQ_NEXTKEY) {
+		parse_nextkey(req);
 	} else if (cmd == REQ_STATS) {
 		parse_stats(req);
 	} else {
@@ -539,6 +545,48 @@ static void parse_incr(struct req_info *req)
 }
 
 
+static void parse_firstkey(struct req_info *req)
+{
+	int rv;
+	const unsigned char *key;
+
+	stats.db_firstkey++;
+
+	key = req->payload + sizeof(uint32_t);
+
+	rv = put_in_queue(req, REQ_FIRSTKEY, 1, NULL, 0, NULL, 0);
+	if (!rv) {
+		req->reply_err(req, ERR_MEM);
+		return;
+	}
+}
+
+static void parse_nextkey(struct req_info *req)
+{
+	int rv;
+	const unsigned char *key;
+	uint32_t ksize;
+
+	ksize = * (uint32_t *) req->payload;
+	ksize = ntohl(ksize);
+	if (req->psize < ksize) {
+		stats.net_broken_req++;
+		req->reply_err(req, ERR_BROKEN);
+		return;
+	}
+
+	stats.db_nextkey++;
+
+	key = req->payload + sizeof(uint32_t);
+
+	rv = put_in_queue(req, REQ_NEXTKEY, 1, key, ksize, NULL, 0);
+	if (!rv) {
+		req->reply_err(req, ERR_MEM);
+		return;
+	}
+}
+
+
 static void parse_stats(struct req_info *req)
 {
 	int i;
@@ -582,6 +630,9 @@ static void parse_stats(struct req_info *req)
 	fcpy(net_version_mismatch);
 	fcpy(net_broken_req);
 	fcpy(net_unk_req);
+
+	fcpy(db_firstkey);
+	fcpy(db_nextkey);
 
 	req->reply_long(req, REP_OK, (unsigned char *) response,
 			sizeof(response));

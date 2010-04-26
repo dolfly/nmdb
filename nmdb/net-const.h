@@ -33,6 +33,8 @@
 #define REQ_CAS			0x104
 #define REQ_INCR		0x105
 #define REQ_STATS		0x106
+#define REQ_FIRSTKEY		0x107
+#define REQ_NEXTKEY		0x108
 
 /* Possible request flags (which can be applied to the documented requests) */
 #define FLAGS_CACHE_ONLY	1	/* get, set, del, cas, incr */

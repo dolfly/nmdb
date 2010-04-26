@@ -47,6 +47,8 @@ struct db_conn *bdb_open(const char *name, int flags)
 	db->set = bdb_set;
 	db->get = bdb_get;
 	db->del = bdb_del;
+	db->firstkey = NULL;
+	db->nextkey = NULL;
 	db->close = bdb_close;
 
 	return db;

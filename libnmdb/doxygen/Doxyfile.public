@@ -4,5 +4,5 @@ OUTPUT_DIRECTORY = doc.public
 EXTRACT_ALL = YES
 EXTRACT_STATIC = NO
 INTERNAL_DOCS = NO
-INPUT = ../nmdb.h groups.doxy
+INPUT = ../nmdb.h
 

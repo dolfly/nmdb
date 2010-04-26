@@ -228,6 +228,51 @@ static void process_op(struct db_conn *db, struct queue_entry *e)
 
 		free(dbval);
 
+	} else if (e->operation == REQ_FIRSTKEY) {
+		unsigned char *key;
+		size_t ksize = 64 * 1024;
+
+		if (db->firstkey == NULL) {
+			e->req->reply_err(e->req, ERR_DB);
+			return;
+		}
+
+		key = malloc(ksize);
+		if (key == NULL) {
+			e->req->reply_err(e->req, ERR_MEM);
+			return;
+		}
+		rv = db->firstkey(db, key, &ksize);
+		if (rv == 0) {
+			e->req->reply_mini(e->req, REP_NOTIN);
+			free(key);
+			return;
+		}
+		e->req->reply_long(e->req, REP_OK, key, ksize);
+		free(key);
+
+	} else if (e->operation == REQ_NEXTKEY) {
+		unsigned char *newkey;
+		size_t nksize = 64 * 1024;
+
+		if (db->nextkey == NULL) {
+			e->req->reply_err(e->req, ERR_DB);
+			return;
+		}
+
+		newkey = malloc(nksize);
+		if (newkey == NULL) {
+			e->req->reply_err(e->req, ERR_MEM);
+			return;
+		}
+		rv = db->nextkey(db, e->key, e->ksize, newkey, &nksize);
+		if (rv == 0) {
+			e->req->reply_mini(e->req, REP_NOTIN);
+			free(newkey);
+			return;
+		}
+		e->req->reply_long(e->req, REP_OK, newkey, nksize);
+		free(newkey);
 	} else {
 		wlog("Unknown op 0x%x\n", e->operation);
 	}

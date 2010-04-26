@@ -31,9 +31,11 @@ struct stats {
 	unsigned long net_version_mismatch;
 	unsigned long net_broken_req;	/* 20 */
 	unsigned long net_unk_req;
+	unsigned long db_firstkey;
+	unsigned long db_nextkey;
 };
 
-#define STATS_REPLY_SIZE 21
+#define STATS_REPLY_SIZE 23
 
 void stats_init(struct stats *s);
 

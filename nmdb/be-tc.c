@@ -34,6 +34,8 @@ struct db_conn *tc_open(const char *name, int flags)
 	db->set = tc_set;
 	db->get = tc_get;
 	db->del = tc_del;
+	db->firstkey = NULL;
+	db->nextkey = NULL;
 	db->close = tc_close;
 
 	return db;

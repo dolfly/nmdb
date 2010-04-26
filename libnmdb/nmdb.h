@@ -4,8 +4,15 @@
 #ifndef _NMDB_H
 #define _NMDB_H
 
+
 /** Opaque type representing a connection with one or more servers. */
 typedef struct nmdb_conn nmdb_t;
+
+
+/**
+ * @addtogroup connection Connection API
+ * Functions used to connect to the servers.
+ */
 
 /** Create a new nmdb_t pointer, used to talk with the server.
  *
@@ -61,6 +68,15 @@ int nmdb_add_sctp_server(nmdb_t *db, const char *addr, int port);
  * @ingroup connection
  */
 int nmdb_free(nmdb_t *db);
+
+
+/**
+ * @addtogroup database Database API
+ * Functions that affect the database and the cache.
+ *
+ * @addtogroup cache Cache API
+ * Functions that affect only the cache.
+ */
 
 /** Get the value associated with a key.
  *
@@ -261,6 +277,61 @@ int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
                 int64_t increment, int64_t *newval);
 
 
+/**
+ * @addtogroup utility Functions used in nmdb utilities
+ * These functions are used almost exclusively by nmdb utilities, although
+ * they may be used by external applications. They often require some
+ * knowledge about nmdb's inner workings so they should be used with care.
+ */
+
+/** Get the first key.
+ * Returns the first key in the database, which can then be used to get the
+ * following one with nmdb_nextkey(). Together, they can be used to iterate
+ * over all the keys of a *single server*.  It has some caveats:
+ *
+ *  - It will fail if db has more than one server.
+ *  - If the database is being modified during iteration, the walk can result
+ *    in skipping nodes or walking the same one twice.
+ *  - There is absolutely no guarantee about the order of the keys.
+ *  - The order is not stable and must not be relied upon.
+ *
+ * This is almost exclusively used for replication utilities.
+ *
+ * @param db connection instance.
+ * @param[out] key the first key.
+ * @param ksize the key size.
+ * @returns -2 on error, -1 if the database is empty, or the key size on
+ * 	success.
+ * @ingroup utility
+ */
+ssize_t nmdb_firstkey(nmdb_t *db, unsigned char *key, size_t ksize);
+
+/** Get the key that follows the one given.
+ * Together with nmdb_firstkey(), they can be used to iterate This function,
+ * along with nmdb_firstkey(), are used to iterate over all the keys of a
+ * *single server*. It has some caveats:
+ *
+ *  - It will fail if db has more than one server.
+ *  - If the database is being modified during iteration, the walk can result
+ *    in skipping nodes or walking the same one twice.
+ *  - There is absolutely no guarantee about the order of the keys.
+ *  - The order is not stable and must not be relied upon.
+ *
+ * This is almost exclusively used for replication utilities.
+ *
+ * @param db connection instance.
+ * @param key the current key.
+ * @param ksize the current key size.
+ * @param[out] newkey the key that follows the current one.
+ * @param nksize the newkey size.
+ * @returns -2 on error, -1 if the database is empty, or the new key size on
+ * 	success.
+ * @ingroup utility
+ */
+ssize_t nmdb_nextkey(nmdb_t *db, const unsigned char *key, size_t ksize,
+		unsigned char *newkey, size_t nksize);
+
+
 /** Request servers' statistics.
  * This API is used by nmdb-stats, and likely to change in the future. Do not
  * rely on it.
@@ -274,6 +345,7 @@ int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
  *	was a network error, -3 if the buffer was too small, -4 if the server
  *	replies were of different size (indicates different server versions,
  *	not supported at the time)
+ * @ingroup utility
  */
 int nmdb_stats(nmdb_t *db, unsigned char *buf, size_t bsize,
 		unsigned int *nservers, unsigned int *nstats);

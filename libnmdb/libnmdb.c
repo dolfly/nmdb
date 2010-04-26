@@ -657,6 +657,116 @@ int nmdb_cache_incr(nmdb_t *db, const unsigned char *key, size_t ksize,
 }
 
 
+ssize_t nmdb_firstkey(nmdb_t *db, unsigned char *key, size_t ksize)
+{
+	ssize_t rv, t;
+	unsigned char *buf, *p;
+	size_t bufsize, payload_offset, psize = 0;
+	uint32_t reply;
+	struct nmdb_srv *srv;
+
+	if (db->nservers != 1) {
+		return -2;
+	}
+	srv = &(db->servers[0]);
+
+	buf = new_packet(srv, REQ_FIRSTKEY, 0, &bufsize, &payload_offset, -1);
+	if (buf == NULL)
+		return -2;
+
+	t = srv_send(srv, buf, payload_offset);
+	if (t <= 0) {
+		rv = -2;
+		goto exit;
+	}
+
+	reply = get_rep(srv, buf, bufsize, &p, &psize);
+
+	if (reply == REP_NOTIN) {
+		rv = -1;
+		goto exit;
+	} else if (reply == REP_ERR) {
+		rv = -2;
+		goto exit;
+	} else if (reply != REP_OK) {
+		/* invalid response */
+		rv = -2;
+		goto exit;
+	}
+
+	/* we've got an answer */
+	rv = * (uint32_t *) p;
+	rv = ntohl(rv);
+	if (rv > (psize - 4) || rv > ksize) {
+		/* the value is too big for the packet size, or it is too big
+		 * to fit in the buffer we were given */
+		rv = -2;
+		goto exit;
+	}
+	memcpy(key, p + 4, rv);
+
+exit:
+	free(buf);
+	return rv;
+
+}
+
+ssize_t nmdb_nextkey(nmdb_t *db, const unsigned char *key, size_t ksize,
+		unsigned char *newkey, size_t nksize)
+{
+	ssize_t rv, t;
+	unsigned char *buf, *p;
+	size_t bufsize, reqsize, payload_offset, psize = 0;
+	uint32_t reply;
+	struct nmdb_srv *srv;
+
+	if (db->nservers != 1)
+		return -2;
+	srv = &(db->servers[0]);
+
+	buf = new_packet(srv, REQ_NEXTKEY, 0, &bufsize, &payload_offset, -1);
+	if (buf == NULL)
+		return -1;
+	reqsize = payload_offset;
+	reqsize += append_1v(buf + payload_offset, key, ksize);
+
+	t = srv_send(srv, buf, reqsize);
+	if (t <= 0) {
+		rv = -2;
+		goto exit;
+	}
+
+	reply = get_rep(srv, buf, bufsize, &p, &psize);
+
+	if (reply == REP_NOTIN) {
+		rv = -1;
+		goto exit;
+	} else if (reply == REP_ERR) {
+		rv = -2;
+		goto exit;
+	} else if (reply != REP_OK) {
+		/* invalid response */
+		rv = -2;
+		goto exit;
+	}
+
+	/* we've got an answer */
+	rv = * (uint32_t *) p;
+	rv = ntohl(rv);
+	if (rv > (psize - 4) || rv > nksize) {
+		/* the value is too big for the packet size, or it is too big
+		 * to fit in the buffer we were given */
+		rv = -2;
+		goto exit;
+	}
+	memcpy(newkey, p + 4, rv);
+
+exit:
+	free(buf);
+	return rv;
+}
+
+
 /* Request servers' statistics, return the aggregated results in buf, with the
  * number of servers in nservers and the number of stats per server in nstats.
  * Used in the "nmdb-stats" utility, matches the server version.

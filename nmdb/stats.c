@@ -26,6 +26,9 @@ void stats_init(struct stats *s)
 	s->net_version_mismatch = 0;
 	s->net_broken_req = 0;
 	s->net_unk_req = 0;
+
+	s->db_firstkey = 0;
+	s->db_nextkey = 0;
 }
 
 

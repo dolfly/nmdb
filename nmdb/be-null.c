@@ -26,6 +26,8 @@ struct db_conn *null_open(const char *name, int flags)
 	db->set = null_set;
 	db->get = null_get;
 	db->del = null_del;
+	db->firstkey = NULL;
+	db->nextkey = NULL;
 	db->close = null_close;
 
 	return db;

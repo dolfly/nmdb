@@ -15,8 +15,11 @@ struct db_conn {
 	int (*get)(struct db_conn *db, const unsigned char *key, size_t ksize,
 			unsigned char *val, size_t *vsize);
 	int (*del)(struct db_conn *db, const unsigned char *key, size_t ksize);
+	int (*firstkey)(struct db_conn *db, unsigned char *key, size_t *ksize);
+	int (*nextkey)(struct db_conn *db,
+			const unsigned char *key, size_t ksize,
+			unsigned char *nextkey, size_t *nksize);
 	int (*close)(struct db_conn *db);
-
 };
 
 enum backend_type {

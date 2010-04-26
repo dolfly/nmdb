@@ -8,6 +8,7 @@
 #include <stdint.h>		/* uint64_t */
 #include <string.h>		/* strcmp() */
 #include <stdlib.h>		/* atoi() */
+#include <arpa/inet.h>		/* htonl() and friends */
 
 #include "nmdb.h"
 
@@ -108,6 +109,7 @@ int main(int argc, char **argv)
 
 		j = nstats * i;
 
+		/* note they are not necessarily in numerical order */
 		shst("cache get", 0);
 		shst("cache set", 1);
 		shst("cache del", 2);
@@ -119,6 +121,8 @@ int main(int argc, char **argv)
 		shst("db del", 7);
 		shst("db cas", 8);
 		shst("db incr", 9);
+		shst("db firstkey", 21);
+		shst("db nextkey", 22);
 
 		shst("cache hits", 10);
 		shst("cache misses", 11);
@@ -136,7 +140,7 @@ int main(int argc, char **argv)
 		shst("unknown requests", 20);
 
 		/* if there are any fields we don't know, show them anyway */
-		for (k = 21; k < nstats; k++) {
+		for (k = 23; k < nstats; k++) {
 			shst("unknown field", k);
 		}
 

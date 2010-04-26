@@ -36,6 +36,8 @@ struct db_conn *qdbm_open(const char *name, int flags)
 	db->set = qdbm_set;
 	db->get = qdbm_get;
 	db->del = qdbm_del;
+	db->firstkey = NULL;
+	db->nextkey = NULL;
 	db->close = qdbm_close;
 
 	return db;

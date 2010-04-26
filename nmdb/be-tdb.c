@@ -21,6 +21,10 @@ int xtdb_set(struct db_conn *db, const unsigned char *key, size_t ksize,
 int xtdb_get(struct db_conn *db, const unsigned char *key, size_t ksize,
 		unsigned char *val, size_t *vsize);
 int xtdb_del(struct db_conn *db, const unsigned char *key, size_t ksize);
+int xtdb_firstkey(struct db_conn *db, unsigned char *key, size_t *ksize);
+int xtdb_nextkey(struct db_conn *db,
+		const unsigned char *key, size_t ksize,
+		unsigned char *nextkey, size_t *nksize);
 int xtdb_close(struct db_conn *db);
 
 
@@ -43,6 +47,8 @@ struct db_conn *xtdb_open(const char *name, int flags)
 	db->set = xtdb_set;
 	db->get = xtdb_get;
 	db->del = xtdb_del;
+	db->firstkey = xtdb_firstkey;
+	db->nextkey = xtdb_nextkey;
 	db->close = xtdb_close;
 
 	return db;
@@ -101,6 +107,39 @@ int xtdb_del(struct db_conn *db, const unsigned char *key, size_t ksize)
 	k.dsize = ksize;
 
 	return tdb_delete(db->conn, k) == 0;
+}
+
+int xtdb_firstkey(struct db_conn *db, unsigned char *key, size_t *ksize)
+{
+	TDB_DATA k;
+
+	k = tdb_firstkey(db->conn);
+	if (k.dptr == NULL)
+		return 0;
+
+	*ksize = k.dsize;
+	memcpy(key, k.dptr, k.dsize);
+	free(k.dptr);
+	return 1;
+}
+
+int xtdb_nextkey(struct db_conn *db,
+		const unsigned char *key, size_t ksize,
+		unsigned char *nextkey, size_t *nksize)
+{
+	TDB_DATA pk, nk;
+
+	pk.dptr = (unsigned char *) key;
+	pk.dsize = ksize;
+
+	nk = tdb_nextkey(db->conn, pk);
+	if (nk.dptr == NULL)
+		return 0;
+
+	*nksize = nk.dsize;
+	memcpy(nextkey, nk.dptr, nk.dsize);
+	free(nk.dptr);
+	return 1;
 }
 
 #else
