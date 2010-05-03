@@ -5,6 +5,11 @@ While normally nothing should be done, sometimes things change in incompatible
 ways. Here's the listing for the releases, you should always check it before
 upgrading.
 
+0.22 -> 0.23
+ * The server signal handling for SIGUSR1 has been remapped: to reopen the
+   file descriptors send SIGHUP instead of SIGUSR1. SIGUSR1 now puts the
+   server in read-only mode.
+
 0.20 -> 0.21
  * nmdb_get() and nmdb_cache_get() now return -1 instead of 0 when there is a
    missing key. This was done to allow setting a value to be "" (no data). All

@@ -35,6 +35,16 @@ static void logfd_reopen_sighandler(int fd, short event, void *arg)
 		wlog("Log reopened\n");
 }
 
+static void enable_read_only_sighandler(int fd, short event, void *arg)
+{
+	if (!settings.read_only) {
+		wlog("Changing to read-only mode\n");
+		settings.read_only = 1;
+	} else {
+		wlog("Got signal, but already in read-only mode\n");
+	}
+}
+
 void net_loop(void)
 {
 	int tipc_fd = -1;
@@ -42,7 +52,8 @@ void net_loop(void)
 	int udp_fd = -1;
 	int sctp_fd = -1;
 	struct event tipc_evt, tcp_evt, udp_evt, sctp_evt,
-		     sigterm_evt, sigint_evt, sigusr1_evt, sigusr2_evt;
+		     sigterm_evt, sigint_evt,
+		     sighup_evt, sigusr1_evt, sigusr2_evt;
 
 	event_init();
 
@@ -101,7 +112,10 @@ void net_loop(void)
 	signal_add(&sigterm_evt, NULL);
 	signal_set(&sigint_evt, SIGINT, exit_sighandler, &sigint_evt);
 	signal_add(&sigint_evt, NULL);
-	signal_set(&sigusr1_evt, SIGUSR1, logfd_reopen_sighandler,
+	signal_set(&sighup_evt, SIGHUP, logfd_reopen_sighandler,
+			&sighup_evt);
+	signal_add(&sighup_evt, NULL);
+	signal_set(&sigusr1_evt, SIGUSR1, enable_read_only_sighandler,
 			&sigusr1_evt);
 	signal_add(&sigusr1_evt, NULL);
 	signal_set(&sigusr2_evt, SIGUSR2, passive_to_active_sighandler,

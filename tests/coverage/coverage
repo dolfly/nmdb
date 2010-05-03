@@ -93,7 +93,9 @@ nmdb_and_kill -d /dev/null	# supposed to fail
 
 out "+ signals"
 nmdb
+run killall -HUP nmdb
 run killall -USR1 nmdb
+run killall -USR1 nmdb		# the second time gets a different message
 run killall -USR2 nmdb
 run killall -TERM nmdb
 wait `pidof nmdb`
