@@ -14,6 +14,9 @@ void wlog(const char *fmt, ...);
 /* Errno logging, perror()-alike */
 void errlog(const char *s);
 
+/* PID file */
+void write_pid();
+
 #endif
 
 

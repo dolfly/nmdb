@@ -89,6 +89,8 @@ nmdb_and_kill -o /dev/null
 nmdb_and_kill -Z		# supposed to fail
 nmdb_and_kill -o /root/nmdb-coverage-fail	# supposed to fail
 nmdb_and_kill -d /dev/null	# supposed to fail
+nmdb_and_kill -i /tmp/nmdb-pid-file.pid
+nmdb_and_kill -i /root/nmdb-pid-file.pid	# supposed to fail
 
 
 out "+ signals"

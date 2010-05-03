@@ -41,6 +41,7 @@ static void help(void) {
 	  "  -S addr	SCTP listening address (all local addresses)\n"
 	  "  -c nobj	max. number of objects to be cached, in thousands (128)\n"
 	  "  -o fname	log to the given file (stdout).\n"
+	  "  -i pidfile file to write the PID to (none).\n"
 	  "  -f		don't fork and stay in the foreground\n"
 	  "  -p		enable passive mode, for redundancy purposes (read docs.)\n"
 	  "  -r		read-only mode\n"
@@ -71,13 +72,14 @@ static int load_settings(int argc, char **argv)
 	settings.passive = 0;
 	settings.read_only = 0;
 	settings.logfname = "-";
+	settings.pidfile = NULL;
 	settings.backend = DEFAULT_BE;
 
 	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
 	strcpy(settings.dbname, DEFDBNAME);
 
 	while ((c = getopt(argc, argv,
-				"b:d:l:L:t:T:u:U:s:S:c:o:fprh?")) != -1) {
+				"b:d:l:L:t:T:u:U:s:S:c:o:i:fprh?")) != -1) {
 		switch(c) {
 		case 'b':
 			settings.backend = be_type_from_str(optarg);
@@ -123,6 +125,11 @@ static int load_settings(int argc, char **argv)
 		case 'o':
 			settings.logfname = malloc(strlen(optarg) + 1);
 			strcpy(settings.logfname, optarg);
+			break;
+
+		case 'i':
+			settings.pidfile = malloc(strlen(optarg) + 1);
+			strcpy(settings.pidfile, optarg);
 			break;
 
 		case 'f':
@@ -232,6 +239,8 @@ int main(int argc, char **argv)
 
 	wlog("Starting nmdb\n");
 
+	write_pid();
+
 	dbthread = db_loop_start(db);
 
 	net_loop();
@@ -243,6 +252,8 @@ int main(int argc, char **argv)
 	queue_free(q);
 
 	cache_free(cd);
+
+	unlink(settings.pidfile);
 
 	return 0;
 }

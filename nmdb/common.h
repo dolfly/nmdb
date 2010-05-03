@@ -30,6 +30,7 @@ struct settings {
 	char *dbname;
 	char *logfname;
 	enum backend_type backend;
+	char *pidfile;
 };
 extern struct settings settings;
 

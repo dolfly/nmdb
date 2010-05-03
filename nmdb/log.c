@@ -72,3 +72,21 @@ void errlog(const char *s)
 	wlog("%s: %s\n", s, strerror(errno));
 }
 
+void write_pid()
+{
+	FILE *f;
+
+	if (settings.pidfile == NULL)
+		return;
+
+	f = fopen(settings.pidfile, "w");
+	if (f == NULL) {
+		errlog("Can't open pidfile for writing");
+		return;
+	}
+
+	fprintf(f, "%d\n", getpid());
+
+	fclose(f);
+}
+
