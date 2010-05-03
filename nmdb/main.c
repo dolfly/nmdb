@@ -71,12 +71,12 @@ static int load_settings(int argc, char **argv)
 	settings.foreground = 0;
 	settings.passive = 0;
 	settings.read_only = 0;
-	settings.logfname = "-";
+	settings.logfname = NULL;
 	settings.pidfile = NULL;
 	settings.backend = DEFAULT_BE;
 
-	settings.dbname = malloc(strlen(DEFDBNAME) + 1);
-	strcpy(settings.dbname, DEFDBNAME);
+	settings.dbname = strdup(DEFDBNAME);
+	settings.logfname = strdup("-");
 
 	while ((c = getopt(argc, argv,
 				"b:d:l:L:t:T:u:U:s:S:c:o:i:fprh?")) != -1) {
@@ -86,8 +86,7 @@ static int load_settings(int argc, char **argv)
 			break;
 		case 'd':
 			free(settings.dbname);
-			settings.dbname = malloc(strlen(optarg) + 1);
-			strcpy(settings.dbname, optarg);
+			settings.dbname = strdup(optarg);
 			break;
 
 		case 'l':
@@ -123,13 +122,13 @@ static int load_settings(int argc, char **argv)
 			break;
 
 		case 'o':
-			settings.logfname = malloc(strlen(optarg) + 1);
-			strcpy(settings.logfname, optarg);
+			free(settings.logfname);
+			settings.logfname = strdup(optarg);
 			break;
 
 		case 'i':
-			settings.pidfile = malloc(strlen(optarg) + 1);
-			strcpy(settings.pidfile, optarg);
+			free(settings.pidfile);
+			settings.pidfile = strdup(optarg);
 			break;
 
 		case 'f':
@@ -180,6 +179,14 @@ static int load_settings(int argc, char **argv)
 	}
 
 	return 1;
+}
+
+
+static void free_settings()
+{
+	free(settings.dbname);
+	free(settings.logfname);
+	free(settings.pidfile);
 }
 
 
@@ -254,6 +261,8 @@ int main(int argc, char **argv)
 	cache_free(cd);
 
 	unlink(settings.pidfile);
+
+	free_settings();
 
 	return 0;
 }
