@@ -65,6 +65,9 @@ REQ_SET        0x102
 REQ_DEL        0x103
 REQ_CAS        0x104
 REQ_INCR       0x105
+REQ_STATS      0x106
+REQ_FIRSTKEY   0x107
+REQ_NEXTKEY    0x108
 ============== ======
 
 
@@ -101,6 +104,10 @@ REQ_CAS
 REQ_INCR
   First the key size (32 bits), then the key, and then the increment as a
   signed network byte order 64 bit integer.
+REQ_FIRSTKEY
+  No payload.
+REQ_NEXTKEY
+  The key size and then the key.
 
 
 Replies
@@ -157,9 +164,10 @@ REP_CACHE_HIT
 REP_OK
   Depending on the request, this reply does or doesn't have an associated
   value. For *REQ_SET**, *REQ_DEL** and *REQ_CAS** there is no payload. But
-  for *REQ_GET* the first 32 bits are the value size, and then the value; and
-  for *REQ_INCR* the first 32 bits are the payload size, and then the
-  post-increment value as a signed 64-bit integer in network byte order.
+  for *REQ_GET* and *REQ_NEXTKEY* the first 32 bits are the value size, and
+  then the value; and for *REQ_INCR* the first 32 bits are the payload size,
+  and then the post-increment value as a signed 64-bit integer in network byte
+  order.
 
 
 Reply error codes
