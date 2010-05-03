@@ -43,3 +43,19 @@ enum backend_type be_type_from_str(const char *name)
 	return BE_UNKNOWN;
 }
 
+
+const char *be_str_from_type(enum backend_type type)
+{
+	if (type == BE_QDBM)
+		return "qdbm";
+	if (type == BE_BDB)
+		return "bdb";
+	if (type == BE_TC)
+		return "tc";
+	if (type == BE_TDB)
+		return "tdb";
+	if (type == BE_NULL)
+		return "null";
+	return "unknown";
+}
+

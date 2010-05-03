@@ -213,6 +213,8 @@ int main(int argc, char **argv)
 		errlog("Error opening DB");
 		return 1;
 	}
+	wlog("Opened database \"%s\" with %s backend\n", settings.dbname,
+		be_str_from_type(settings.backend));
 
 	if (!settings.foreground) {
 		pid = fork();

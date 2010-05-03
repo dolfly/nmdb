@@ -40,6 +40,9 @@ struct db_conn *db_open(enum backend_type type, const char *name, int flags);
 /* Returns the backend type for the given name. */
 enum backend_type be_type_from_str(const char *name);
 
+/* Returns the backend name for the given type. */
+const char *be_str_from_type(enum backend_type type);
+
 /* String containing a list of all supported backends */
 #if BE_ENABLE_QDBM
   #define _QDBM_SUPP "qdbm "
