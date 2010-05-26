@@ -4,6 +4,7 @@
 #ifndef _NMDB_H
 #define _NMDB_H
 
+#include <stdlib.h>	/* size_t, ssize_t */
 
 /** Opaque type representing a connection with one or more servers. */
 typedef struct nmdb_conn nmdb_t;
