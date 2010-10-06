@@ -438,9 +438,10 @@ int cache_incr(struct cache *cd, const unsigned char *key, size_t ksize,
 	val = e->val;
 	vsize = e->vsize;
 
-	/* the value must be a NULL terminated string, otherwise strtoll might
-	 * cause a segmentation fault */
-	if (val && val[vsize - 1] != '\0')
+	/* The value must be a 0-terminated string, otherwise strtoll might
+	 * cause a segmentation fault. Note that val should never be NULL, but
+	 * it doesn't hurt to check just in case */
+	if (val == NULL || val[vsize - 1] != '\0')
 		return -2;
 
 	intval = strtoll((char *) val, NULL, 10);
