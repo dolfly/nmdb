@@ -103,7 +103,6 @@ int main(int argc, char **argv)
 	/* The following assumes it can be more than one server. This can
 	 * never happen with the current code, but it can be useful as an
 	 * example in the future. */
-	j = 0;
 	for (i = 0; i < nservers; i++) {
 		printf("stats for server %d:\n", i);
 
