@@ -77,6 +77,7 @@ static void init_req(struct tcp_socket *tcpsock)
 static void rep_send_error(const struct req_info *req, const unsigned int code)
 {
 	uint32_t l, r, c;
+	ssize_t rv;
 	unsigned char minibuf[4 * 4];
 
 	if (settings.passive)
@@ -92,9 +93,9 @@ static void rep_send_error(const struct req_info *req, const unsigned int code)
 	memcpy(minibuf + 12, &c, 4);
 
 	/* If this send fails, there's nothing to be done */
-	r = send(req->fd, minibuf, 4 * 4, 0);
+	rv = send(req->fd, minibuf, 4 * 4, 0);
 
-	if (r < 0) {
+	if (rv < 0) {
 		errlog("rep_send_error() failed");
 	}
 }
