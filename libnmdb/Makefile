@@ -8,10 +8,6 @@ ENABLE_SCTP := $(shell if echo "\#include <netinet/sctp.h>" | \
 
 CFLAGS += -std=c99 -pedantic -Wall -O3
 ALL_CFLAGS = -D_XOPEN_SOURCE=500 -fPIC $(CFLAGS)
-ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
-		-DENABLE_TCP=$(ENABLE_TCP) \
-		-DENABLE_UDP=$(ENABLE_UDP) \
-		-DENABLE_SCTP=$(ENABLE_SCTP)
 
 ifdef DEBUG
 ALL_CFLAGS += -g

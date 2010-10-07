@@ -22,10 +22,10 @@
 
 /* Defined to 0 or 1 at libnmdb build time according the build configuration,
  * not to be used externally. */
-#define _ENABLE_TIPC ++CONFIG_ENABLE_TIPC++
-#define _ENABLE_TCP ++CONFIG_ENABLE_TCP++
-#define _ENABLE_UDP ++CONFIG_ENABLE_UDP++
-#define _ENABLE_SCTP ++CONFIG_ENABLE_SCTP++
+#define ENABLE_TIPC ++CONFIG_ENABLE_TIPC++
+#define ENABLE_TCP ++CONFIG_ENABLE_TCP++
+#define ENABLE_UDP ++CONFIG_ENABLE_UDP++
+#define ENABLE_SCTP ++CONFIG_ENABLE_SCTP++
 
 /* Functions used internally but shared among the different files. */
 int compare_servers(const void *s1, const void *s2);
@@ -40,11 +40,11 @@ ssize_t ssend(int fd, const unsigned char *buf, size_t count, int flags);
 #include <sys/types.h>		/* socket defines */
 #include <sys/socket.h>		/* socklen_t */
 
-#if _ENABLE_TIPC
+#if ENABLE_TIPC
 #include <linux/tipc.h>		/* struct sockaddr_tipc */
 #endif
 
-#if (_ENABLE_TCP || _ENABLE_UDP || _ENABLE_SCTP)
+#if (ENABLE_TCP || ENABLE_UDP || ENABLE_SCTP)
 #include <netinet/in.h>		/* struct sockaddr_in */
 #endif
 
@@ -54,7 +54,7 @@ struct nmdb_srv {
 	int type;
 	union {
 
-#if _ENABLE_TIPC
+#if ENABLE_TIPC
 		struct {
 			unsigned int port;
 			struct sockaddr_tipc srvsa;
@@ -62,7 +62,7 @@ struct nmdb_srv {
 		} tipc;
 #endif
 
-#if (_ENABLE_TCP || _ENABLE_UDP || _ENABLE_SCTP)
+#if (ENABLE_TCP || ENABLE_UDP || ENABLE_SCTP)
 		struct {
 			struct sockaddr_in srvsa;
 			socklen_t srvlen;
