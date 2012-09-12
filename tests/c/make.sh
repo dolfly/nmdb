@@ -3,7 +3,7 @@
 set -e
 
 USAGE="\
-Use: build.sh [build|debug_build|strict_build|profile_build|clean]
+Use: $0 [build|debug_build|strict_build|profile_build|clean]
 "
 
 
@@ -45,7 +45,7 @@ for p in TIPC TCP UDP SCTP MULT; do
 			else
 				# build only if src is newer than the binary
 				if [ "$t.c" -nt "$t-$OP" ]; then
-					cc -lnmdb $ALLCF $TF -o $t-$OP $t.c
+					cc $t.c -lnmdb $ALLCF $TF -o $t-$OP
 				fi
 			fi
 		done

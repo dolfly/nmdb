@@ -27,8 +27,7 @@ default: all
 all: nmdb-stats
 
 nmdb-stats: nmdb-stats.o
-	$(NICE_CC) $(ALL_CFLAGS) -L../libnmdb -lnmdb nmdb-stats.o \
-		-o nmdb-stats
+	$(NICE_CC) $(ALL_CFLAGS) $< -L../libnmdb -lnmdb -o $@
 
 .c.o:
 	$(NICE_CC) $(ALL_CFLAGS) -I../libnmdb -c $< -o $@
