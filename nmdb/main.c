@@ -260,7 +260,8 @@ int main(int argc, char **argv)
 
 	cache_free(cd);
 
-	unlink(settings.pidfile);
+	if (settings.pidfile)
+		unlink(settings.pidfile);
 
 	free_settings();
 
