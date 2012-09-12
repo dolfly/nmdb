@@ -565,11 +565,9 @@ static PyTypeObject nmdbType = {
 
 PyMODINIT_FUNC initnmdb_ll(void)
 {
-	PyObject *m;
-
 	nmdbType.ob_type = &PyType_Type;
 
-	m = Py_InitModule("nmdb_ll", nmdb_functions);
+	Py_InitModule("nmdb_ll", nmdb_functions);
 }
 
 #endif
