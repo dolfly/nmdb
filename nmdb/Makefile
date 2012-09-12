@@ -16,6 +16,8 @@ BE_ENABLE_TC := $(shell if `pkg-config --exists tokyocabinet`; \
 	then echo 1; else echo 0; fi)
 BE_ENABLE_TDB := $(shell if `pkg-config --exists tdb`; \
 	then echo 1; else echo 0; fi)
+BE_ENABLE_LEVELDB := $(shell if echo "\#include <leveldb/c.h>" | \
+		$(CPP) - > /dev/null 2>&1; then echo 1; else echo 0; fi)
 BE_ENABLE_NULL := 1
 
 
@@ -29,6 +31,7 @@ ALL_CFLAGS += -DENABLE_TIPC=$(ENABLE_TIPC) \
 		-DBE_ENABLE_BDB=$(BE_ENABLE_BDB) \
 		-DBE_ENABLE_TC=$(BE_ENABLE_TC) \
 		-DBE_ENABLE_TDB=$(BE_ENABLE_TDB) \
+		-DBE_ENABLE_LEVELDB=$(BE_ENABLE_LEVELDB) \
 		-DBE_ENABLE_NULL=$(BE_ENABLE_NULL) \
 
 
@@ -50,7 +53,7 @@ PREFIX=/usr/local
 
 
 OBJS = cache.o dbloop.o queue.o log.o net.o netutils.o parse.o stats.o main.o \
-       be.o be-bdb.o be-null.o be-qdbm.o be-tc.o be-tdb.o
+       be.o be-bdb.o be-null.o be-qdbm.o be-tc.o be-tdb.o be-leveldb.o
 LIBS = -levent -lpthread -lrt
 
 
@@ -93,6 +96,9 @@ endif
 ifeq ($(BE_ENABLE_TDB), 1)
 	ALL_CFLAGS += `pkg-config tdb --cflags`
 	LIBS += `pkg-config tdb --libs`
+endif
+ifeq ($(BE_ENABLE_LEVELDB), 1)
+	LIBS += -lleveldb
 endif
 ifeq ($(BE_ENABLE_NULL), 1)
 endif

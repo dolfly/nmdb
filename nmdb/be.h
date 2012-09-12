@@ -31,6 +31,7 @@ enum backend_type {
 	BE_BDB,
 	BE_TC,
 	BE_TDB,
+	BE_LEVELDB,
 	BE_NULL,
 };
 
@@ -68,13 +69,20 @@ const char *be_str_from_type(enum backend_type type);
   #define _TDB_SUPP ""
 #endif
 
+#if BE_ENABLE_LEVELDB
+  #define _LEVELDB_SUPP "leveldb "
+#else
+  #define _LEVELDB_SUPP ""
+#endif
+
 #if BE_ENABLE_NULL
   #define _NULL_SUPP "null "
 #else
   #define _NULL_SUPP ""
 #endif
 
-#define SUPPORTED_BE _QDBM_SUPP _BDB_SUPP _TC_SUPP _TDB_SUPP _NULL_SUPP
+#define SUPPORTED_BE \
+	_QDBM_SUPP _BDB_SUPP _TC_SUPP _TDB_SUPP _LEVELDB_SUPP _NULL_SUPP
 
 
 /* Default backend */
@@ -90,6 +98,9 @@ const char *be_str_from_type(enum backend_type type);
 #elif BE_ENABLE_BDB
   #define DEFAULT_BE BE_BDB
   #define DEFAULT_BE_NAME "bdb"
+#elif BE_ENABLE_LEVELDB
+  #define DEFAULT_BE BE_LEVELDB
+  #define DEFAULT_BE_NAME "leveldb"
 #elif BE_ENABLE_NULL
   #warning "using null backend as the default"
   #define DEFAULT_BE BE_NULL

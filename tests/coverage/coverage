@@ -36,7 +36,7 @@ function run() {
 
 function nmdb() {
 	log "-- nmdb starting:" "$@"
-	rm -f $DB
+	rm -rf $DB
 	./nmdb/nmdb -f -d $DB "$@" >> $LOG 2>> $LOG &
 	sleep 0.2
 }
@@ -49,7 +49,7 @@ function kill_nmdb() {
 
 function nmdb_and_kill() {
 	log "-- nmdb_and_kill starting:" "$@"
-	rm -f $DB
+	rm -rf $DB
 	./nmdb/nmdb -f -d $DB "$@" >> $LOG 2>> $LOG &
 	sleep 0.2
 	killall nmdb >> $LOG 2>> $LOG
@@ -103,9 +103,9 @@ run killall -TERM nmdb
 wait `pidof nmdb`
 
 
-for be in bdb tc qdbm tdb; do
+for be in bdb tc qdbm tdb leveldb; do
 	out "+ backend $be"
-	run rm -f $DB
+	run rm -rf $DB
 	nmdb -b $be
 	if ! pidof nmdb > /dev/null; then
 		out "  unsupported"

@@ -7,6 +7,7 @@ struct db_conn *qdbm_open(const char *name, int flags);
 struct db_conn *bdb_open(const char *name, int flags);
 struct db_conn *tc_open(const char *name, int flags);
 struct db_conn *xtdb_open(const char *name, int flags);
+struct db_conn *xleveldb_open(const char *name, int flags);
 struct db_conn *null_open(const char *name, int flags);
 
 
@@ -21,6 +22,8 @@ struct db_conn *db_open(enum backend_type type, const char *name, int flags)
 		return tc_open(name, flags);
 	case BE_TDB:
 		return xtdb_open(name, flags);
+	case BE_LEVELDB:
+		return xleveldb_open(name, flags);
 	case BE_NULL:
 		return null_open(name, flags);
 	default:
@@ -38,6 +41,8 @@ enum backend_type be_type_from_str(const char *name)
 		return BE_ENABLE_TC ? BE_TC : BE_UNSUPPORTED;
 	if (strcmp(name, "tdb") == 0)
 		return BE_ENABLE_TDB ? BE_TDB : BE_UNSUPPORTED;
+	if (strcmp(name, "leveldb") == 0)
+		return BE_ENABLE_LEVELDB ? BE_LEVELDB : BE_UNSUPPORTED;
 	if (strcmp(name, "null") == 0)
 		return BE_ENABLE_NULL ? BE_NULL : BE_UNSUPPORTED;
 	return BE_UNKNOWN;
@@ -54,6 +59,8 @@ const char *be_str_from_type(enum backend_type type)
 		return "tc";
 	if (type == BE_TDB)
 		return "tdb";
+	if (type == BE_LEVELDB)
+		return "leveldb";
 	if (type == BE_NULL)
 		return "null";
 	return "unknown";
